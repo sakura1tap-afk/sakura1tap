@@ -1,6 +1,6 @@
 :root {
-  color: #f6f7fb;
-  background: #07080b;
+  color: #181716;
+  background: #ece9df;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -36,10 +36,29 @@ button {
   position: relative;
   width: 100%;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.075), transparent 25rem),
-    linear-gradient(180deg, #0b0c10 0%, #050609 100%);
+  background: #ece9df;
   overflow: hidden;
+}
+
+.entry-page {
+  background:
+    linear-gradient(90deg, rgba(24, 23, 22, 0.09) 0 1px, transparent 1px) 50% 50% / 4.25rem 4.25rem,
+    linear-gradient(180deg, rgba(24, 23, 22, 0.065) 0 1px, transparent 1px) 50% 50% / 4.25rem 4.25rem,
+    linear-gradient(180deg, #f3f1e9, #e5e1d6);
+}
+
+.tone-warm .entry-page {
+  background:
+    linear-gradient(90deg, rgba(48, 39, 27, 0.08) 0 1px, transparent 1px) 50% 50% / 4.25rem 4.25rem,
+    linear-gradient(180deg, rgba(48, 39, 27, 0.06) 0 1px, transparent 1px) 50% 50% / 4.25rem 4.25rem,
+    linear-gradient(180deg, #f7efe4, #e7dece);
+}
+
+.tone-mist .entry-page {
+  background:
+    linear-gradient(90deg, rgba(70, 43, 58, 0.075) 0 1px, transparent 1px) 50% 50% / 4.25rem 4.25rem,
+    linear-gradient(180deg, rgba(70, 43, 58, 0.055) 0 1px, transparent 1px) 50% 50% / 4.25rem 4.25rem,
+    linear-gradient(180deg, #f8edf1, #e7dde2);
 }
 
 .scene-wrap {
@@ -60,13 +79,124 @@ button {
 .model-status {
   width: max-content;
   max-width: min(72vw, 18rem);
-  color: rgba(246, 247, 251, 0.68);
+  color: rgba(24, 23, 22, 0.58);
   font-size: 0.875rem;
   line-height: 1.5;
   letter-spacing: 0;
   text-align: center;
   white-space: nowrap;
   user-select: none;
+}
+
+.side-panel {
+  position: fixed;
+  top: 50%;
+  z-index: 6;
+  display: flex;
+  transform: translateY(-50%);
+}
+
+.side-panel-left {
+  left: clamp(1rem, 3vw, 2.75rem);
+}
+
+.side-panel-right {
+  right: clamp(1rem, 3vw, 2.75rem);
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.control-stack,
+.tone-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.45rem;
+  border: 1px solid rgba(24, 23, 22, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 1rem 3rem rgba(32, 30, 27, 0.12);
+}
+
+.control-divider {
+  align-self: center;
+  width: 1.15rem;
+  height: 1px;
+  background: rgba(24, 23, 22, 0.16);
+}
+
+.icon-control,
+.light-toggle,
+.tone-dot {
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  color: rgba(24, 23, 22, 0.62);
+  cursor: pointer;
+  outline: none;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.icon-control,
+.light-toggle {
+  width: 2.45rem;
+  height: 2.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.light-toggle {
+  border-color: rgba(24, 23, 22, 0.12);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 1rem 3rem rgba(32, 30, 27, 0.1);
+}
+
+.icon-control:hover,
+.light-toggle:hover,
+.tone-dot:hover {
+  transform: translateY(-1px);
+}
+
+.icon-control.is-active,
+.light-toggle.is-active {
+  border-color: rgba(24, 23, 22, 0.18);
+  background: rgba(24, 23, 22, 0.88);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.tone-dot {
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(24, 23, 22, 0.1);
+}
+
+.tone-dot-paper {
+  background: #f7f5ef;
+}
+
+.tone-dot-warm {
+  background: #fff0d8;
+}
+
+.tone-dot-mist {
+  background: #ffeaf2;
+}
+
+.tone-dot.is-active {
+  border-color: rgba(24, 23, 22, 0.36);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6),
+    0 0 0 3px rgba(24, 23, 22, 0.08);
 }
 
 .enter-overlay {
@@ -76,34 +206,85 @@ button {
   z-index: 5;
   display: flex;
   justify-content: center;
-  padding: 0 1.5rem max(1.1rem, env(safe-area-inset-bottom));
+  padding: 0 1.5rem max(1.15rem, env(safe-area-inset-bottom));
 }
 
 .enter-button {
   pointer-events: auto;
-  min-width: 7rem;
-  height: 3rem;
-  border: 1px solid rgba(255, 255, 255, 0.26);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 11.2rem;
+  height: 3.25rem;
+  border: 1px solid rgba(24, 23, 22, 0.14);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.09);
-  color: rgba(255, 255, 255, 0.92);
-  letter-spacing: 0.08em;
-  padding: 0 1.8rem;
+  background: rgba(255, 255, 255, 0.84);
+  color: rgba(24, 23, 22, 0.86);
+  letter-spacing: 0.12em;
+  padding: 0 3.2rem;
   cursor: pointer;
   outline: none;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 1.5rem 4rem rgba(0, 0, 0, 0.32);
+  box-shadow: 0 1.2rem 3.5rem rgba(32, 30, 27, 0.18);
+  overflow: hidden;
 }
 
 .enter-button:focus-visible {
-  border-color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(24, 23, 22, 0.42);
   box-shadow:
-    0 0 0 3px rgba(255, 255, 255, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 1.5rem 4rem rgba(0, 0, 0, 0.32);
+    0 0 0 3px rgba(24, 23, 22, 0.1),
+    0 1.2rem 3.5rem rgba(32, 30, 27, 0.18);
+}
+
+.enter-button-orb {
+  position: absolute;
+  left: 0.45rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 999px;
+  background: rgba(24, 23, 22, 0.9);
+  color: rgba(255, 255, 255, 0.92);
+  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.enter-button-text {
+  position: relative;
+  z-index: 1;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition:
+    opacity 180ms ease,
+    transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.enter-button-line {
+  position: absolute;
+  right: 0.95rem;
+  width: 2.25rem;
+  height: 1px;
+  background: rgba(24, 23, 22, 0.22);
+  transition:
+    opacity 180ms ease,
+    transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.enter-button:hover .enter-button-orb {
+  transform: translateX(7.9rem);
+}
+
+.enter-button:hover .enter-button-text {
+  opacity: 0.64;
+  transform: translateX(-0.85rem);
+}
+
+.enter-button:hover .enter-button-line {
+  opacity: 0;
+  transform: translateX(0.6rem);
 }
 
 .main-page {
@@ -113,7 +294,7 @@ button {
 
 .main-page h1 {
   margin: 0;
-  color: rgba(255, 255, 255, 0.88);
+  color: rgba(24, 23, 22, 0.86);
   font-size: clamp(2rem, 8vw, 4.8rem);
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -124,8 +305,40 @@ button {
   .entry-page,
   .main-page {
     background:
-      radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.07), transparent 18rem),
-      linear-gradient(180deg, #0b0c10 0%, #050609 100%);
+      linear-gradient(90deg, rgba(24, 23, 22, 0.055) 0 1px, transparent 1px) 50% 50% / 3.2rem 3.2rem,
+      linear-gradient(180deg, rgba(24, 23, 22, 0.04) 0 1px, transparent 1px) 50% 50% / 3.2rem 3.2rem,
+      linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(238, 235, 226, 0.9));
+  }
+
+  .side-panel {
+    top: 1rem;
+    transform: none;
+  }
+
+  .side-panel-left {
+    left: 0.85rem;
+  }
+
+  .side-panel-right {
+    right: 0.85rem;
+    gap: 0.55rem;
+  }
+
+  .control-stack,
+  .tone-switcher {
+    gap: 0.35rem;
+    padding: 0.35rem;
+  }
+
+  .icon-control,
+  .light-toggle {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .tone-dot {
+    width: 2rem;
+    height: 2rem;
   }
 
   .enter-overlay {
@@ -133,7 +346,16 @@ button {
   }
 
   .enter-button {
-    min-width: 6.5rem;
-    height: 2.75rem;
+    width: 10.2rem;
+    height: 3rem;
+  }
+
+  .enter-button-orb {
+    width: 2.14rem;
+    height: 2.14rem;
+  }
+
+  .enter-button:hover .enter-button-orb {
+    transform: translateX(7.05rem);
   }
 }
