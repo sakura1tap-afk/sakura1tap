@@ -2,8 +2,6 @@ import { Center, useGLTF } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import type { ViewMode } from './EntryControls'
 
-const MODEL_PATH = '/models/study.glb'
-
 const viewSettings: Record<ViewMode, { position: [number, number, number]; rotation: [number, number, number]; scale: number }> = {
   detail: {
     position: [0.16, 0.58, 0],
@@ -23,11 +21,12 @@ const viewSettings: Record<ViewMode, { position: [number, number, number]; rotat
 }
 
 type StudyModelProps = {
+  modelUrl: string
   viewMode: ViewMode
 }
 
-export default function StudyModel({ viewMode }: StudyModelProps) {
-  const gltf = useGLTF(MODEL_PATH)
+export default function StudyModel({ modelUrl, viewMode }: StudyModelProps) {
+  const gltf = useGLTF(modelUrl)
   const settings = viewSettings[viewMode]
   const { size } = useThree()
   const isCompact = size.width < 640
@@ -42,5 +41,3 @@ export default function StudyModel({ viewMode }: StudyModelProps) {
     </Center>
   )
 }
-
-useGLTF.preload(MODEL_PATH)

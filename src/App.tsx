@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import BootOverlay from './components/BootOverlay'
 import EntryScene from './components/EntryScene'
 import EntryControls, { type BackgroundTone, type ViewMode } from './components/EntryControls'
@@ -22,7 +22,16 @@ export default function App() {
   const [backgroundTone, setBackgroundTone] = useState<BackgroundTone>('paper')
   const [softLight, setSoftLight] = useState(true)
   const [bootComplete, setBootComplete] = useState(false)
+  const [modelObjectUrl, setModelObjectUrl] = useState<string | null>(null)
   const [webglAvailable] = useState(canUseWebGL)
+
+  useEffect(() => {
+    return () => {
+      if (modelObjectUrl) {
+        URL.revokeObjectURL(modelObjectUrl)
+      }
+    }
+  }, [modelObjectUrl])
 
   return (
     <main className={`app-shell tone-${backgroundTone}`}>
@@ -38,10 +47,11 @@ export default function App() {
           >
             {webglAvailable ? (
               <>
-                {bootComplete && (
+                {bootComplete && modelObjectUrl && (
                   <EntryScene
                     autoRotate={autoRotate}
                     backgroundTone={backgroundTone}
+                    modelUrl={modelObjectUrl}
                     softLight={softLight}
                     viewMode={viewMode}
                   />
@@ -58,7 +68,15 @@ export default function App() {
                   viewMode={viewMode}
                 />
                 <EnterOverlay isReady={bootComplete} onEnter={() => setEntered(true)} />
-                {!bootComplete && <BootOverlay modelUrl="/models/study.glb" onComplete={() => setBootComplete(true)} />}
+                {!bootComplete && (
+                  <BootOverlay
+                    modelUrl="/models/study.glb"
+                    onComplete={(loadedModelUrl) => {
+                      setModelObjectUrl(loadedModelUrl)
+                      setBootComplete(true)
+                    }}
+                  />
+                )}
               </>
             ) : (
               <div className="webgl-fallback">
