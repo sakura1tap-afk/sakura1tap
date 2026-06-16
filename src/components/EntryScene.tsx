@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber'
-import { Environment, Html, OrbitControls } from '@react-three/drei'
-import { Component, Suspense, type ErrorInfo, type ReactNode } from 'react'
+import { Html, OrbitControls } from '@react-three/drei'
+import { Component, type ErrorInfo, type ReactNode } from 'react'
 import type { BackgroundTone, ViewMode } from './EntryControls'
 import StudyModel from './StudyModel'
 
@@ -61,21 +61,13 @@ export default function EntryScene({ autoRotate, backgroundTone, modelBuffer, so
       >
         <color attach="background" args={[sceneBackgrounds[backgroundTone]]} />
         <ambientLight intensity={softLight ? 0.96 : 0.72} />
+        <hemisphereLight args={['#ffffff', '#c9c0ae', softLight ? 0.7 : 0.45]} />
         <directionalLight position={[4, 6, 4]} intensity={softLight ? 1.35 : 1.05} />
         <directionalLight position={[-3, 2, -4]} intensity={softLight ? 0.48 : 0.3} color="#d9e3ff" />
 
-        <Suspense
-          fallback={
-            <Html center className="model-status">
-              loading
-            </Html>
-          }
-        >
-          <ModelBoundary>
-            <StudyModel modelBuffer={modelBuffer} viewMode={viewMode} />
-          </ModelBoundary>
-          <Environment preset="city" />
-        </Suspense>
+        <ModelBoundary>
+          <StudyModel modelBuffer={modelBuffer} viewMode={viewMode} />
+        </ModelBoundary>
 
         <OrbitControls
           makeDefault
