@@ -22,16 +22,8 @@ export default function App() {
   const [backgroundTone, setBackgroundTone] = useState<BackgroundTone>('paper')
   const [softLight, setSoftLight] = useState(true)
   const [bootComplete, setBootComplete] = useState(false)
-  const [modelObjectUrl, setModelObjectUrl] = useState<string | null>(null)
+  const [modelBuffer, setModelBuffer] = useState<ArrayBuffer | null>(null)
   const [webglAvailable] = useState(canUseWebGL)
-
-  useEffect(() => {
-    return () => {
-      if (modelObjectUrl) {
-        URL.revokeObjectURL(modelObjectUrl)
-      }
-    }
-  }, [modelObjectUrl])
 
   return (
     <main className={`app-shell tone-${backgroundTone}`}>
@@ -47,11 +39,11 @@ export default function App() {
           >
             {webglAvailable ? (
               <>
-                {bootComplete && modelObjectUrl && (
+                {bootComplete && modelBuffer && (
                   <EntryScene
                     autoRotate={autoRotate}
                     backgroundTone={backgroundTone}
-                    modelUrl={modelObjectUrl}
+                    modelBuffer={modelBuffer}
                     softLight={softLight}
                     viewMode={viewMode}
                   />
@@ -71,8 +63,8 @@ export default function App() {
                 {!bootComplete && (
                   <BootOverlay
                     modelUrl="/models/study.glb"
-                    onComplete={(loadedModelUrl) => {
-                      setModelObjectUrl(loadedModelUrl)
+                    onComplete={(loadedModelBuffer) => {
+                      setModelBuffer(loadedModelBuffer)
                       setBootComplete(true)
                     }}
                   />

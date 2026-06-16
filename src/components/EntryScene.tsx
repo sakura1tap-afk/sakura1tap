@@ -7,7 +7,7 @@ import StudyModel from './StudyModel'
 type EntrySceneProps = {
   autoRotate: boolean
   backgroundTone: BackgroundTone
-  modelUrl: string
+  modelBuffer: ArrayBuffer
   softLight: boolean
   viewMode: ViewMode
 }
@@ -50,7 +50,7 @@ const sceneBackgrounds: Record<BackgroundTone, string> = {
   warm: '#f0e7d9',
 }
 
-export default function EntryScene({ autoRotate, backgroundTone, modelUrl, softLight, viewMode }: EntrySceneProps) {
+export default function EntryScene({ autoRotate, backgroundTone, modelBuffer, softLight, viewMode }: EntrySceneProps) {
   return (
     <div className="scene-wrap" aria-hidden="true">
       <Canvas
@@ -72,7 +72,7 @@ export default function EntryScene({ autoRotate, backgroundTone, modelUrl, softL
           }
         >
           <ModelBoundary>
-            <StudyModel modelUrl={modelUrl} viewMode={viewMode} />
+            <StudyModel modelBuffer={modelBuffer} viewMode={viewMode} />
           </ModelBoundary>
           <Environment preset="city" />
         </Suspense>

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 type BootOverlayProps = {
   modelUrl: string
-  onComplete: (loadedModelUrl: string) => void
+  onComplete: (loadedModelBuffer: ArrayBuffer) => void
 }
 
 type BootState = 'loading' | 'complete' | 'error'
@@ -13,7 +13,7 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
   const [bootState, setBootState] = useState<BootState>('loading')
   const [minimumElapsed, setMinimumElapsed] = useState(false)
   const [message, setMessage] = useState('INITIALIZING')
-  const [loadedModelUrl, setLoadedModelUrl] = useState<string | null>(null)
+  const [loadedModelBuffer, setLoadedModelBuffer] = useState<ArrayBuffer | null>(null)
   const [progress, setProgress] = useState(0)
   const displayProgress = useMemo(() => Math.min(100, Math.max(0, Math.round(progress))), [progress])
   const complete = minimumElapsed && bootState === 'complete'
@@ -27,12 +27,12 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
 
     setProgress(100)
     const hideTimer = window.setTimeout(() => {
-      if (loadedModelUrl) {
-        onComplete(loadedModelUrl)
+      if (loadedModelBuffer) {
+        onComplete(loadedModelBuffer)
       }
     }, 360)
     return () => window.clearTimeout(hideTimer)
-  }, [complete, loadedModelUrl, onComplete])
+  }, [complete, loadedModelBuffer, onComplete])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -41,7 +41,7 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
 
     setBootState('loading')
     setMinimumElapsed(false)
-    setLoadedModelUrl(null)
+    setLoadedModelBuffer(null)
     setMessage('CONNECTING')
     setProgress(0)
 
@@ -78,8 +78,7 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
         if (!response.body) {
           const buffer = await response.arrayBuffer()
           if (!alive) return
-          const objectUrl = URL.createObjectURL(new Blob([buffer], { type: 'model/gltf-binary' }))
-          setLoadedModelUrl(objectUrl)
+          setLoadedModelBuffer(buffer)
           setMessage('CALIBRATING SCENE')
           setProgress((current) => Math.max(current, 96))
           setBootState('complete')
@@ -105,13 +104,14 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
         }
 
         if (!alive) return
-        const modelParts = chunks.map((chunk) => {
-          const copy = new ArrayBuffer(chunk.byteLength)
-          new Uint8Array(copy).set(chunk)
-          return copy
-        })
-        const objectUrl = URL.createObjectURL(new Blob(modelParts, { type: 'model/gltf-binary' }))
-        setLoadedModelUrl(objectUrl)
+        const modelBuffer = new ArrayBuffer(received)
+        const modelView = new Uint8Array(modelBuffer)
+        let offset = 0
+        for (const chunk of chunks) {
+          modelView.set(chunk, offset)
+          offset += chunk.byteLength
+        }
+        setLoadedModelBuffer(modelBuffer)
         setMessage('CALIBRATING SCENE')
         setProgress((current) => Math.max(current, 96))
         setBootState('complete')
