@@ -48,28 +48,13 @@ button {
 }
 
 .scene-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
   cursor: grab;
 }
 
 .scene-wrap canvas:active {
   cursor: grabbing;
-}
-
-.sketchfab-stage {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background:
-    radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.08), transparent 28rem),
-    #07080b;
-}
-
-.sketchfab-stage iframe {
-  width: min(100vw, 92rem);
-  height: min(100vh, 56rem);
-  border: 0;
-  background: #07080b;
 }
 
 .model-status {
@@ -82,13 +67,6 @@ button {
   text-align: center;
   white-space: nowrap;
   user-select: none;
-}
-
-.model-status-plain {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
 }
 
 .enter-overlay {
