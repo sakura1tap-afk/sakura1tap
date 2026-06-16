@@ -1,12 +1,13 @@
 import { Canvas } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import { Component, type ErrorInfo, type ReactNode } from 'react'
-import type { BackgroundTone, ViewMode } from './EntryControls'
+import type { BackgroundTone, ModelSize, ViewMode } from './EntryControls'
 import StudyModel from './StudyModel'
 
 type EntrySceneProps = {
   autoRotate: boolean
   backgroundTone: BackgroundTone
+  modelSize: ModelSize
   modelBuffer: ArrayBuffer
   softLight: boolean
   viewMode: ViewMode
@@ -50,7 +51,14 @@ const sceneBackgrounds: Record<BackgroundTone, string> = {
   warm: '#f0e7d9',
 }
 
-export default function EntryScene({ autoRotate, backgroundTone, modelBuffer, softLight, viewMode }: EntrySceneProps) {
+export default function EntryScene({
+  autoRotate,
+  backgroundTone,
+  modelBuffer,
+  modelSize,
+  softLight,
+  viewMode,
+}: EntrySceneProps) {
   return (
     <div className="scene-wrap" aria-hidden="true">
       <Canvas
@@ -66,7 +74,7 @@ export default function EntryScene({ autoRotate, backgroundTone, modelBuffer, so
         <directionalLight position={[-3, 2, -4]} intensity={softLight ? 0.48 : 0.3} color="#d9e3ff" />
 
         <ModelBoundary>
-          <StudyModel modelBuffer={modelBuffer} viewMode={viewMode} />
+          <StudyModel modelBuffer={modelBuffer} modelSize={modelSize} viewMode={viewMode} />
         </ModelBoundary>
 
         <OrbitControls

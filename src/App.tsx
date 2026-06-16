@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import BootOverlay from './components/BootOverlay'
 import EntryScene from './components/EntryScene'
-import EntryControls, { type BackgroundTone, type ViewMode } from './components/EntryControls'
+import EntryControls, { type BackgroundTone, type ModelSize, type ViewMode } from './components/EntryControls'
 import EnterOverlay from './components/EnterOverlay'
 import MainPage from './components/MainPage'
 
@@ -19,6 +19,7 @@ export default function App() {
   const [entered, setEntered] = useState(false)
   const [autoRotate, setAutoRotate] = useState(true)
   const [viewMode, setViewMode] = useState<ViewMode>('front')
+  const [modelSize, setModelSize] = useState<ModelSize>('medium')
   const [backgroundTone, setBackgroundTone] = useState<BackgroundTone>('paper')
   const [softLight, setSoftLight] = useState(true)
   const [bootComplete, setBootComplete] = useState(false)
@@ -43,6 +44,7 @@ export default function App() {
                   <EntryScene
                     autoRotate={autoRotate}
                     backgroundTone={backgroundTone}
+                    modelSize={modelSize}
                     modelBuffer={modelBuffer}
                     softLight={softLight}
                     viewMode={viewMode}
@@ -53,9 +55,11 @@ export default function App() {
                   backgroundTone={backgroundTone}
                   isReady={bootComplete}
                   onBackgroundToneChange={setBackgroundTone}
+                  onModelSizeChange={setModelSize}
                   onSoftLightChange={setSoftLight}
                   onToggleRotate={() => setAutoRotate((value) => !value)}
                   onViewModeChange={setViewMode}
+                  modelSize={modelSize}
                   softLight={softLight}
                   viewMode={viewMode}
                 />

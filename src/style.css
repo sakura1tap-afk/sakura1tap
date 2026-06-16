@@ -315,72 +315,170 @@ button {
   padding: 0.55rem 0.9rem;
 }
 
-.side-panel {
+.command-hub {
   position: fixed;
-  top: 50%;
+  left: clamp(4rem, 8vw, 7rem);
+  bottom: clamp(5rem, 14vh, 8rem);
   z-index: 6;
-  display: flex;
+  width: 3.3rem;
+  height: 3.3rem;
   opacity: 0;
-  transform: translateY(-50%);
+  pointer-events: none;
+  transform: translate(-0.75rem, 0.75rem) scale(0.96);
   transition:
     opacity 420ms ease,
     transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.side-panel-left {
-  transform: translate(-0.5rem, -50%);
-}
-
-.side-panel-right {
-  transform: translate(0.5rem, -50%);
-}
-
-.side-panel.is-ready {
+.command-hub.is-ready {
   opacity: 1;
-  transform: translate(0, -50%);
+  pointer-events: auto;
+  transform: translate(0, 0) scale(1);
 }
 
-.side-panel-left {
-  left: clamp(1rem, 3vw, 2.75rem);
-}
-
-.side-panel-right {
-  right: clamp(1rem, 3vw, 2.75rem);
-  flex-direction: column;
-  align-items: center;
-  gap: 0.8rem;
-}
-
-.control-stack,
-.tone-switcher {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  padding: 0.45rem;
-  border: 1px solid rgba(24, 23, 22, 0.12);
+.command-hub::before,
+.command-hub::after {
+  position: absolute;
+  inset: 50%;
+  width: 10.8rem;
+  height: 10.8rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 1rem 3rem rgba(32, 30, 27, 0.12);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.45);
+  transition:
+    opacity 260ms ease,
+    transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.control-divider {
-  align-self: center;
-  width: 1.15rem;
-  height: 1px;
-  background: rgba(24, 23, 22, 0.16);
+.command-hub::before {
+  border: 1px solid rgba(24, 23, 22, 0.08);
+  background:
+    linear-gradient(90deg, transparent 0 calc(50% - 1px), rgba(24, 23, 22, 0.08) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)),
+    linear-gradient(180deg, transparent 0 calc(50% - 1px), rgba(24, 23, 22, 0.08) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px));
 }
 
-.icon-control,
-.light-toggle,
-.tone-dot {
+.command-hub::after {
+  width: 7.2rem;
+  height: 7.2rem;
+  border: 1px dashed rgba(24, 23, 22, 0.16);
+}
+
+.command-hub.is-open::before,
+.command-hub.is-open::after,
+.command-hub:focus-within::before,
+.command-hub:focus-within::after {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.command-hub-button {
+  position: relative;
+  z-index: 2;
   display: grid;
   place-items: center;
-  border: 1px solid transparent;
-  color: rgba(24, 23, 22, 0.62);
+  width: 3.3rem;
+  height: 3.3rem;
+  border: 1px solid rgba(24, 23, 22, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: rgba(24, 23, 22, 0.8);
   cursor: pointer;
   outline: none;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 1rem 2.8rem rgba(32, 30, 27, 0.16);
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.command-hub-button::after {
+  position: absolute;
+  inset: 0.45rem;
+  border: 1px solid rgba(24, 23, 22, 0.1);
+  border-radius: inherit;
+  content: "";
+}
+
+.command-hub.is-open .command-hub-button,
+.command-hub-button:hover,
+.command-hub-button:focus-visible {
+  border-color: rgba(24, 23, 22, 0.26);
+  background: rgba(24, 23, 22, 0.9);
+  color: rgba(255, 255, 255, 0.92);
+  transform: rotate(45deg);
+}
+
+.command-orbit {
+  position: absolute;
+  inset: 0;
+}
+
+.command-group {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  gap: 0.4rem;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+  transform-origin: center;
+  animation: command-pop 360ms cubic-bezier(0.18, 0.9, 0.18, 1);
+  transition:
+    opacity 220ms ease,
+    transform 420ms cubic-bezier(0.18, 0.9, 0.18, 1);
+}
+
+.command-hub.is-open .command-group,
+.command-hub:focus-within .command-group {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.command-hub.is-open .command-group-rotate,
+.command-hub:focus-within .command-group-rotate {
+  transform: translate(-50%, calc(-50% - 4.65rem)) scale(1);
+}
+
+.command-hub.is-open .command-group-view,
+.command-hub:focus-within .command-group-view {
+  transform: translate(calc(-50% + 5.4rem), calc(-50% - 1.45rem)) scale(1);
+}
+
+.command-hub.is-open .command-group-size,
+.command-hub:focus-within .command-group-size {
+  transform: translate(calc(-50% + 4.55rem), calc(-50% + 3.45rem)) scale(1);
+}
+
+.command-hub.is-open .command-group-tone,
+.command-hub:focus-within .command-group-tone {
+  transform: translate(calc(-50% - 0.4rem), calc(-50% + 5.05rem)) scale(1);
+}
+
+.command-hub.is-open .command-group-light,
+.command-hub:focus-within .command-group-light {
+  transform: translate(calc(-50% - 4.2rem), calc(-50% + 1.4rem)) scale(1);
+}
+
+.command-option,
+.command-tone {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid rgba(24, 23, 22, 0.12);
+  border-radius: 999px;
+  color: rgba(24, 23, 22, 0.65);
+  cursor: pointer;
+  outline: none;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 0.85rem 2.2rem rgba(32, 30, 27, 0.12);
   transition:
     background 160ms ease,
     border-color 160ms ease,
@@ -388,71 +486,61 @@ button {
     transform 160ms ease;
 }
 
-.icon-control,
-.light-toggle {
-  width: 2.45rem;
-  height: 2.45rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.68);
+.command-option {
+  background: rgba(255, 255, 255, 0.8);
 }
 
-.light-toggle {
-  border-color: rgba(24, 23, 22, 0.12);
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 1rem 3rem rgba(32, 30, 27, 0.1);
+.command-option:hover,
+.command-option:focus-visible,
+.command-tone:hover,
+.command-tone:focus-visible {
+  transform: translateY(-2px);
 }
 
-.icon-control:hover,
-.light-toggle:hover,
-.tone-dot:hover {
-  transform: translateY(-1px);
-}
-
-.icon-control.is-active,
-.light-toggle.is-active {
-  border-color: rgba(24, 23, 22, 0.18);
-  background: rgba(24, 23, 22, 0.88);
+.command-option.is-active {
+  border-color: rgba(24, 23, 22, 0.2);
+  background: rgba(24, 23, 22, 0.9);
   color: rgba(255, 255, 255, 0.92);
 }
 
-.tone-dot {
-  width: 2.3rem;
-  height: 2.3rem;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px rgba(24, 23, 22, 0.1);
-}
-
-.tone-dot-paper {
+.command-tone-paper {
   background: #f7f5ef;
 }
 
-.tone-dot-warm {
+.command-tone-warm {
   background: #fff0d8;
 }
 
-.tone-dot-mist {
+.command-tone-mist {
   background: #ffeaf2;
 }
 
-.tone-dot.is-active {
-  border-color: rgba(24, 23, 22, 0.36);
+.command-tone.is-active {
+  border-color: rgba(24, 23, 22, 0.38);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.6),
-    0 0 0 3px rgba(24, 23, 22, 0.08);
+    0 0 0 3px rgba(24, 23, 22, 0.08),
+    0 0.85rem 2.2rem rgba(32, 30, 27, 0.12);
+}
+
+@keyframes command-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .enter-overlay {
   pointer-events: none;
   position: fixed;
-  inset: auto 0 0;
+  inset: 0;
   z-index: 5;
-  display: flex;
-  justify-content: center;
   opacity: 0;
-  padding: 0 1.5rem max(1.15rem, env(safe-area-inset-bottom));
-  transform: translateY(0.75rem);
+  transform: translateY(0.85rem);
   transition:
     opacity 420ms ease,
     transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -463,26 +551,77 @@ button {
   transform: translateY(0);
 }
 
+.enter-tether {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(5.35rem, 12vh, 8.2rem);
+  display: grid;
+  justify-items: center;
+  width: 1px;
+  height: clamp(5.3rem, 15vh, 8rem);
+  transform: translateX(-50%);
+}
+
+.enter-tether-line {
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(24, 23, 22, 0), rgba(24, 23, 22, 0.28), rgba(24, 23, 22, 0.06));
+}
+
+.enter-tether-pulse {
+  position: absolute;
+  top: 0;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: rgba(24, 23, 22, 0.82);
+  box-shadow: 0 0 1.2rem rgba(24, 23, 22, 0.22);
+  animation: tether-pulse 2.2s cubic-bezier(0.3, 0.8, 0.3, 1) infinite;
+}
+
+.enter-target {
+  position: absolute;
+  top: -0.95rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 1px solid rgba(24, 23, 22, 0.16);
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, transparent 0 calc(50% - 1px), rgba(24, 23, 22, 0.18) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)),
+    linear-gradient(180deg, transparent 0 calc(50% - 1px), rgba(24, 23, 22, 0.18) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px));
+}
+
 .enter-button {
   pointer-events: auto;
-  position: relative;
+  position: absolute;
+  left: 50%;
+  bottom: max(1.3rem, env(safe-area-inset-bottom));
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 11.2rem;
-  height: 3.25rem;
+  justify-content: space-between;
+  width: 12.5rem;
+  height: 3.45rem;
   border: 1px solid rgba(24, 23, 22, 0.14);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.84);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.74)),
+    rgba(255, 255, 255, 0.84);
   color: rgba(24, 23, 22, 0.86);
   letter-spacing: 0.12em;
-  padding: 0 3.2rem;
+  padding: 0 1rem 0 0.46rem;
   cursor: pointer;
   outline: none;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 1.2rem 3.5rem rgba(32, 30, 27, 0.18);
+  box-shadow:
+    0 1.2rem 3.5rem rgba(32, 30, 27, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
   overflow: hidden;
+  transform: translateX(-50%);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .enter-button:disabled {
@@ -496,9 +635,24 @@ button {
     0 1.2rem 3.5rem rgba(32, 30, 27, 0.18);
 }
 
-.enter-button-orb {
+.enter-button:hover {
+  transform: translateX(-50%) translateY(-3px);
+}
+
+.enter-button:active {
+  transform: translateX(-50%) translateY(-1px) scale(0.985);
+}
+
+.enter-button-scan {
   position: absolute;
-  left: 0.45rem;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(24, 23, 22, 0.08), transparent);
+  opacity: 0;
+  transform: translateX(-105%);
+}
+
+.enter-button-orb {
+  position: relative;
   z-index: 2;
   display: grid;
   place-items: center;
@@ -507,7 +661,7 @@ button {
   border-radius: 999px;
   background: rgba(24, 23, 22, 0.9);
   color: rgba(255, 255, 255, 0.92);
-  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .enter-button-text {
@@ -521,28 +675,79 @@ button {
 }
 
 .enter-button-line {
-  position: absolute;
-  right: 0.95rem;
-  width: 2.25rem;
+  position: relative;
+  z-index: 1;
+  width: 2.55rem;
   height: 1px;
-  background: rgba(24, 23, 22, 0.22);
+  background: rgba(24, 23, 22, 0.18);
+  overflow: hidden;
   transition:
     opacity 180ms ease,
     transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.enter-button-line span {
+  display: block;
+  width: 60%;
+  height: 100%;
+  background: rgba(24, 23, 22, 0.78);
+  animation: enter-line 1.7s ease-in-out infinite;
+}
+
+.enter-button:hover .enter-button-scan {
+  opacity: 1;
+  animation: enter-scan 780ms ease;
+}
+
 .enter-button:hover .enter-button-orb {
-  transform: translateX(7.9rem);
+  transform: translateX(8.15rem) rotate(-18deg);
 }
 
 .enter-button:hover .enter-button-text {
-  opacity: 0.64;
+  opacity: 0.72;
   transform: translateX(-0.85rem);
 }
 
 .enter-button:hover .enter-button-line {
-  opacity: 0;
-  transform: translateX(0.6rem);
+  opacity: 0.18;
+  transform: translateX(0.45rem);
+}
+
+@keyframes tether-pulse {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.72);
+  }
+
+  22% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(100%) scale(1);
+  }
+}
+
+@keyframes enter-line {
+  0% {
+    transform: translateX(-105%);
+  }
+
+  52%,
+  100% {
+    transform: translateX(175%);
+  }
+}
+
+@keyframes enter-scan {
+  from {
+    transform: translateX(-105%);
+  }
+
+  to {
+    transform: translateX(105%);
+  }
 }
 
 .main-page {
@@ -590,50 +795,79 @@ button {
       linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(238, 235, 226, 0.9));
   }
 
-  .side-panel {
-    top: 1rem;
-    transform: none;
+  .command-hub {
+    left: 3.15rem;
+    bottom: auto;
+    top: 3.2rem;
+    width: 3rem;
+    height: 3rem;
   }
 
-  .side-panel-left,
-  .side-panel-right,
-  .side-panel.is-ready {
-    transform: none;
+  .command-hub-button {
+    width: 3rem;
+    height: 3rem;
   }
 
-  .side-panel-left {
-    left: 0.85rem;
+  .command-hub::before {
+    width: 9.8rem;
+    height: 9.8rem;
   }
 
-  .side-panel-right {
-    right: 0.85rem;
-    gap: 0.55rem;
+  .command-hub::after {
+    width: 6.3rem;
+    height: 6.3rem;
   }
 
-  .control-stack,
-  .tone-switcher {
-    gap: 0.35rem;
-    padding: 0.35rem;
+  .command-option,
+  .command-tone {
+    width: 2.08rem;
+    height: 2.08rem;
   }
 
-  .icon-control,
-  .light-toggle {
-    width: 2.2rem;
-    height: 2.2rem;
+  .command-group {
+    gap: 0.28rem;
   }
 
-  .tone-dot {
-    width: 2rem;
-    height: 2rem;
+  .command-hub.is-open .command-group,
+  .command-hub:focus-within .command-group {
+    opacity: 1 !important;
+    pointer-events: auto;
   }
 
-  .enter-overlay {
-    padding-bottom: max(0.9rem, env(safe-area-inset-bottom));
+  .command-hub.is-open .command-group-rotate,
+  .command-hub:focus-within .command-group-rotate {
+    transform: translate(calc(-50% - 1.55rem), calc(-50% + 4.05rem)) scale(1) !important;
+  }
+
+  .command-hub.is-open .command-group-view,
+  .command-hub:focus-within .command-group-view {
+    transform: translate(calc(-50% + 4.55rem), calc(-50% + 0.45rem)) scale(1) !important;
+  }
+
+  .command-hub.is-open .command-group-size,
+  .command-hub:focus-within .command-group-size {
+    transform: translate(calc(-50% + 3.85rem), calc(-50% + 4.15rem)) scale(1) !important;
+  }
+
+  .command-hub.is-open .command-group-tone,
+  .command-hub:focus-within .command-group-tone {
+    transform: translate(calc(-50% + 0.15rem), calc(-50% + 6.85rem)) scale(1) !important;
+  }
+
+  .command-hub.is-open .command-group-light,
+  .command-hub:focus-within .command-group-light {
+    transform: translate(calc(-50% + 8rem), calc(-50% + 6.65rem)) scale(1) !important;
+  }
+
+  .enter-tether {
+    bottom: clamp(4.95rem, 10vh, 6.2rem);
+    height: clamp(4.7rem, 13vh, 6rem);
   }
 
   .enter-button {
-    width: 10.2rem;
-    height: 3rem;
+    width: 11rem;
+    height: 3.08rem;
+    bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
   .enter-button-orb {
@@ -642,6 +876,6 @@ button {
   }
 
   .enter-button:hover .enter-button-orb {
-    transform: translateX(7.05rem);
+    transform: translateX(7rem) rotate(-18deg);
   }
 }

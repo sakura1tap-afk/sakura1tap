@@ -3,7 +3,7 @@ import { useThree } from '@react-three/fiber'
 import { useEffect, useState } from 'react'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import type { Group } from 'three'
-import type { ViewMode } from './EntryControls'
+import type { ModelSize, ViewMode } from './EntryControls'
 
 const viewSettings: Record<ViewMode, { position: [number, number, number]; rotation: [number, number, number]; scale: number }> = {
   detail: {
@@ -23,12 +23,19 @@ const viewSettings: Record<ViewMode, { position: [number, number, number]; rotat
   },
 }
 
+const sizeScale: Record<ModelSize, number> = {
+  large: 1.12,
+  medium: 1,
+  small: 0.88,
+}
+
 type StudyModelProps = {
   modelBuffer: ArrayBuffer
+  modelSize: ModelSize
   viewMode: ViewMode
 }
 
-export default function StudyModel({ modelBuffer, viewMode }: StudyModelProps) {
+export default function StudyModel({ modelBuffer, modelSize, viewMode }: StudyModelProps) {
   const [scene, setScene] = useState<Group | null>(null)
   const [error, setError] = useState(false)
   const settings = viewSettings[viewMode]
@@ -37,7 +44,7 @@ export default function StudyModel({ modelBuffer, viewMode }: StudyModelProps) {
   const position: [number, number, number] = isCompact
     ? [settings.position[0], settings.position[1] - 0.28, settings.position[2]]
     : settings.position
-  const scale = settings.scale * (isCompact ? 0.62 : 1)
+  const scale = settings.scale * sizeScale[modelSize] * (isCompact ? 0.62 : 1)
 
   useEffect(() => {
     let alive = true
