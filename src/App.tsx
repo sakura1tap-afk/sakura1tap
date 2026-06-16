@@ -38,12 +38,14 @@ export default function App() {
           >
             {webglAvailable ? (
               <>
-                <EntryScene
-                  autoRotate={autoRotate}
-                  backgroundTone={backgroundTone}
-                  softLight={softLight}
-                  viewMode={viewMode}
-                />
+                {bootComplete && (
+                  <EntryScene
+                    autoRotate={autoRotate}
+                    backgroundTone={backgroundTone}
+                    softLight={softLight}
+                    viewMode={viewMode}
+                  />
+                )}
                 <EntryControls
                   autoRotate={autoRotate}
                   backgroundTone={backgroundTone}
@@ -56,7 +58,7 @@ export default function App() {
                   viewMode={viewMode}
                 />
                 <EnterOverlay isReady={bootComplete} onEnter={() => setEntered(true)} />
-                <BootOverlay onComplete={() => setBootComplete(true)} />
+                {!bootComplete && <BootOverlay modelUrl="/models/study.glb" onComplete={() => setBootComplete(true)} />}
               </>
             ) : (
               <div className="webgl-fallback">

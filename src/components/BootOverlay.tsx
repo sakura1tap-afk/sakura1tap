@@ -1,38 +1,121 @@
-import { useProgress } from '@react-three/drei'
 import { motion } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 type BootOverlayProps = {
+  modelUrl: string
   onComplete: () => void
 }
 
-export default function BootOverlay({ onComplete }: BootOverlayProps) {
-  const { active, progress } = useProgress()
-  const [minimumElapsed, setMinimumElapsed] = useState(false)
-  const [visible, setVisible] = useState(true)
-  const displayProgress = useMemo(() => {
-    if (!active && progress === 0) return 100
-    return Math.min(100, Math.round(progress))
-  }, [active, progress])
-  const complete = minimumElapsed && !active && displayProgress >= 100
+type BootState = 'loading' | 'complete' | 'error'
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => setMinimumElapsed(true), 1250)
-    return () => window.clearTimeout(timer)
+export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) {
+  const [attempt, setAttempt] = useState(0)
+  const [bootState, setBootState] = useState<BootState>('loading')
+  const [minimumElapsed, setMinimumElapsed] = useState(false)
+  const [message, setMessage] = useState('INITIALIZING')
+  const [progress, setProgress] = useState(0)
+  const displayProgress = useMemo(() => Math.min(100, Math.max(0, Math.round(progress))), [progress])
+  const complete = minimumElapsed && bootState === 'complete'
+
+  const retry = useCallback(() => {
+    setAttempt((value) => value + 1)
   }, [])
 
   useEffect(() => {
     if (!complete) return
 
-    const hideTimer = window.setTimeout(() => {
-      setVisible(false)
-      onComplete()
-    }, 360)
-
+    setProgress(100)
+    const hideTimer = window.setTimeout(onComplete, 360)
     return () => window.clearTimeout(hideTimer)
   }, [complete, onComplete])
 
-  if (!visible) return null
+  useEffect(() => {
+    const controller = new AbortController()
+    let alive = true
+    let simulatedProgress = 8
+
+    setBootState('loading')
+    setMinimumElapsed(false)
+    setMessage('CONNECTING')
+    setProgress(0)
+
+    const minimumTimer = window.setTimeout(() => {
+      if (alive) setMinimumElapsed(true)
+    }, 1250)
+
+    const timeoutTimer = window.setTimeout(() => {
+      controller.abort()
+    }, 25000)
+
+    const simulationTimer = window.setInterval(() => {
+      if (!alive) return
+      simulatedProgress = Math.min(92, simulatedProgress + Math.max(1, (92 - simulatedProgress) * 0.08))
+      setProgress((value) => Math.max(value, simulatedProgress))
+    }, 180)
+
+    async function preloadModel() {
+      try {
+        setMessage('LOADING MODEL')
+
+        const response = await fetch(modelUrl, {
+          cache: 'force-cache',
+          signal: controller.signal,
+        })
+
+        const contentType = response.headers.get('content-type') ?? ''
+        if (!response.ok || contentType.includes('text/html')) {
+          throw new Error(`Model request failed: ${response.status}`)
+        }
+
+        const contentLength = Number(response.headers.get('content-length') ?? 0)
+
+        if (!response.body) {
+          await response.arrayBuffer()
+          if (!alive) return
+          setMessage('CALIBRATING SCENE')
+          setProgress((current) => Math.max(current, 96))
+          setBootState('complete')
+          return
+        }
+
+        const reader = response.body.getReader()
+        let received = 0
+
+        while (alive) {
+          const { done, value } = await reader.read()
+
+          if (done) break
+          received += value?.length ?? 0
+
+          if (contentLength > 0) {
+            setProgress(Math.min(99, (received / contentLength) * 100))
+          } else {
+            setProgress((current) => Math.max(current, Math.min(96, current + 2.5)))
+          }
+        }
+
+        if (!alive) return
+        setMessage('CALIBRATING SCENE')
+        setProgress((current) => Math.max(current, 96))
+        setBootState('complete')
+      } catch (error) {
+        if (!alive) return
+        console.warn('Model preload failed.', error)
+        setMessage('MODEL LOAD FAILED')
+        setBootState('error')
+      }
+    }
+
+    preloadModel()
+
+    return () => {
+      alive = false
+      controller.abort()
+      window.clearTimeout(minimumTimer)
+      window.clearTimeout(timeoutTimer)
+      window.clearInterval(simulationTimer)
+    }
+  }, [attempt, modelUrl])
 
   return (
     <motion.div className="boot-overlay" initial={{ opacity: 1 }}>
@@ -48,9 +131,17 @@ export default function BootOverlay({ onComplete }: BootOverlayProps) {
           <motion.span animate={{ width: `${displayProgress}%` }} transition={{ ease: 'easeOut' }} />
         </div>
         <div className="boot-meta">
-          <span>LOADING MODEL</span>
+          <span>{message}</span>
           <span>{displayProgress.toString().padStart(3, '0')}%</span>
         </div>
+        {bootState === 'error' && (
+          <div className="boot-error">
+            <span>模型加载超时或被当前网络阻止</span>
+            <button onClick={retry} type="button">
+              RETRY
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   )

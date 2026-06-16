@@ -89,14 +89,14 @@ button {
 }
 
 .boot-overlay {
-  pointer-events: none;
+  pointer-events: auto;
   position: fixed;
   inset: 0;
   z-index: 12;
   background:
     linear-gradient(90deg, rgba(24, 23, 22, 0.12) 0 1px, transparent 1px) 50% 50% / 3rem 3rem,
     linear-gradient(180deg, rgba(24, 23, 22, 0.08) 0 1px, transparent 1px) 50% 50% / 3rem 3rem,
-    rgba(236, 233, 223, 0.86);
+    linear-gradient(180deg, #f3f1e9, #e5e1d6);
   overflow: hidden;
 }
 
@@ -153,6 +153,27 @@ button {
   justify-content: space-between;
   margin-top: 0.7rem;
   color: rgba(24, 23, 22, 0.56);
+}
+
+.boot-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  color: rgba(24, 23, 22, 0.72);
+  font-size: 0.78rem;
+  letter-spacing: 0;
+}
+
+.boot-error button {
+  border: 1px solid rgba(24, 23, 22, 0.24);
+  border-radius: 999px;
+  background: rgba(24, 23, 22, 0.88);
+  color: rgba(255, 255, 255, 0.94);
+  cursor: pointer;
+  letter-spacing: 0.12em;
+  padding: 0.55rem 0.9rem;
 }
 
 .side-panel {
