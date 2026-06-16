@@ -15,7 +15,9 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
   const [message, setMessage] = useState('INITIALIZING')
   const [loadedModelBuffer, setLoadedModelBuffer] = useState<ArrayBuffer | null>(null)
   const [progress, setProgress] = useState(0)
+  const bootSegments = useMemo(() => Array.from({ length: 18 }, (_, index) => index), [])
   const displayProgress = useMemo(() => Math.min(100, Math.max(0, Math.round(progress))), [progress])
+  const activeSegments = Math.round((displayProgress / 100) * bootSegments.length)
   const complete = minimumElapsed && bootState === 'complete'
 
   const retry = useCallback(() => {
@@ -35,6 +37,18 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
   }, [complete, loadedModelBuffer, onComplete])
 
   useEffect(() => {
+    if (bootState !== 'loading') return
+
+    if (displayProgress > 86) {
+      setMessage('DECODING SCENE')
+    } else if (displayProgress > 56) {
+      setMessage('MAPPING LIGHT')
+    } else if (displayProgress > 24) {
+      setMessage('STREAMING MESH')
+    }
+  }, [bootState, displayProgress])
+
+  useEffect(() => {
     const controller = new AbortController()
     let alive = true
     let simulatedProgress = 8
@@ -47,7 +61,7 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
 
     const minimumTimer = window.setTimeout(() => {
       if (alive) setMinimumElapsed(true)
-    }, 1250)
+    }, 1850)
 
     const timeoutTimer = window.setTimeout(() => {
       controller.abort()
@@ -135,22 +149,77 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
   }, [attempt, modelUrl])
 
   return (
-    <motion.div className="boot-overlay" initial={{ opacity: 1 }}>
+    <motion.div className={`boot-overlay boot-${bootState}`} initial={{ opacity: 1 }}>
+      <div className="boot-grid" aria-hidden="true" />
       <motion.div
-        className="boot-scan"
-        animate={{ x: ['-18%', '118%'] }}
-        transition={{ duration: 1.55, ease: 'easeInOut', repeat: Infinity }}
+        className="boot-sweep"
+        aria-hidden="true"
+        animate={{ x: ['-22vw', '122vw'] }}
+        transition={{ duration: 2.2, ease: 'easeInOut', repeat: Infinity }}
       />
 
-      <div className="boot-readout">
-        <span className="boot-kicker">SAKURA1TAP SYSTEM</span>
-        <div className="boot-track" aria-hidden="true">
+      <section className="boot-console" aria-live="polite" aria-label="Loading 3D entry scene">
+        <div className="boot-topline">
+          <span>SAKURA1TAP</span>
+          <span>ENTRY SEQUENCE</span>
+        </div>
+
+        <div className="boot-core" aria-hidden="true">
+          <motion.span
+            className="boot-ring boot-ring-outer"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 9, ease: 'linear', repeat: Infinity }}
+          />
+          <motion.span
+            className="boot-ring boot-ring-inner"
+            animate={{ rotate: -360 }}
+            transition={{ duration: 6.5, ease: 'linear', repeat: Infinity }}
+          />
+          <motion.span
+            className="boot-reticle"
+            animate={{ scale: [0.96, 1.04, 0.96], opacity: [0.48, 0.85, 0.48] }}
+            transition={{ duration: 1.8, ease: 'easeInOut', repeat: Infinity }}
+          />
+          <div className="boot-percent">
+            <span>{displayProgress.toString().padStart(3, '0')}</span>
+            <em>%</em>
+          </div>
+        </div>
+
+        <div className="boot-segments" aria-hidden="true">
+          {bootSegments.map((segment) => (
+            <span
+              className={segment < activeSegments ? 'is-active' : undefined}
+              key={segment}
+              style={{ transitionDelay: `${segment * 18}ms` }}
+            />
+          ))}
+        </div>
+
+        <div className="boot-track">
           <motion.span animate={{ width: `${displayProgress}%` }} transition={{ ease: 'easeOut' }} />
         </div>
+
         <div className="boot-meta">
           <span>{message}</span>
-          <span>{displayProgress.toString().padStart(3, '0')}%</span>
+          <span>{bootState === 'complete' ? 'READY' : 'SYNC'}</span>
         </div>
+
+        <div className="boot-data" aria-hidden="true">
+          <span>
+            <b>MODEL BUFFER</b>
+            <i>{displayProgress > 92 ? 'LOCKED' : 'STREAM'}</i>
+          </span>
+          <span>
+            <b>WEBGL</b>
+            <i>ONLINE</i>
+          </span>
+          <span>
+            <b>SCENE PARSE</b>
+            <i>{bootState === 'complete' ? 'ARMED' : 'WAIT'}</i>
+          </span>
+        </div>
+
         {bootState === 'error' && (
           <div className="boot-error">
             <span>模型加载超时或被当前网络阻止</span>
@@ -159,7 +228,7 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
             </button>
           </div>
         )}
-      </div>
+      </section>
     </motion.div>
   )
 }

@@ -94,51 +94,171 @@ button {
   inset: 0;
   z-index: 12;
   background:
-    linear-gradient(90deg, rgba(24, 23, 22, 0.12) 0 1px, transparent 1px) 50% 50% / 3rem 3rem,
-    linear-gradient(180deg, rgba(24, 23, 22, 0.08) 0 1px, transparent 1px) 50% 50% / 3rem 3rem,
-    linear-gradient(180deg, #f3f1e9, #e5e1d6);
+    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.96), transparent 34rem),
+    linear-gradient(90deg, rgba(24, 23, 22, 0.09) 0 1px, transparent 1px) 50% 50% / 3.15rem 3.15rem,
+    linear-gradient(180deg, rgba(24, 23, 22, 0.07) 0 1px, transparent 1px) 50% 50% / 3.15rem 3.15rem,
+    linear-gradient(180deg, #f6f4ec, #e7e3d8);
   overflow: hidden;
 }
 
-.boot-scan {
+.boot-overlay::before,
+.boot-overlay::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.boot-overlay::before {
+  background:
+    linear-gradient(90deg, transparent 0 49.85%, rgba(24, 23, 22, 0.12) 49.85% 50.15%, transparent 50.15%),
+    linear-gradient(180deg, transparent 0 49.85%, rgba(24, 23, 22, 0.1) 49.85% 50.15%, transparent 50.15%);
+  mask-image: radial-gradient(circle at center, #000 0 18rem, transparent 27rem);
+  -webkit-mask-image: radial-gradient(circle at center, #000 0 18rem, transparent 27rem);
+}
+
+.boot-overlay::after {
+  background:
+    repeating-linear-gradient(0deg, rgba(24, 23, 22, 0.045) 0 1px, transparent 1px 5px),
+    radial-gradient(circle at 50% 50%, transparent 0 28rem, rgba(236, 233, 223, 0.68) 42rem);
+  mix-blend-mode: multiply;
+  opacity: 0.42;
+}
+
+.boot-grid {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, transparent 0 48%, rgba(24, 23, 22, 0.055) 48% 49%, transparent 49%),
+    linear-gradient(225deg, transparent 0 48%, rgba(24, 23, 22, 0.04) 48% 49%, transparent 49%);
+  background-size: 8rem 8rem;
+  opacity: 0.6;
+}
+
+.boot-sweep {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: min(18vw, 14rem);
+  width: min(22vw, 17rem);
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(24, 23, 22, 0.04),
-    rgba(24, 23, 22, 0.2),
-    rgba(24, 23, 22, 0.04),
+    rgba(24, 23, 22, 0.025),
+    rgba(24, 23, 22, 0.14),
+    rgba(24, 23, 22, 0.025),
     transparent
   );
   mix-blend-mode: multiply;
 }
 
-.boot-readout {
+.boot-console {
   position: fixed;
   left: 50%;
-  bottom: max(2rem, env(safe-area-inset-bottom));
-  width: min(34rem, calc(100vw - 3rem));
-  transform: translateX(-50%);
+  top: 50%;
+  z-index: 1;
+  display: grid;
+  width: min(34rem, calc(100vw - 2rem));
+  transform: translate(-50%, -50%);
   color: rgba(24, 23, 22, 0.82);
+  gap: 1.05rem;
 }
 
-.boot-kicker,
-.boot-meta {
+.boot-topline,
+.boot-meta,
+.boot-data {
   font-size: 0.68rem;
   letter-spacing: 0.18em;
 }
 
-.boot-kicker {
-  display: block;
-  margin-bottom: 0.75rem;
+.boot-topline,
+.boot-meta {
+  display: flex;
+  justify-content: space-between;
+  color: rgba(24, 23, 22, 0.58);
+}
+
+.boot-core {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: clamp(14rem, 34vw, 22rem);
+}
+
+.boot-ring,
+.boot-reticle {
+  position: absolute;
+  border-radius: 999px;
+}
+
+.boot-ring-outer {
+  width: min(62vw, 19rem);
+  height: min(62vw, 19rem);
+  border: 1px solid rgba(24, 23, 22, 0.2);
+  border-top-color: rgba(24, 23, 22, 0.78);
+  border-right-color: rgba(24, 23, 22, 0.06);
+}
+
+.boot-ring-inner {
+  width: min(43vw, 13rem);
+  height: min(43vw, 13rem);
+  border: 1px dashed rgba(24, 23, 22, 0.32);
+}
+
+.boot-reticle {
+  width: min(52vw, 16rem);
+  height: min(52vw, 16rem);
+  background:
+    linear-gradient(90deg, transparent 0 calc(50% - 1px), rgba(24, 23, 22, 0.16) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)),
+    linear-gradient(180deg, transparent 0 calc(50% - 1px), rgba(24, 23, 22, 0.14) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px));
+  box-shadow: inset 0 0 0 1px rgba(24, 23, 22, 0.08);
+}
+
+.boot-percent {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  color: rgba(24, 23, 22, 0.88);
+  font-variant-numeric: tabular-nums;
+  line-height: 0.9;
+}
+
+.boot-percent span {
+  font-size: clamp(4.6rem, 17vw, 9.4rem);
+  font-weight: 500;
+}
+
+.boot-percent em {
+  margin-left: 0.35rem;
+  font-size: clamp(1.2rem, 3vw, 1.75rem);
+  font-style: normal;
+  transform: translateY(0.6rem);
+}
+
+.boot-segments {
+  display: grid;
+  grid-template-columns: repeat(18, 1fr);
+  gap: 0.24rem;
+}
+
+.boot-segments span {
+  height: 0.52rem;
+  border: 1px solid rgba(24, 23, 22, 0.14);
+  background: rgba(255, 255, 255, 0.26);
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.boot-segments span.is-active {
+  border-color: rgba(24, 23, 22, 0.48);
+  background: rgba(24, 23, 22, 0.82);
+  transform: translateY(-1px);
 }
 
 .boot-track {
-  height: 2px;
-  background: rgba(24, 23, 22, 0.13);
+  height: 1px;
+  background: rgba(24, 23, 22, 0.14);
   overflow: hidden;
 }
 
@@ -148,11 +268,30 @@ button {
   background: rgba(24, 23, 22, 0.86);
 }
 
-.boot-meta {
+.boot-data {
   display: flex;
+  gap: 0.55rem;
   justify-content: space-between;
-  margin-top: 0.7rem;
-  color: rgba(24, 23, 22, 0.56);
+  color: rgba(24, 23, 22, 0.52);
+}
+
+.boot-data span {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.boot-data b,
+.boot-data i {
+  overflow: hidden;
+  font-style: normal;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.boot-data i {
+  color: rgba(24, 23, 22, 0.84);
 }
 
 .boot-error {
@@ -160,7 +299,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 0.15rem;
   color: rgba(24, 23, 22, 0.72);
   font-size: 0.78rem;
   letter-spacing: 0;
