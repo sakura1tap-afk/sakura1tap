@@ -6,8 +6,8 @@ export default function StudyModel() {
   const gltf = useGLTF(MODEL_PATH)
 
   return (
-    <Center position={[0, -0.2, 0]}>
-      <primitive object={gltf.scene} scale={0.0031} />
+    <Center position={[0, 0.55, 0]}>
+      <primitive object={gltf.scene} scale={0.00205} />
     </Center>
   )
 }
