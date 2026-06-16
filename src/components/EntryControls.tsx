@@ -6,6 +6,7 @@ export type BackgroundTone = 'paper' | 'warm' | 'mist'
 type EntryControlsProps = {
   autoRotate: boolean
   backgroundTone: BackgroundTone
+  isReady: boolean
   onBackgroundToneChange: (tone: BackgroundTone) => void
   onSoftLightChange: (enabled: boolean) => void
   onToggleRotate: () => void
@@ -29,6 +30,7 @@ const toneControls = [
 export default function EntryControls({
   autoRotate,
   backgroundTone,
+  isReady,
   onBackgroundToneChange,
   onSoftLightChange,
   onToggleRotate,
@@ -38,7 +40,7 @@ export default function EntryControls({
 }: EntryControlsProps) {
   return (
     <>
-      <aside className="side-panel side-panel-left" aria-label="模型控制">
+      <aside className={`side-panel side-panel-left ${isReady ? 'is-ready' : ''}`} aria-label="模型控制">
         <div className="control-stack">
           <button
             aria-label={autoRotate ? '暂停自动旋转' : '开启自动旋转'}
@@ -67,7 +69,7 @@ export default function EntryControls({
         </div>
       </aside>
 
-      <aside className="side-panel side-panel-right" aria-label="画面控制">
+      <aside className={`side-panel side-panel-right ${isReady ? 'is-ready' : ''}`} aria-label="画面控制">
         <div className="tone-switcher">
           {toneControls.map(({ label, value }) => (
             <button

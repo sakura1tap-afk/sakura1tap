@@ -88,12 +88,96 @@ button {
   user-select: none;
 }
 
+.boot-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 12;
+  background:
+    linear-gradient(90deg, rgba(24, 23, 22, 0.12) 0 1px, transparent 1px) 50% 50% / 3rem 3rem,
+    linear-gradient(180deg, rgba(24, 23, 22, 0.08) 0 1px, transparent 1px) 50% 50% / 3rem 3rem,
+    rgba(236, 233, 223, 0.86);
+  overflow: hidden;
+}
+
+.boot-scan {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: min(18vw, 14rem);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(24, 23, 22, 0.04),
+    rgba(24, 23, 22, 0.2),
+    rgba(24, 23, 22, 0.04),
+    transparent
+  );
+  mix-blend-mode: multiply;
+}
+
+.boot-readout {
+  position: fixed;
+  left: 50%;
+  bottom: max(2rem, env(safe-area-inset-bottom));
+  width: min(34rem, calc(100vw - 3rem));
+  transform: translateX(-50%);
+  color: rgba(24, 23, 22, 0.82);
+}
+
+.boot-kicker,
+.boot-meta {
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+}
+
+.boot-kicker {
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.boot-track {
+  height: 2px;
+  background: rgba(24, 23, 22, 0.13);
+  overflow: hidden;
+}
+
+.boot-track span {
+  display: block;
+  height: 100%;
+  background: rgba(24, 23, 22, 0.86);
+}
+
+.boot-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.7rem;
+  color: rgba(24, 23, 22, 0.56);
+}
+
 .side-panel {
   position: fixed;
   top: 50%;
   z-index: 6;
   display: flex;
+  opacity: 0;
   transform: translateY(-50%);
+  transition:
+    opacity 420ms ease,
+    transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.side-panel-left {
+  transform: translate(-0.5rem, -50%);
+}
+
+.side-panel-right {
+  transform: translate(0.5rem, -50%);
+}
+
+.side-panel.is-ready {
+  opacity: 1;
+  transform: translate(0, -50%);
 }
 
 .side-panel-left {
@@ -206,7 +290,17 @@ button {
   z-index: 5;
   display: flex;
   justify-content: center;
+  opacity: 0;
   padding: 0 1.5rem max(1.15rem, env(safe-area-inset-bottom));
+  transform: translateY(0.75rem);
+  transition:
+    opacity 420ms ease,
+    transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.enter-overlay.is-ready {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .enter-button {
@@ -229,6 +323,10 @@ button {
   -webkit-backdrop-filter: blur(18px);
   box-shadow: 0 1.2rem 3.5rem rgba(32, 30, 27, 0.18);
   overflow: hidden;
+}
+
+.enter-button:disabled {
+  cursor: default;
 }
 
 .enter-button:focus-visible {
@@ -300,6 +398,28 @@ button {
   letter-spacing: 0.08em;
 }
 
+.webgl-fallback {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+  align-content: center;
+  color: rgba(24, 23, 22, 0.76);
+  background: #ece9df;
+  text-align: center;
+}
+
+.webgl-fallback span {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+}
+
+.webgl-fallback strong {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
 @media (max-width: 640px) {
   .app-shell,
   .entry-page,
@@ -312,6 +432,12 @@ button {
 
   .side-panel {
     top: 1rem;
+    transform: none;
+  }
+
+  .side-panel-left,
+  .side-panel-right,
+  .side-panel.is-ready {
     transform: none;
   }
 

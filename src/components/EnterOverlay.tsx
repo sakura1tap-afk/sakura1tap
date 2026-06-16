@@ -2,14 +2,16 @@ import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 
 type EnterOverlayProps = {
+  isReady: boolean
   onEnter: () => void
 }
 
-export default function EnterOverlay({ onEnter }: EnterOverlayProps) {
+export default function EnterOverlay({ isReady, onEnter }: EnterOverlayProps) {
   return (
-    <div className="enter-overlay">
+    <div className={`enter-overlay ${isReady ? 'is-ready' : ''}`}>
       <motion.button
         className="enter-button"
+        disabled={!isReady}
         type="button"
         onClick={onEnter}
         whileHover={{ y: -3 }}
