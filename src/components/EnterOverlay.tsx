@@ -14,6 +14,12 @@ export default function EnterOverlay({ isReady, onEnter }: EnterOverlayProps) {
         <span className="enter-tether-pulse" />
         <span className="enter-target" />
       </div>
+      <div className="enter-field" aria-hidden="true">
+        <span className="enter-field-ring enter-field-ring-outer" />
+        <span className="enter-field-ring enter-field-ring-inner" />
+        <span className="enter-field-bracket enter-field-bracket-left" />
+        <span className="enter-field-bracket enter-field-bracket-right" />
+      </div>
       <motion.button
         className="enter-button"
         disabled={!isReady}
@@ -21,6 +27,7 @@ export default function EnterOverlay({ isReady, onEnter }: EnterOverlayProps) {
         onClick={onEnter}
       >
         <span className="enter-button-scan" aria-hidden="true" />
+        <span className="enter-button-noise" aria-hidden="true" />
         <span className="enter-button-orb" aria-hidden="true">
           <ArrowRight size={17} strokeWidth={1.9} />
         </span>
