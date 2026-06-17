@@ -62,10 +62,6 @@ const stageModels: StageModelConfig[] = [
   },
   {
     url: '/live2d/Fern/fern.model3.json',
-    parameterOverrides: {
-      Param33: 0,
-      Param34: 0,
-    },
     layout: {
       heightRatio: 1.08,
       maxHeight: 940,
@@ -231,7 +227,6 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
         loadedModels.forEach(({ model, parameterOverrides }) => {
           app.stage.addChild(model)
           applyParameterOverrides(model, parameterOverrides)
-          void model.motion('').catch(() => undefined)
         })
         app.ticker.add(() => {
           modelsRef.current.forEach(({ model, parameterOverrides }) => {
