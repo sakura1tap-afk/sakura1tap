@@ -21,6 +21,7 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
   const displayProgress = useMemo(() => Math.min(100, Math.max(0, Math.round(progress))), [progress])
   const activeSegments = Math.round((displayProgress / 100) * bootSegments.length)
   const readyToFinish = minimumElapsed && bootState === 'complete'
+  const isRevealing = readyToFinish && displayProgress >= 100
 
   const retry = useCallback(() => {
     setAttempt((value) => value + 1)
@@ -39,7 +40,7 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
       if (loadedModelBuffer) {
         onComplete(loadedModelBuffer)
       }
-    }, 360)
+    }, 980)
     return () => window.clearTimeout(hideTimer)
   }, [displayProgress, loadedModelBuffer, onComplete, readyToFinish])
 
@@ -181,41 +182,26 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
   }, [attempt, modelUrl])
 
   return (
-    <motion.div className={`boot-overlay boot-${bootState}`} initial={{ opacity: 1 }}>
+    <motion.div className={`boot-overlay boot-${bootState} ${isRevealing ? 'boot-revealing' : ''}`} initial={{ opacity: 1 }}>
       <div className="boot-grid" aria-hidden="true" />
+      <div className="boot-vignette" aria-hidden="true" />
+      <div className="boot-reveal" aria-hidden="true" />
       <motion.div
         className="boot-sweep"
         aria-hidden="true"
-        animate={{ x: ['-22vw', '122vw'] }}
-        transition={{ duration: 2.2, ease: 'easeInOut', repeat: Infinity }}
+        animate={{ y: ['-18vh', '118vh'] }}
+        transition={{ duration: 2.8, ease: 'easeInOut', repeat: Infinity }}
       />
 
       <section className="boot-console" aria-live="polite" aria-label="Loading 3D entry scene">
         <div className="boot-topline">
           <span>SAKURA1TAP</span>
-          <span>ENTRY SEQUENCE</span>
+          <span>{readyToFinish && displayProgress >= 100 ? 'OPEN' : 'LOADING'}</span>
         </div>
 
-        <div className="boot-core" aria-hidden="true">
-          <motion.span
-            className="boot-ring boot-ring-outer"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 9, ease: 'linear', repeat: Infinity }}
-          />
-          <motion.span
-            className="boot-ring boot-ring-inner"
-            animate={{ rotate: -360 }}
-            transition={{ duration: 6.5, ease: 'linear', repeat: Infinity }}
-          />
-          <motion.span
-            className="boot-reticle"
-            animate={{ scale: [0.96, 1.04, 0.96], opacity: [0.48, 0.85, 0.48] }}
-            transition={{ duration: 1.8, ease: 'easeInOut', repeat: Infinity }}
-          />
-          <div className="boot-percent">
-            <span>{displayProgress.toString().padStart(3, '0')}</span>
-            <em>%</em>
-          </div>
+        <div className="boot-percent">
+          <span>{displayProgress.toString().padStart(3, '0')}</span>
+          <em>%</em>
         </div>
 
         <div className="boot-segments" aria-hidden="true">
@@ -235,21 +221,6 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
         <div className="boot-meta">
           <span>{message}</span>
           <span>{readyToFinish && displayProgress >= 100 ? 'READY' : 'SYNC'}</span>
-        </div>
-
-        <div className="boot-data" aria-hidden="true">
-          <span>
-            <b>MODEL BUFFER</b>
-            <i>{displayProgress > 92 ? 'LOCKED' : 'STREAM'}</i>
-          </span>
-          <span>
-            <b>WEBGL</b>
-            <i>ONLINE</i>
-          </span>
-          <span>
-            <b>SCENE PARSE</b>
-            <i>{readyToFinish && displayProgress >= 100 ? 'ARMED' : 'WAIT'}</i>
-          </span>
         </div>
 
         {bootState === 'error' && (
