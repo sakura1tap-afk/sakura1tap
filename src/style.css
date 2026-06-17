@@ -902,10 +902,10 @@ button {
 
 .live2d-entry-ink {
   left: 50%;
-  top: 17%;
+  top: 48%;
   z-index: 1;
-  width: min(34rem, 70vw);
-  height: min(11rem, 20vh);
+  width: min(22rem, 42vw);
+  height: min(10rem, 18vh);
   border-radius: 999px;
   background:
     radial-gradient(circle at 42% 50%, rgba(255, 255, 255, 0.09), transparent 38%),
@@ -915,34 +915,25 @@ button {
   transform: translate(-50%, -50%);
 }
 
-.entry-poem {
-  z-index: 3;
-  color: rgba(255, 255, 255, 0.32);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(0.78rem, 1.1vw, 0.96rem);
-  letter-spacing: 0.32em;
-  writing-mode: vertical-rl;
-  pointer-events: none;
-}
-
-.entry-poem-left {
-  left: clamp(2rem, 7vw, 7rem);
-  top: 23%;
-}
-
-.entry-poem-right {
-  right: clamp(2rem, 7vw, 7rem);
-  top: 41%;
-}
-
 .live2d-character {
-  inset: clamp(3rem, 8vh, 5rem) 0 0;
+  top: clamp(3rem, 7vh, 4.5rem);
+  bottom: 0;
   z-index: 2;
   opacity: 1;
   transition:
     opacity 460ms ease,
     transform 680ms cubic-bezier(0.2, 0.8, 0.2, 1),
     filter 460ms ease;
+}
+
+.live2d-character-left {
+  left: 0;
+  right: 50%;
+}
+
+.live2d-character-right {
+  left: 50%;
+  right: 0;
 }
 
 .live2d-character.is-entering {
@@ -1007,7 +998,7 @@ button {
 
 .live2d-enter-button {
   left: calc(50% - 6.7rem);
-  top: clamp(3.2rem, 13vh, 7.4rem);
+  top: calc(50% - 1.675rem);
   z-index: 5;
   display: inline-flex;
   align-items: center;
@@ -1253,16 +1244,23 @@ button {
   }
 
   .live2d-character {
-    inset: 4.2rem 0 calc(3.5rem + env(safe-area-inset-bottom));
+    top: 4.2rem;
+    bottom: calc(3.5rem + env(safe-area-inset-bottom));
   }
 
-  .entry-poem {
-    display: none;
+  .live2d-character-left {
+    left: -12%;
+    right: 48%;
+  }
+
+  .live2d-character-right {
+    left: 48%;
+    right: -12%;
   }
 
   .live2d-enter-button {
     left: calc(50% - 5.9rem);
-    top: max(2.4rem, env(safe-area-inset-top));
+    top: calc(50% - 1.54rem);
     width: 11.8rem;
     height: 3.08rem;
   }

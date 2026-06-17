@@ -18,7 +18,14 @@ const inkParticles = Array.from({ length: 18 }, (_, index) => ({
 export default function Live2DEntry({ isReady, onEnter }: Live2DEntryProps) {
   const [isEntering, setIsEntering] = useState(false)
   const [buttonHover, setButtonHover] = useState(false)
-  const [modelLoadState, setModelLoadState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [frierenLoadState, setFrierenLoadState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [fernLoadState, setFernLoadState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const modelLoadState =
+    frierenLoadState === 'error' || fernLoadState === 'error'
+      ? 'error'
+      : frierenLoadState === 'ready' && fernLoadState === 'ready'
+        ? 'ready'
+        : 'loading'
 
   const handleEnter = () => {
     if (!isReady || isEntering) return
@@ -39,17 +46,43 @@ export default function Live2DEntry({ isReady, onEnter }: Live2DEntryProps) {
       <div className="live2d-entry-vignette" aria-hidden="true" />
       <div className="live2d-entry-ink" aria-hidden="true" />
 
-      <div className="entry-poem entry-poem-left" aria-hidden="true">
-        静观其形
-      </div>
-      <div className="entry-poem entry-poem-right" aria-hidden="true">
-        一触即入
-      </div>
-
       <Live2DCharacter
-        focusPoint={buttonHover ? { x: 0.5, y: 0.22 } : null}
+        className="live2d-character-left"
+        focusPoint={buttonHover ? { x: 0.88, y: 0.42 } : null}
         isEntering={isEntering}
-        onLoadStateChange={setModelLoadState}
+        layout={{
+          heightRatio: 0.82,
+          maxHeight: 690,
+          maxScale: 0.38,
+          mobileHeightRatio: 0.66,
+          mobileMaxHeight: 530,
+          mobileMaxScale: 0.23,
+          mobileX: 0.5,
+          mobileY: 0.64,
+          x: 0.64,
+          y: 0.66,
+        }}
+        modelUrl="/live2d/Frieren/Frieren.model3.json"
+        onLoadStateChange={setFrierenLoadState}
+      />
+      <Live2DCharacter
+        className="live2d-character-right"
+        focusPoint={buttonHover ? { x: 0.12, y: 0.42 } : null}
+        isEntering={isEntering}
+        layout={{
+          heightRatio: 0.82,
+          maxHeight: 690,
+          maxScale: 0.38,
+          mobileHeightRatio: 0.66,
+          mobileMaxHeight: 530,
+          mobileMaxScale: 0.23,
+          mobileX: 0.5,
+          mobileY: 0.64,
+          x: 0.36,
+          y: 0.66,
+        }}
+        modelUrl="/live2d/Fern/fern.model3.json"
+        onLoadStateChange={setFernLoadState}
       />
 
       <div className="live2d-entry-status" aria-hidden="true">

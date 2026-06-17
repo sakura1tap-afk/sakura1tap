@@ -8,28 +8,47 @@ type FocusPoint = {
 }
 
 type Live2DCharacterProps = {
+  className?: string
   focusPoint: FocusPoint | null
   isEntering: boolean
+  layout?: Partial<Live2DLayout>
   modelUrl?: string
   onLoadStateChange?: (state: 'loading' | 'ready' | 'error') => void
 }
 
-const live2dLayout = {
-  desktopHeightRatio: 0.72,
-  desktopMaxHeight: 620,
-  desktopX: 0.5,
-  desktopY: 0.64,
+type Live2DLayout = {
+  heightRatio: number
+  maxHeight: number
+  maxScale: number
+  mobileHeightRatio: number
+  mobileMaxHeight: number
+  mobileMaxScale: number
+  mobileX: number
+  mobileY: number
+  x: number
+  y: number
+}
+
+const defaultLive2dLayout: Live2DLayout = {
+  heightRatio: 0.72,
+  maxHeight: 620,
+  maxScale: 0.32,
   mobileHeightRatio: 0.68,
   mobileMaxHeight: 560,
+  mobileMaxScale: 0.24,
   mobileX: 0.5,
   mobileY: 0.64,
+  x: 0.5,
+  y: 0.64,
 }
 
 type Live2DModelInstance = InstanceType<typeof Live2DModel>
 
 export default function Live2DCharacter({
+  className = '',
   focusPoint,
   isEntering,
+  layout,
   modelUrl = '/live2d/Frieren/Frieren.model3.json',
   onLoadStateChange,
 }: Live2DCharacterProps) {
@@ -48,6 +67,7 @@ export default function Live2DCharacter({
 
     let disposed = false
     let resizeObserver: ResizeObserver | null = null
+    const resolvedLayout = { ...defaultLive2dLayout, ...layout }
 
     const applyModelLayout = () => {
       const app = appRef.current
@@ -59,16 +79,16 @@ export default function Live2DCharacter({
       const height = Math.max(1, rect.height)
       const isCompact = width < 720
       const targetHeight = Math.min(
-        height * (isCompact ? live2dLayout.mobileHeightRatio : live2dLayout.desktopHeightRatio),
-        isCompact ? live2dLayout.mobileMaxHeight : live2dLayout.desktopMaxHeight,
+        height * (isCompact ? resolvedLayout.mobileHeightRatio : resolvedLayout.heightRatio),
+        isCompact ? resolvedLayout.mobileMaxHeight : resolvedLayout.maxHeight,
       )
       const modelBoundsHeight = Math.max(1, model.getBounds().height / Math.max(model.scale.y, 0.0001))
-      const scale = Math.min(targetHeight / modelBoundsHeight, isCompact ? 0.24 : 0.32)
+      const scale = Math.min(targetHeight / modelBoundsHeight, isCompact ? resolvedLayout.mobileMaxScale : resolvedLayout.maxScale)
 
       app.renderer.resize(width, height)
       model.scale.set(scale)
-      model.x = width * (isCompact ? live2dLayout.mobileX : live2dLayout.desktopX)
-      model.y = height * (isCompact ? live2dLayout.mobileY : live2dLayout.desktopY)
+      model.x = width * (isCompact ? resolvedLayout.mobileX : resolvedLayout.x)
+      model.y = height * (isCompact ? resolvedLayout.mobileY : resolvedLayout.y)
       container.dataset.live2dScale = scale.toFixed(4)
       container.dataset.live2dBoundsHeight = modelBoundsHeight.toFixed(1)
       container.dataset.live2dTargetHeight = targetHeight.toFixed(1)
@@ -164,7 +184,7 @@ export default function Live2DCharacter({
 
   return (
     <div
-      className={`live2d-character is-${loadState} ${isEntering ? 'is-entering' : ''}`}
+      className={`live2d-character ${className} is-${loadState} ${isEntering ? 'is-entering' : ''}`}
       onPointerDown={triggerCharacterFeedback}
       ref={containerRef}
     >
