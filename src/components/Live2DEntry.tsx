@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowDownRight } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { useEffect, useState } from 'react'
-import Live2DStage from './Live2DStage'
+import Live2DCharacter from './Live2DCharacter'
 
 type Live2DEntryProps = {
   isReady: boolean
@@ -16,13 +16,51 @@ const inkParticles = Array.from({ length: 18 }, (_, index) => ({
   y: `${42 + Math.cos(index * 1.25) * 18}%`,
 }))
 
+const frierenLayout = {
+  heightRatio: 1.08,
+  maxHeight: 930,
+  maxScale: 0.62,
+  mobileHeightRatio: 0.74,
+  mobileMaxHeight: 530,
+  mobileMaxScale: 0.3,
+  mobileX: 0.56,
+  mobileY: 0.76,
+  x: 0.64,
+  y: 0.88,
+}
+
+const fernLayout = {
+  heightRatio: 1.08,
+  maxHeight: 940,
+  maxScale: 0.6,
+  mobileHeightRatio: 0.74,
+  mobileMaxHeight: 530,
+  mobileMaxScale: 0.3,
+  mobileX: 0.44,
+  mobileY: 0.76,
+  x: 0.38,
+  y: 0.88,
+}
+
+const fernParameterOverrides = {
+  Param33: 0,
+  Param34: 0,
+}
+
 export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DEntryProps) {
   const [isEntering, setIsEntering] = useState(false)
   const [buttonHover, setButtonHover] = useState(false)
-  const [modelLoadState, setModelLoadState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [frierenLoadState, setFrierenLoadState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [fernLoadState, setFernLoadState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const modelLoadState =
+    frierenLoadState === 'loading' || fernLoadState === 'loading'
+      ? 'loading'
+      : frierenLoadState === 'error' && fernLoadState === 'error'
+        ? 'error'
+        : 'ready'
 
   useEffect(() => {
-    onReadyChange?.(modelLoadState === 'ready' || modelLoadState === 'error')
+    onReadyChange?.(modelLoadState !== 'loading')
   }, [modelLoadState, onReadyChange])
 
   const handleEnter = () => {
@@ -44,10 +82,22 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
       <div className="live2d-entry-vignette" aria-hidden="true" />
       <div className="live2d-entry-ink" aria-hidden="true" />
 
-      <Live2DStage
-        focusPoint={buttonHover ? { x: 0.5, y: 0.42 } : null}
+      <Live2DCharacter
+        className="live2d-character-left"
+        focusPoint={buttonHover ? { x: 0.64, y: 0.44 } : null}
         isEntering={isEntering}
-        onLoadStateChange={setModelLoadState}
+        layout={frierenLayout}
+        modelUrl="/live2d/Frieren/Frieren.model3.json"
+        onLoadStateChange={setFrierenLoadState}
+      />
+      <Live2DCharacter
+        className="live2d-character-right"
+        focusPoint={buttonHover ? { x: 0.38, y: 0.44 } : null}
+        isEntering={isEntering}
+        layout={fernLayout}
+        modelUrl="/live2d/Fern/fern.model3.json"
+        onLoadStateChange={setFernLoadState}
+        parameterOverrides={fernParameterOverrides}
       />
 
       <div className="live2d-entry-status" aria-hidden="true">

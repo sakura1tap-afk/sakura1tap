@@ -33,23 +33,31 @@ type Live2DModelInstance = InstanceType<typeof Live2DModel>
 type StageModelConfig = {
   layout: Live2DLayout
   parameterOverrides?: Record<string, number>
+  required?: boolean
   url: string
+}
+
+type LoadedStageModel = {
+  layout: Live2DLayout
+  model: Live2DModelInstance
+  parameterOverrides?: Record<string, number>
 }
 
 const stageModels: StageModelConfig[] = [
   {
     url: '/live2d/Frieren/Frieren.model3.json',
+    required: true,
     layout: {
-      heightRatio: 0.92,
-      maxHeight: 800,
-      maxScale: 0.5,
-      mobileHeightRatio: 0.66,
+      heightRatio: 1.06,
+      maxHeight: 930,
+      maxScale: 0.62,
+      mobileHeightRatio: 0.74,
       mobileMaxHeight: 530,
-      mobileMaxScale: 0.24,
+      mobileMaxScale: 0.3,
       mobileX: 0.38,
-      mobileY: 0.68,
-      x: 0.36,
-      y: 0.8,
+      mobileY: 0.76,
+      x: 0.37,
+      y: 0.88,
     },
   },
   {
@@ -59,24 +67,26 @@ const stageModels: StageModelConfig[] = [
       Param34: 0,
     },
     layout: {
-      heightRatio: 0.92,
-      maxHeight: 800,
-      maxScale: 0.5,
-      mobileHeightRatio: 0.66,
+      heightRatio: 1.08,
+      maxHeight: 940,
+      maxScale: 0.6,
+      mobileHeightRatio: 0.74,
       mobileMaxHeight: 530,
-      mobileMaxScale: 0.24,
+      mobileMaxScale: 0.3,
       mobileX: 0.62,
-      mobileY: 0.68,
-      x: 0.67,
-      y: 0.8,
+      mobileY: 0.76,
+      x: 0.64,
+      y: 0.88,
     },
   },
 ]
 
+const MODEL_LOAD_TIMEOUT = 18000
+
 export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange }: Live2DStageProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const appRef = useRef<PIXI.Application | null>(null)
-  const modelsRef = useRef<Array<{ layout: Live2DLayout; model: Live2DModelInstance; parameterOverrides?: Record<string, number> }>>([])
+  const modelsRef = useRef<LoadedStageModel[]>([])
   const [loadState, setLoadState] = useState<StageState>('loading')
 
   useEffect(() => {
@@ -136,6 +146,52 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
       })
     }
 
+    const bindParameterOverrides = (model: Live2DModelInstance, overrides?: Record<string, number>) => {
+      if (!overrides) return
+
+      const internalModel = model.internalModel as {
+        on?: (eventName: string, callback: () => void) => void
+      }
+
+      internalModel.on?.('beforeModelUpdate', () => applyParameterOverrides(model, overrides))
+    }
+
+    const waitForStableFrame = async (app: PIXI.Application) => {
+      app.renderer.render(app.stage)
+      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
+      app.renderer.render(app.stage)
+      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
+    }
+
+    const loadModelWithTimeout = async ({
+      layout,
+      parameterOverrides,
+      required,
+      url,
+    }: StageModelConfig): Promise<LoadedStageModel | null> => {
+      let timeoutId = 0
+      try {
+        const model = await Promise.race([
+          Live2DModel.from(url),
+          new Promise<never>((_, reject) => {
+            timeoutId = window.setTimeout(() => reject(new Error(`Live2D load timed out: ${url}`)), MODEL_LOAD_TIMEOUT)
+          }),
+        ])
+        window.clearTimeout(timeoutId)
+        model.anchor.set(0.5, 0.52)
+        model.alpha = 1
+        model.interactive = true
+        applyParameterOverrides(model, parameterOverrides)
+        bindParameterOverrides(model, parameterOverrides)
+        return { layout, model, parameterOverrides }
+      } catch (error) {
+        window.clearTimeout(timeoutId)
+        console.warn('Live2D model failed to load.', url, error)
+        if (required) throw error
+        return null
+      }
+    }
+
     const init = async () => {
       try {
         setLoadState('loading')
@@ -158,15 +214,8 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
         app.view.className = 'live2d-canvas live2d-stage-canvas'
         container.appendChild(app.view)
 
-        const loadedModels = await Promise.all(
-          stageModels.map(async ({ layout, parameterOverrides, url }) => {
-            const model = await Live2DModel.from(url)
-            model.anchor.set(0.5, 0.52)
-            model.alpha = 1
-            model.interactive = true
-            applyParameterOverrides(model, parameterOverrides)
-            return { layout, model, parameterOverrides }
-          }),
+        const loadedModels = (await Promise.all(stageModels.map(loadModelWithTimeout))).filter(
+          (item): item is LoadedStageModel => item !== null,
         )
 
         if (disposed) {
@@ -174,10 +223,15 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
           return
         }
 
+        if (loadedModels.length === 0) {
+          throw new Error('No Live2D models loaded.')
+        }
+
         modelsRef.current = loadedModels
         loadedModels.forEach(({ model, parameterOverrides }) => {
           app.stage.addChild(model)
           applyParameterOverrides(model, parameterOverrides)
+          void model.motion('').catch(() => undefined)
         })
         app.ticker.add(() => {
           modelsRef.current.forEach(({ model, parameterOverrides }) => {
@@ -187,6 +241,8 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
 
         applyStageLayout()
         window.requestAnimationFrame(applyStageLayout)
+        await waitForStableFrame(app)
+        if (disposed) return
         setLoadState('ready')
 
         resizeObserver = new ResizeObserver(applyStageLayout)

@@ -14,6 +14,7 @@ type Live2DCharacterProps = {
   layout?: Partial<Live2DLayout>
   modelUrl?: string
   onLoadStateChange?: (state: 'loading' | 'ready' | 'error') => void
+  parameterOverrides?: Record<string, number>
 }
 
 type Live2DLayout = {
@@ -51,6 +52,7 @@ export default function Live2DCharacter({
   layout,
   modelUrl = '/live2d/Frieren/Frieren.model3.json',
   onLoadStateChange,
+  parameterOverrides,
 }: Live2DCharacterProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const appRef = useRef<PIXI.Application | null>(null)
@@ -133,10 +135,29 @@ export default function Live2DCharacter({
         model.anchor.set(0.5, 0.52)
         model.interactive = true
         app.stage.addChild(model)
-        void model.motion('').catch(() => undefined)
-        void model.expression().catch(() => undefined)
+        const applyParameterOverrides = () => {
+          if (!parameterOverrides) return
+
+          const coreModel = model.internalModel.coreModel as {
+            setParameterValueById?: (parameterId: string, value: number, weight?: number) => void
+          }
+
+          Object.entries(parameterOverrides).forEach(([parameterId, value]) => {
+            coreModel.setParameterValueById?.(parameterId, value, 1)
+          })
+        }
+        const internalModel = model.internalModel as {
+          on?: (eventName: string, callback: () => void) => void
+        }
+        internalModel.on?.('beforeModelUpdate', applyParameterOverrides)
+        applyParameterOverrides()
         applyModelLayout()
         window.requestAnimationFrame(applyModelLayout)
+        app.renderer.render(app.stage)
+        await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
+        app.renderer.render(app.stage)
+        await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
+        if (disposed) return
         setLoadState('ready')
 
         resizeObserver = new ResizeObserver(applyModelLayout)
@@ -158,7 +179,7 @@ export default function Live2DCharacter({
       appRef.current = null
       container.querySelector('.live2d-canvas')?.remove()
     }
-  }, [modelUrl])
+  }, [layout, modelUrl, parameterOverrides])
 
   useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
