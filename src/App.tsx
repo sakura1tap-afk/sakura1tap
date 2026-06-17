@@ -1,9 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import BootOverlay from './components/BootOverlay'
-import EntryScene from './components/EntryScene'
-import EntryControls, { type BackgroundTone, type ModelSize, type ViewMode } from './components/EntryControls'
-import EnterOverlay from './components/EnterOverlay'
+import Live2DEntry from './components/Live2DEntry'
 import MainPage from './components/MainPage'
 
 function canUseWebGL() {
@@ -17,22 +15,17 @@ function canUseWebGL() {
 
 export default function App() {
   const [entered, setEntered] = useState(false)
-  const [autoRotate, setAutoRotate] = useState(true)
-  const [viewMode, setViewMode] = useState<ViewMode>('front')
-  const [modelSize, setModelSize] = useState<ModelSize>('medium')
-  const [backgroundTone, setBackgroundTone] = useState<BackgroundTone>('paper')
-  const [softLight, setSoftLight] = useState(true)
   const [bootComplete, setBootComplete] = useState(false)
   const [modelBuffer, setModelBuffer] = useState<ArrayBuffer | null>(null)
   const [webglAvailable] = useState(canUseWebGL)
 
   return (
-    <main className={`app-shell tone-${backgroundTone}`}>
+    <main className="app-shell tone-paper">
       <AnimatePresence mode="wait">
         {!entered ? (
           <motion.section
             key="entry"
-            className="entry-page"
+            className="entry-page live2d-entry-page"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -40,30 +33,7 @@ export default function App() {
           >
             {webglAvailable ? (
               <>
-                {bootComplete && modelBuffer && (
-                  <EntryScene
-                    autoRotate={autoRotate}
-                    backgroundTone={backgroundTone}
-                    modelSize={modelSize}
-                    modelBuffer={modelBuffer}
-                    softLight={softLight}
-                    viewMode={viewMode}
-                  />
-                )}
-                <EntryControls
-                  autoRotate={autoRotate}
-                  backgroundTone={backgroundTone}
-                  isReady={bootComplete}
-                  onBackgroundToneChange={setBackgroundTone}
-                  onModelSizeChange={setModelSize}
-                  onSoftLightChange={setSoftLight}
-                  onToggleRotate={() => setAutoRotate((value) => !value)}
-                  onViewModeChange={setViewMode}
-                  modelSize={modelSize}
-                  softLight={softLight}
-                  viewMode={viewMode}
-                />
-                <EnterOverlay isReady={bootComplete} onEnter={() => setEntered(true)} />
+                {bootComplete && <Live2DEntry isReady={bootComplete} onEnter={() => setEntered(true)} />}
                 {!bootComplete && (
                   <BootOverlay
                     modelUrl="/models/study.glb"

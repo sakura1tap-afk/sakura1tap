@@ -36,6 +36,7 @@ button {
   position: relative;
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   background: #ece9df;
   overflow: hidden;
 }
@@ -45,6 +46,10 @@ button {
     linear-gradient(90deg, rgba(24, 23, 22, 0.09) 0 1px, transparent 1px) 50% 50% / 4.25rem 4.25rem,
     linear-gradient(180deg, rgba(24, 23, 22, 0.065) 0 1px, transparent 1px) 50% 50% / 4.25rem 4.25rem,
     linear-gradient(180deg, #f3f1e9, #e5e1d6);
+}
+
+.live2d-entry-page {
+  background: #050505;
 }
 
 .tone-warm .entry-page {
@@ -829,6 +834,351 @@ button {
   font-weight: 500;
 }
 
+.live2d-entry {
+  position: absolute;
+  inset: 0;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 50% 62%, rgba(255, 255, 255, 0.12), transparent 24rem),
+    radial-gradient(circle at 50% 22%, rgba(216, 243, 255, 0.08), transparent 20rem),
+    linear-gradient(180deg, #040404, #0b0b0a 48%, #040404);
+  color: rgba(255, 255, 255, 0.9);
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.live2d-entry::before,
+.live2d-entry::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.live2d-entry::before {
+  background:
+    linear-gradient(90deg, transparent 0 49.95%, rgba(255, 255, 255, 0.12) 49.95% 50.05%, transparent 50.05%),
+    linear-gradient(180deg, transparent 0 49.95%, rgba(255, 255, 255, 0.08) 49.95% 50.05%, transparent 50.05%);
+  mask-image: radial-gradient(circle at 50% 56%, #000 0 19rem, transparent 36rem);
+  -webkit-mask-image: radial-gradient(circle at 50% 56%, #000 0 19rem, transparent 36rem);
+  opacity: 0.42;
+}
+
+.live2d-entry::after {
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 5px);
+  opacity: 0.2;
+}
+
+.live2d-entry-grid,
+.live2d-entry-vignette,
+.live2d-entry-ink,
+.live2d-character,
+.live2d-entry-status,
+.live2d-enter-button,
+.entry-poem,
+.live2d-entry-curtain {
+  position: absolute;
+}
+
+.live2d-entry-grid {
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px) 50% 54% / 4.6rem 4.6rem,
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px) 50% 54% / 4.6rem 4.6rem;
+  mask-image: radial-gradient(circle at 50% 58%, #000 0 28rem, transparent 45rem);
+  -webkit-mask-image: radial-gradient(circle at 50% 58%, #000 0 28rem, transparent 45rem);
+  opacity: 0.46;
+}
+
+.live2d-entry-vignette {
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(circle at 50% 56%, transparent 0 17rem, rgba(0, 0, 0, 0.62) 45rem),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.72), transparent 24%, transparent 76%, rgba(0, 0, 0, 0.72));
+  pointer-events: none;
+}
+
+.live2d-entry-ink {
+  left: 50%;
+  top: 17%;
+  z-index: 1;
+  width: min(34rem, 70vw);
+  height: min(11rem, 20vh);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 42% 50%, rgba(255, 255, 255, 0.09), transparent 38%),
+    radial-gradient(circle at 56% 55%, rgba(216, 243, 255, 0.09), transparent 44%);
+  filter: blur(20px);
+  opacity: 0.78;
+  transform: translate(-50%, -50%);
+}
+
+.entry-poem {
+  z-index: 3;
+  color: rgba(255, 255, 255, 0.32);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(0.78rem, 1.1vw, 0.96rem);
+  letter-spacing: 0.32em;
+  writing-mode: vertical-rl;
+  pointer-events: none;
+}
+
+.entry-poem-left {
+  left: clamp(2rem, 7vw, 7rem);
+  top: 23%;
+}
+
+.entry-poem-right {
+  right: clamp(2rem, 7vw, 7rem);
+  top: 41%;
+}
+
+.live2d-character {
+  inset: clamp(3rem, 8vh, 5rem) 0 0;
+  z-index: 2;
+  opacity: 1;
+  transition:
+    opacity 460ms ease,
+    transform 680ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 460ms ease;
+}
+
+.live2d-character.is-entering {
+  opacity: 0;
+  filter: blur(10px);
+  transform: scale(0.985) translateY(1.2rem);
+}
+
+.live2d-canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.live2d-status {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  z-index: 2;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+
+.live2d-entry-status {
+  left: 50%;
+  bottom: clamp(1.3rem, 3vh, 2rem);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(255, 255, 255, 0.36);
+  gap: 0.7rem;
+  letter-spacing: 0.18em;
+  padding: 0.55rem 0.9rem;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.live2d-entry-status span {
+  font-size: 0.58rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.live2d-entry-status span + span::before {
+  display: inline-block;
+  width: 0.24rem;
+  height: 0.24rem;
+  margin-right: 0.72rem;
+  border-radius: 999px;
+  background: rgba(216, 243, 255, 0.82);
+  box-shadow: 0 0 1rem rgba(216, 243, 255, 0.6);
+  content: "";
+  vertical-align: middle;
+}
+
+.live2d-enter-button {
+  left: calc(50% - 6.7rem);
+  top: clamp(3.2rem, 13vh, 7.4rem);
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 13.4rem;
+  height: 3.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 24% 50%, rgba(255, 255, 255, 0.16), transparent 38%),
+    rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  gap: 0.8rem;
+  letter-spacing: 0.18em;
+  overflow: hidden;
+  padding: 0 1rem 0 0.56rem;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    0 1rem 3.2rem rgba(0, 0, 0, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.live2d-enter-button:disabled {
+  cursor: default;
+}
+
+.live2d-enter-button::before,
+.live2d-enter-button::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.live2d-enter-button::before {
+  background: linear-gradient(90deg, transparent, rgba(216, 243, 255, 0.28), transparent);
+  opacity: 0;
+  transform: translateX(-110%);
+  transition:
+    opacity 240ms ease,
+    transform 740ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.live2d-enter-button::after {
+  border-radius: inherit;
+  box-shadow: inset 0 0 1.6rem rgba(216, 243, 255, 0);
+  transition: box-shadow 280ms ease;
+}
+
+.live2d-enter-button:hover::before {
+  opacity: 1;
+  transform: translateX(110%);
+}
+
+.live2d-enter-button:hover::after {
+  box-shadow: inset 0 0 1.6rem rgba(216, 243, 255, 0.18);
+}
+
+.live2d-enter-mark {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(0, 0, 0, 0.88);
+  transition:
+    background 220ms ease,
+    transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.live2d-enter-button:hover .live2d-enter-mark {
+  background: rgba(216, 243, 255, 0.95);
+  transform: translateX(8.5rem) rotate(-18deg);
+}
+
+.live2d-enter-text,
+.live2d-enter-line {
+  position: relative;
+  z-index: 2;
+  transition:
+    opacity 240ms ease,
+    transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.live2d-enter-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+}
+
+.live2d-enter-line {
+  width: 2.35rem;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.32);
+  overflow: hidden;
+}
+
+.live2d-enter-line::after {
+  display: block;
+  width: 55%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.86);
+  content: "";
+  animation: enter-line 1.8s ease-in-out infinite;
+}
+
+.live2d-enter-button:hover .live2d-enter-text {
+  opacity: 0.68;
+  transform: translateX(-0.75rem);
+}
+
+.live2d-enter-button:hover .live2d-enter-line {
+  opacity: 0.18;
+  transform: translateX(0.42rem);
+}
+
+.live2d-enter-ink {
+  position: absolute;
+  inset: -2.2rem;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.live2d-enter-ink i {
+  position: absolute;
+  left: var(--ink-x);
+  top: var(--ink-y);
+  width: 0.34rem;
+  height: 0.34rem;
+  border-radius: 999px;
+  background: rgba(216, 243, 255, 0.75);
+  filter: blur(1px);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.35);
+}
+
+.live2d-enter-button:hover .live2d-enter-ink i {
+  animation: live2d-ink 900ms cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  animation-delay: calc(var(--ink-index) * 42ms);
+}
+
+.live2d-entry-curtain {
+  inset: 0;
+  z-index: 9;
+  background:
+    radial-gradient(circle at 50% 44%, transparent 0 9rem, rgba(0, 0, 0, 0.72) 27rem),
+    rgba(0, 0, 0, 0.86);
+  pointer-events: none;
+}
+
+@keyframes live2d-ink {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.25);
+  }
+
+  28% {
+    opacity: 0.72;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + (var(--ink-index) - 9) * 0.22rem), calc(-50% - 1.7rem)) scale(2.8);
+  }
+}
+
 @media (max-width: 640px) {
   .app-shell,
   .entry-page,
@@ -900,6 +1250,29 @@ button {
 
   .enter-button:hover .enter-button-orb {
     transform: translateX(7rem) rotate(-18deg);
+  }
+
+  .live2d-character {
+    inset: 4.2rem 0 calc(3.5rem + env(safe-area-inset-bottom));
+  }
+
+  .entry-poem {
+    display: none;
+  }
+
+  .live2d-enter-button {
+    left: calc(50% - 5.9rem);
+    top: max(2.4rem, env(safe-area-inset-top));
+    width: 11.8rem;
+    height: 3.08rem;
+  }
+
+  .live2d-enter-button:hover .live2d-enter-mark {
+    transform: translateX(7.2rem) rotate(-18deg);
+  }
+
+  .live2d-entry-status {
+    bottom: max(0.9rem, env(safe-area-inset-bottom));
   }
 }
 
