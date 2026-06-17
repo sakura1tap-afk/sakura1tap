@@ -969,15 +969,11 @@ button {
 }
 
 .live2d-character-left .live2d-canvas {
-  filter:
-    drop-shadow(0 1.4rem 2.4rem rgba(78, 59, 32, 0.18))
-    drop-shadow(0 0 1px rgba(56, 42, 24, 0.34));
+  filter: none;
 }
 
 .live2d-stage-canvas {
-  filter:
-    drop-shadow(0 1.4rem 2.4rem rgba(78, 59, 32, 0.16))
-    drop-shadow(0 0 1px rgba(56, 42, 24, 0.24));
+  filter: none;
 }
 
 .live2d-status {

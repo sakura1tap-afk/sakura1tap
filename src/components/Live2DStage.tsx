@@ -30,7 +30,13 @@ type Live2DLayout = {
 
 type Live2DModelInstance = InstanceType<typeof Live2DModel>
 
-const stageModels: Array<{ layout: Live2DLayout; url: string }> = [
+type StageModelConfig = {
+  layout: Live2DLayout
+  parameterOverrides?: Record<string, number>
+  url: string
+}
+
+const stageModels: StageModelConfig[] = [
   {
     url: '/live2d/Frieren/Frieren.model3.json',
     layout: {
@@ -48,6 +54,10 @@ const stageModels: Array<{ layout: Live2DLayout; url: string }> = [
   },
   {
     url: '/live2d/Fern/fern.model3.json',
+    parameterOverrides: {
+      Param33: 0,
+      Param34: 0,
+    },
     layout: {
       heightRatio: 0.92,
       maxHeight: 800,
@@ -66,7 +76,7 @@ const stageModels: Array<{ layout: Live2DLayout; url: string }> = [
 export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange }: Live2DStageProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const appRef = useRef<PIXI.Application | null>(null)
-  const modelsRef = useRef<Array<{ layout: Live2DLayout; model: Live2DModelInstance }>>([])
+  const modelsRef = useRef<Array<{ layout: Live2DLayout; model: Live2DModelInstance; parameterOverrides?: Record<string, number> }>>([])
   const [loadState, setLoadState] = useState<StageState>('loading')
 
   useEffect(() => {
@@ -114,6 +124,18 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
       })
     }
 
+    const applyParameterOverrides = (model: Live2DModelInstance, overrides?: Record<string, number>) => {
+      if (!overrides) return
+
+      const coreModel = model.internalModel.coreModel as {
+        setParameterValueById?: (parameterId: string, value: number, weight?: number) => void
+      }
+
+      Object.entries(overrides).forEach(([parameterId, value]) => {
+        coreModel.setParameterValueById?.(parameterId, value, 1)
+      })
+    }
+
     const init = async () => {
       try {
         setLoadState('loading')
@@ -137,12 +159,13 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
         container.appendChild(app.view)
 
         const loadedModels = await Promise.all(
-          stageModels.map(async ({ layout, url }) => {
+          stageModels.map(async ({ layout, parameterOverrides, url }) => {
             const model = await Live2DModel.from(url)
             model.anchor.set(0.5, 0.52)
             model.alpha = 1
             model.interactive = true
-            return { layout, model }
+            applyParameterOverrides(model, parameterOverrides)
+            return { layout, model, parameterOverrides }
           }),
         )
 
@@ -152,9 +175,14 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
         }
 
         modelsRef.current = loadedModels
-        loadedModels.forEach(({ model }) => {
+        loadedModels.forEach(({ model, parameterOverrides }) => {
           app.stage.addChild(model)
-          void model.motion('').catch(() => undefined)
+          applyParameterOverrides(model, parameterOverrides)
+        })
+        app.ticker.add(() => {
+          modelsRef.current.forEach(({ model, parameterOverrides }) => {
+            applyParameterOverrides(model, parameterOverrides)
+          })
         })
 
         applyStageLayout()
