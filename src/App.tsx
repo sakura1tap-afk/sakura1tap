@@ -82,7 +82,7 @@ export default function App() {
             )}
           </motion.section>
         ) : (
-          <MainPage key="main" />
+          <MainPage key="main" modelBuffer={modelBuffer} />
         )}
       </AnimatePresence>
     </main>
