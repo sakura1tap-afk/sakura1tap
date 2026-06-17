@@ -15,12 +15,14 @@ type Live2DCharacterProps = {
 }
 
 const live2dLayout = {
-  desktopScale: 0.88,
+  desktopHeightRatio: 0.72,
+  desktopMaxHeight: 620,
   desktopX: 0.5,
-  desktopY: 0.58,
-  mobileScale: 0.72,
+  desktopY: 0.64,
+  mobileHeightRatio: 0.68,
+  mobileMaxHeight: 560,
   mobileX: 0.5,
-  mobileY: 0.6,
+  mobileY: 0.64,
 }
 
 type Live2DModelInstance = InstanceType<typeof Live2DModel>
@@ -56,13 +58,20 @@ export default function Live2DCharacter({
       const width = Math.max(1, rect.width)
       const height = Math.max(1, rect.height)
       const isCompact = width < 720
-      const scaleBase = Math.min((width * 0.48) / model.width, (height * 0.84) / model.height)
-      const scale = scaleBase * (isCompact ? live2dLayout.mobileScale : live2dLayout.desktopScale)
+      const targetHeight = Math.min(
+        height * (isCompact ? live2dLayout.mobileHeightRatio : live2dLayout.desktopHeightRatio),
+        isCompact ? live2dLayout.mobileMaxHeight : live2dLayout.desktopMaxHeight,
+      )
+      const modelBoundsHeight = Math.max(1, model.getBounds().height / Math.max(model.scale.y, 0.0001))
+      const scale = Math.min(targetHeight / modelBoundsHeight, isCompact ? 0.24 : 0.32)
 
       app.renderer.resize(width, height)
       model.scale.set(scale)
       model.x = width * (isCompact ? live2dLayout.mobileX : live2dLayout.desktopX)
       model.y = height * (isCompact ? live2dLayout.mobileY : live2dLayout.desktopY)
+      container.dataset.live2dScale = scale.toFixed(4)
+      container.dataset.live2dBoundsHeight = modelBoundsHeight.toFixed(1)
+      container.dataset.live2dTargetHeight = targetHeight.toFixed(1)
     }
 
     const init = async () => {
@@ -98,6 +107,7 @@ export default function Live2DCharacter({
         model.interactive = true
         app.stage.addChild(model)
         applyModelLayout()
+        window.requestAnimationFrame(applyModelLayout)
         setLoadState('ready')
 
         resizeObserver = new ResizeObserver(applyModelLayout)
