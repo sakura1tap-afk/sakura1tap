@@ -16,8 +16,10 @@ function canUseWebGL() {
 export default function App() {
   const [entered, setEntered] = useState(false)
   const [bootComplete, setBootComplete] = useState(false)
+  const [live2dReady, setLive2dReady] = useState(false)
   const [modelBuffer, setModelBuffer] = useState<ArrayBuffer | null>(null)
   const [webglAvailable] = useState(canUseWebGL)
+  const entryReady = bootComplete && live2dReady
 
   return (
     <main className="app-shell tone-paper">
@@ -33,9 +35,14 @@ export default function App() {
           >
             {webglAvailable ? (
               <>
-                {bootComplete && <Live2DEntry isReady={bootComplete} onEnter={() => setEntered(true)} />}
-                {!bootComplete && (
+                <Live2DEntry
+                  isReady={entryReady}
+                  onEnter={() => setEntered(true)}
+                  onReadyChange={setLive2dReady}
+                />
+                {!entryReady && (
                   <BootOverlay
+                    canComplete={live2dReady}
                     modelUrl="/models/study.glb"
                     onComplete={(loadedModelBuffer) => {
                       setModelBuffer(loadedModelBuffer)

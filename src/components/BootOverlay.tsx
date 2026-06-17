@@ -2,13 +2,14 @@ import { motion } from 'framer-motion'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 type BootOverlayProps = {
+  canComplete?: boolean
   modelUrl: string
   onComplete: (loadedModelBuffer: ArrayBuffer) => void
 }
 
 type BootState = 'loading' | 'complete' | 'error'
 
-export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) {
+export default function BootOverlay({ canComplete = true, modelUrl, onComplete }: BootOverlayProps) {
   const [attempt, setAttempt] = useState(0)
   const [bootState, setBootState] = useState<BootState>('loading')
   const [minimumElapsed, setMinimumElapsed] = useState(false)
@@ -20,7 +21,7 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
   const bootSegments = useMemo(() => Array.from({ length: 18 }, (_, index) => index), [])
   const displayProgress = useMemo(() => Math.min(100, Math.max(0, Math.round(progress))), [progress])
   const activeSegments = Math.round((displayProgress / 100) * bootSegments.length)
-  const readyToFinish = minimumElapsed && bootState === 'complete'
+  const readyToFinish = minimumElapsed && bootState === 'complete' && canComplete
   const isRevealing = readyToFinish && displayProgress >= 100
 
   const retry = useCallback(() => {

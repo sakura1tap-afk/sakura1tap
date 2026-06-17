@@ -77,7 +77,7 @@ export default function Live2DCharacter({
       const rect = container.getBoundingClientRect()
       const width = Math.max(1, rect.width)
       const height = Math.max(1, rect.height)
-      const isCompact = width < 720
+      const isCompact = window.innerWidth < 720
       const targetHeight = Math.min(
         height * (isCompact ? resolvedLayout.mobileHeightRatio : resolvedLayout.heightRatio),
         isCompact ? resolvedLayout.mobileMaxHeight : resolvedLayout.maxHeight,
@@ -89,8 +89,15 @@ export default function Live2DCharacter({
       model.scale.set(scale)
       model.x = width * (isCompact ? resolvedLayout.mobileX : resolvedLayout.x)
       model.y = height * (isCompact ? resolvedLayout.mobileY : resolvedLayout.y)
+      const fittedBounds = model.getBounds()
       container.dataset.live2dScale = scale.toFixed(4)
       container.dataset.live2dBoundsHeight = modelBoundsHeight.toFixed(1)
+      container.dataset.live2dFittedBounds = [
+        fittedBounds.x.toFixed(1),
+        fittedBounds.y.toFixed(1),
+        fittedBounds.width.toFixed(1),
+        fittedBounds.height.toFixed(1),
+      ].join(',')
       container.dataset.live2dTargetHeight = targetHeight.toFixed(1)
     }
 
@@ -126,6 +133,8 @@ export default function Live2DCharacter({
         model.anchor.set(0.5, 0.52)
         model.interactive = true
         app.stage.addChild(model)
+        void model.motion('').catch(() => undefined)
+        void model.expression().catch(() => undefined)
         applyModelLayout()
         window.requestAnimationFrame(applyModelLayout)
         setLoadState('ready')
