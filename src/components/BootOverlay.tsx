@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 type BootOverlayProps = {
   modelUrl: string
@@ -15,53 +15,86 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
   const [message, setMessage] = useState('INITIALIZING')
   const [loadedModelBuffer, setLoadedModelBuffer] = useState<ArrayBuffer | null>(null)
   const [progress, setProgress] = useState(0)
+  const [targetProgress, setTargetProgress] = useState(0)
+  const bootStartRef = useRef(0)
   const bootSegments = useMemo(() => Array.from({ length: 18 }, (_, index) => index), [])
   const displayProgress = useMemo(() => Math.min(100, Math.max(0, Math.round(progress))), [progress])
   const activeSegments = Math.round((displayProgress / 100) * bootSegments.length)
-  const complete = minimumElapsed && bootState === 'complete'
+  const readyToFinish = minimumElapsed && bootState === 'complete'
 
   const retry = useCallback(() => {
     setAttempt((value) => value + 1)
   }, [])
 
   useEffect(() => {
-    if (!complete) return
+    if (!readyToFinish) return
 
-    setProgress(100)
+    setTargetProgress(100)
+  }, [readyToFinish])
+
+  useEffect(() => {
+    if (!readyToFinish || displayProgress < 100) return
+
     const hideTimer = window.setTimeout(() => {
       if (loadedModelBuffer) {
         onComplete(loadedModelBuffer)
       }
     }, 360)
     return () => window.clearTimeout(hideTimer)
-  }, [complete, loadedModelBuffer, onComplete])
+  }, [displayProgress, loadedModelBuffer, onComplete, readyToFinish])
 
   useEffect(() => {
-    if (bootState !== 'loading') return
+    if (bootState === 'error') return
 
-    if (displayProgress > 86) {
+    const progressTimer = window.setInterval(() => {
+      setProgress((current) => {
+        const elapsed = window.performance.now() - bootStartRef.current
+        const timedProgress = Math.min(targetProgress, (elapsed / 4300) * 100)
+        const distance = targetProgress - current
+
+        if (distance <= 0) return Math.max(current, timedProgress)
+        if (distance < 0.35) return targetProgress
+
+        const step = Math.min(2.4, Math.max(0.18, distance * 0.08))
+        return Math.min(targetProgress, Math.max(timedProgress, current + step))
+      })
+    }, 80)
+
+    return () => window.clearInterval(progressTimer)
+  }, [bootState, targetProgress])
+
+  useEffect(() => {
+    if (bootState === 'error') return
+
+    if (displayProgress >= 100 && readyToFinish) {
+      setMessage('SCENE READY')
+    } else if (displayProgress > 86) {
       setMessage('DECODING SCENE')
     } else if (displayProgress > 56) {
       setMessage('MAPPING LIGHT')
     } else if (displayProgress > 24) {
       setMessage('STREAMING MESH')
+    } else {
+      setMessage('CONNECTING')
     }
-  }, [bootState, displayProgress])
+  }, [bootState, displayProgress, readyToFinish])
 
   useEffect(() => {
     const controller = new AbortController()
     let alive = true
-    let simulatedProgress = 8
+    let simulatedProgress = 2
 
+    bootStartRef.current = window.performance.now()
     setBootState('loading')
     setMinimumElapsed(false)
     setLoadedModelBuffer(null)
     setMessage('CONNECTING')
     setProgress(0)
+    setTargetProgress(0)
 
     const minimumTimer = window.setTimeout(() => {
       if (alive) setMinimumElapsed(true)
-    }, 1850)
+    }, 3200)
 
     const timeoutTimer = window.setTimeout(() => {
       controller.abort()
@@ -69,8 +102,8 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
 
     const simulationTimer = window.setInterval(() => {
       if (!alive) return
-      simulatedProgress = Math.min(92, simulatedProgress + Math.max(1, (92 - simulatedProgress) * 0.08))
-      setProgress((value) => Math.max(value, simulatedProgress))
+      simulatedProgress = Math.min(84, simulatedProgress + Math.max(0.75, (84 - simulatedProgress) * 0.06))
+      setTargetProgress((value) => Math.max(value, simulatedProgress))
     }, 180)
 
     async function preloadModel() {
@@ -93,8 +126,7 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
           const buffer = await response.arrayBuffer()
           if (!alive) return
           setLoadedModelBuffer(buffer)
-          setMessage('CALIBRATING SCENE')
-          setProgress((current) => Math.max(current, 96))
+          setTargetProgress((current) => Math.max(current, 94))
           setBootState('complete')
           return
         }
@@ -111,9 +143,10 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
           received += value?.length ?? 0
 
           if (contentLength > 0) {
-            setProgress(Math.min(99, (received / contentLength) * 100))
+            const realProgress = (received / contentLength) * 100
+            setTargetProgress((current) => Math.max(current, Math.min(92, realProgress * 0.92)))
           } else {
-            setProgress((current) => Math.max(current, Math.min(96, current + 2.5)))
+            setTargetProgress((current) => Math.max(current, Math.min(90, current + 2.5)))
           }
         }
 
@@ -126,8 +159,7 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
           offset += chunk.byteLength
         }
         setLoadedModelBuffer(modelBuffer)
-        setMessage('CALIBRATING SCENE')
-        setProgress((current) => Math.max(current, 96))
+        setTargetProgress((current) => Math.max(current, 94))
         setBootState('complete')
       } catch (error) {
         if (!alive) return
@@ -202,7 +234,7 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
 
         <div className="boot-meta">
           <span>{message}</span>
-          <span>{bootState === 'complete' ? 'READY' : 'SYNC'}</span>
+          <span>{readyToFinish && displayProgress >= 100 ? 'READY' : 'SYNC'}</span>
         </div>
 
         <div className="boot-data" aria-hidden="true">
@@ -216,7 +248,7 @@ export default function BootOverlay({ modelUrl, onComplete }: BootOverlayProps) 
           </span>
           <span>
             <b>SCENE PARSE</b>
-            <i>{bootState === 'complete' ? 'ARMED' : 'WAIT'}</i>
+            <i>{readyToFinish && displayProgress >= 100 ? 'ARMED' : 'WAIT'}</i>
           </span>
         </div>
 
