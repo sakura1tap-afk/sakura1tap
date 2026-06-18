@@ -3,7 +3,7 @@
 	"FileReferences": {
 		"Moc": "Frieren.moc3",
 		"Textures": [
-			"Frieren.4096/texture_00.png"
+			"Frieren.8192/texture_00.png"
 		],
 		"Physics": "Frieren.physics3.json",
 		"DisplayInfo": "Frieren.cdi3.json",

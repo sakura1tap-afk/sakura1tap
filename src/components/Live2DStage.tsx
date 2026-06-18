@@ -31,6 +31,7 @@ type Live2DLayout = {
 type Live2DModelInstance = InstanceType<typeof Live2DModel>
 
 type StageModelConfig = {
+  feedbackExpressions?: string[]
   layout: Live2DLayout
   parameterOverrides?: Record<string, number>
   required?: boolean
@@ -38,6 +39,7 @@ type StageModelConfig = {
 }
 
 type LoadedStageModel = {
+  feedbackExpressions?: string[]
   layout: Live2DLayout
   model: Live2DModelInstance
   parameterOverrides?: Record<string, number>
@@ -47,6 +49,7 @@ const stageModels: StageModelConfig[] = [
   {
     url: '/live2d/Frieren/Frieren.model3.json',
     required: true,
+    feedbackExpressions: ['wh', 'han', 'ku', 'yy', 'mmy', 'anya2'],
     layout: {
       heightRatio: 1.06,
       maxHeight: 930,
@@ -54,14 +57,15 @@ const stageModels: StageModelConfig[] = [
       mobileHeightRatio: 0.74,
       mobileMaxHeight: 530,
       mobileMaxScale: 0.3,
-      mobileX: 0.38,
+      mobileX: 0.35,
       mobileY: 0.76,
-      x: 0.37,
+      x: 0.3,
       y: 0.88,
     },
   },
   {
     url: '/live2d/Fern/fern.model3.json',
+    parameterOverrides: { Param33: 1 },
     layout: {
       heightRatio: 1.08,
       maxHeight: 940,
@@ -69,9 +73,9 @@ const stageModels: StageModelConfig[] = [
       mobileHeightRatio: 0.74,
       mobileMaxHeight: 530,
       mobileMaxScale: 0.3,
-      mobileX: 0.62,
+      mobileX: 0.65,
       mobileY: 0.76,
-      x: 0.64,
+      x: 0.71,
       y: 0.88,
     },
   },
@@ -79,9 +83,20 @@ const stageModels: StageModelConfig[] = [
 
 const MODEL_LOAD_TIMEOUT = 18000
 
+const focusModelAtStagePoint = (model: Live2DModelInstance, stageX: number, stageY: number) => {
+  const bounds = model.getBounds()
+  const centerX = bounds.x + bounds.width * 0.5
+  const centerY = bounds.y + bounds.height * 0.45
+  const focusX = (stageX - centerX) / Math.max(bounds.width * 0.48, 1)
+  const focusY = (centerY - stageY) / Math.max(bounds.height * 0.42, 1)
+
+  model.focus(focusX, focusY)
+}
+
 export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange }: Live2DStageProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const appRef = useRef<PIXI.Application | null>(null)
+  const feedbackIndexRef = useRef(0)
   const modelsRef = useRef<LoadedStageModel[]>([])
   const [loadState, setLoadState] = useState<StageState>('loading')
 
@@ -160,6 +175,7 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
     }
 
     const loadModelWithTimeout = async ({
+      feedbackExpressions,
       layout,
       parameterOverrides,
       required,
@@ -179,7 +195,7 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
         model.interactive = true
         applyParameterOverrides(model, parameterOverrides)
         bindParameterOverrides(model, parameterOverrides)
-        return { layout, model, parameterOverrides }
+        return { feedbackExpressions, layout, model, parameterOverrides }
       } catch (error) {
         window.clearTimeout(timeoutId)
         console.warn('Live2D model failed to load.', url, error)
@@ -215,7 +231,7 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
         )
 
         if (disposed) {
-          loadedModels.forEach(({ model }) => model.destroy({ children: true, texture: true, baseTexture: true }))
+          loadedModels.forEach(({ model }) => model.destroy({ children: true }))
           return
         }
 
@@ -253,7 +269,7 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
     return () => {
       disposed = true
       resizeObserver?.disconnect()
-      modelsRef.current.forEach(({ model }) => model.destroy({ children: true, texture: true, baseTexture: true }))
+      modelsRef.current.forEach(({ model }) => model.destroy({ children: true }))
       modelsRef.current = []
       appRef.current?.destroy(true)
       appRef.current = null
@@ -268,7 +284,7 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
 
       const rect = container.getBoundingClientRect()
       modelsRef.current.forEach(({ model }) => {
-        model.focus(event.clientX - rect.left, event.clientY - rect.top)
+        focusModelAtStagePoint(model, event.clientX - rect.left, event.clientY - rect.top)
       })
     }
 
@@ -282,13 +298,25 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
 
     const rect = container.getBoundingClientRect()
     modelsRef.current.forEach(({ model }) => {
-      model.focus(rect.width * focusPoint.x, rect.height * focusPoint.y)
+      focusModelAtStagePoint(model, rect.width * focusPoint.x, rect.height * focusPoint.y)
     })
   }, [focusPoint])
 
   const triggerCharacterFeedback = () => {
-    modelsRef.current.forEach(({ model }) => {
-      void model.expression().catch(() => undefined)
+    const feedbackIndex = feedbackIndexRef.current
+    feedbackIndexRef.current += 1
+
+    modelsRef.current.forEach(({ feedbackExpressions, model }) => {
+      const expressionName = feedbackExpressions?.[feedbackIndex % feedbackExpressions.length]
+
+      if (expressionName) {
+        void model.expression(expressionName).catch(() => {
+          void model.expression().catch(() => undefined)
+        })
+      } else {
+        void model.expression().catch(() => undefined)
+      }
+
       void model.motion('').catch(() => undefined)
     })
   }
