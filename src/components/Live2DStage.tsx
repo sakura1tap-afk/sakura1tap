@@ -1,6 +1,5 @@
-import * as PIXI from 'pixi.js'
-import { config, Live2DModel } from 'pixi-live2d-display/cubism4'
 import { useEffect, useRef, useState } from 'react'
+import { CubismSdkModel, ensureCubismFramework, type CubismSdkModelConfig } from '../live2d/CubismSdkModel'
 
 type FocusPoint = {
   x: number
@@ -15,89 +14,43 @@ type Live2DStageProps = {
   onLoadStateChange?: (state: StageState) => void
 }
 
-type Live2DLayout = {
-  heightRatio: number
-  maxHeight: number
-  maxScale: number
-  mobileHeightRatio: number
-  mobileMaxHeight: number
-  mobileMaxScale: number
-  mobileX: number
-  mobileY: number
-  x: number
-  y: number
-}
-
-type Live2DModelInstance = InstanceType<typeof Live2DModel>
-
-type StageModelConfig = {
-  feedbackExpressions?: string[]
-  layout: Live2DLayout
-  parameterOverrides?: Record<string, number>
-  required?: boolean
-  url: string
-}
-
-type LoadedStageModel = {
-  feedbackExpressions?: string[]
-  layout: Live2DLayout
-  model: Live2DModelInstance
-  parameterOverrides?: Record<string, number>
-}
-
-const stageModels: StageModelConfig[] = [
+const stageModels: CubismSdkModelConfig[] = [
   {
-    url: '/live2d/Frieren/Frieren.model3.json',
+    url: '/live2d/WhiteAngelOriginal/无口天使 5.model3.json',
     required: true,
-    feedbackExpressions: ['wh', 'han', 'ku', 'yy', 'mmy', 'anya2'],
+    feedbackExpressions: ['expression15', 'expression2', 'expression3', 'expression5', 'expression8', 'expression9'],
+    parameterOverrides: { Param80: 1 },
     layout: {
-      heightRatio: 1.06,
-      maxHeight: 930,
-      maxScale: 0.62,
-      mobileHeightRatio: 0.74,
-      mobileMaxHeight: 530,
-      mobileMaxScale: 0.3,
-      mobileX: 0.35,
-      mobileY: 0.76,
-      x: 0.3,
-      y: 0.88,
+      height: 1.72,
+      mobileHeight: 1.42,
+      mobileX: 0.36,
+      mobileY: 0.75,
+      x: 0.4,
+      y: 0.64,
     },
   },
   {
     url: '/live2d/Fern/fern.model3.json',
+    required: true,
     parameterOverrides: { Param33: 1 },
     layout: {
-      heightRatio: 1.08,
-      maxHeight: 940,
-      maxScale: 0.6,
-      mobileHeightRatio: 0.74,
-      mobileMaxHeight: 530,
-      mobileMaxScale: 0.3,
-      mobileX: 0.65,
-      mobileY: 0.76,
-      x: 0.71,
-      y: 0.88,
+      height: 1.82,
+      mobileHeight: 1.42,
+      mobileX: 0.64,
+      mobileY: 0.75,
+      x: 0.92,
+      y: 0.64,
     },
   },
 ]
 
-const MODEL_LOAD_TIMEOUT = 18000
-
-const focusModelAtStagePoint = (model: Live2DModelInstance, stageX: number, stageY: number) => {
-  const bounds = model.getBounds()
-  const centerX = bounds.x + bounds.width * 0.5
-  const centerY = bounds.y + bounds.height * 0.45
-  const focusX = (stageX - centerX) / Math.max(bounds.width * 0.48, 1)
-  const focusY = (centerY - stageY) / Math.max(bounds.height * 0.42, 1)
-
-  model.focus(focusX, focusY)
-}
+const MODEL_LOAD_TIMEOUT = 24000
+const MAX_DPR = 2
 
 export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange }: Live2DStageProps) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const appRef = useRef<PIXI.Application | null>(null)
-  const feedbackIndexRef = useRef(0)
-  const modelsRef = useRef<LoadedStageModel[]>([])
+  const engineRef = useRef<CubismStageEngine | null>(null)
   const [loadState, setLoadState] = useState<StageState>('loading')
 
   useEffect(() => {
@@ -105,161 +58,29 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
   }, [loadState, onLoadStateChange])
 
   useEffect(() => {
+    const canvas = canvasRef.current
     const container = containerRef.current
-    if (!container) return undefined
+    if (!canvas || !container) return undefined
 
     let disposed = false
-    let resizeObserver: ResizeObserver | null = null
-
-    const applyStageLayout = () => {
-      const app = appRef.current
-      if (!app || !container) return
-
-      const rect = container.getBoundingClientRect()
-      const width = Math.max(1, rect.width)
-      const height = Math.max(1, rect.height)
-      const isCompact = window.innerWidth < 720
-
-      app.renderer.resize(width, height)
-
-      modelsRef.current.forEach(({ layout, model }, index) => {
-        const targetHeight = Math.min(
-          height * (isCompact ? layout.mobileHeightRatio : layout.heightRatio),
-          isCompact ? layout.mobileMaxHeight : layout.maxHeight,
-        )
-        const modelBoundsHeight = Math.max(1, model.getBounds().height / Math.max(model.scale.y, 0.0001))
-        const scale = Math.min(targetHeight / modelBoundsHeight, isCompact ? layout.mobileMaxScale : layout.maxScale)
-
-        model.scale.set(scale)
-        model.x = width * (isCompact ? layout.mobileX : layout.x)
-        model.y = height * (isCompact ? layout.mobileY : layout.y)
-
-        const fittedBounds = model.getBounds()
-        container.dataset[`live2dScale${index}`] = scale.toFixed(4)
-        container.dataset[`live2dBounds${index}`] = [
-          fittedBounds.x.toFixed(1),
-          fittedBounds.y.toFixed(1),
-          fittedBounds.width.toFixed(1),
-          fittedBounds.height.toFixed(1),
-        ].join(',')
-      })
-    }
-
-    const applyParameterOverrides = (model: Live2DModelInstance, overrides?: Record<string, number>) => {
-      if (!overrides) return
-
-      const coreModel = model.internalModel.coreModel as {
-        setParameterValueById?: (parameterId: string, value: number, weight?: number) => void
-      }
-
-      Object.entries(overrides).forEach(([parameterId, value]) => {
-        coreModel.setParameterValueById?.(parameterId, value, 1)
-      })
-    }
-
-    const bindParameterOverrides = (model: Live2DModelInstance, overrides?: Record<string, number>) => {
-      if (!overrides) return
-
-      const internalModel = model.internalModel as {
-        on?: (eventName: string, callback: () => void) => void
-      }
-
-      internalModel.on?.('beforeModelUpdate', () => applyParameterOverrides(model, overrides))
-    }
-
-    const waitForStableFrame = async (app: PIXI.Application) => {
-      app.renderer.render(app.stage)
-      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
-      app.renderer.render(app.stage)
-      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
-    }
-
-    const loadModelWithTimeout = async ({
-      feedbackExpressions,
-      layout,
-      parameterOverrides,
-      required,
-      url,
-    }: StageModelConfig): Promise<LoadedStageModel | null> => {
-      let timeoutId = 0
-      try {
-        const model = await Promise.race([
-          Live2DModel.from(url),
-          new Promise<never>((_, reject) => {
-            timeoutId = window.setTimeout(() => reject(new Error(`Live2D load timed out: ${url}`)), MODEL_LOAD_TIMEOUT)
-          }),
-        ])
-        window.clearTimeout(timeoutId)
-        model.anchor.set(0.5, 0.52)
-        model.alpha = 1
-        model.interactive = true
-        applyParameterOverrides(model, parameterOverrides)
-        bindParameterOverrides(model, parameterOverrides)
-        return { feedbackExpressions, layout, model, parameterOverrides }
-      } catch (error) {
-        window.clearTimeout(timeoutId)
-        console.warn('Live2D model failed to load.', url, error)
-        if (required) throw error
-        return null
-      }
-    }
+    const engine = new CubismStageEngine(canvas, container)
+    engineRef.current = engine
 
     const init = async () => {
       try {
         setLoadState('loading')
-
-        if (!window.Live2DCubismCore) {
-          throw new Error('Cubism runtime is not available.')
-        }
-
-        window.PIXI = PIXI
-        config.logLevel = config.LOG_LEVEL_ERROR
-        Live2DModel.registerTicker(PIXI.Ticker)
-
-        const app = new PIXI.Application({
-          antialias: true,
-          autoDensity: true,
-          backgroundAlpha: 0,
-          resolution: Math.min(window.devicePixelRatio || 1, 2),
-        })
-        appRef.current = app
-        app.view.className = 'live2d-canvas live2d-stage-canvas'
-        container.appendChild(app.view)
-
-        const loadedModels = (await Promise.all(stageModels.map(loadModelWithTimeout))).filter(
-          (item): item is LoadedStageModel => item !== null,
-        )
-
-        if (disposed) {
-          loadedModels.forEach(({ model }) => model.destroy({ children: true }))
-          return
-        }
-
-        if (loadedModels.length === 0) {
-          throw new Error('No Live2D models loaded.')
-        }
-
-        modelsRef.current = loadedModels
-        loadedModels.forEach(({ model, parameterOverrides }) => {
-          app.stage.addChild(model)
-          applyParameterOverrides(model, parameterOverrides)
-        })
-        app.ticker.add(() => {
-          modelsRef.current.forEach(({ model, parameterOverrides }) => {
-            applyParameterOverrides(model, parameterOverrides)
-          })
-        })
-
-        applyStageLayout()
-        window.requestAnimationFrame(applyStageLayout)
-        await waitForStableFrame(app)
+        await engine.load()
         if (disposed) return
+        if (isLocalhost()) {
+          window.__sakuraCubismStage = {
+            getSnapshot: engine.getDebugSnapshot,
+          }
+        }
+        engine.start()
         setLoadState('ready')
-
-        resizeObserver = new ResizeObserver(applyStageLayout)
-        resizeObserver.observe(container)
       } catch (error) {
         console.warn('Live2D model failed to load.', error)
+        if (disposed) return
         setLoadState('error')
       }
     }
@@ -268,12 +89,11 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
 
     return () => {
       disposed = true
-      resizeObserver?.disconnect()
-      modelsRef.current.forEach(({ model }) => model.destroy({ children: true }))
-      modelsRef.current = []
-      appRef.current?.destroy(true)
-      appRef.current = null
-      container.querySelector('.live2d-canvas')?.remove()
+      engine.stop()
+      if (window.__sakuraCubismStage?.getSnapshot === engine.getDebugSnapshot) {
+        delete window.__sakuraCubismStage
+      }
+      engineRef.current = null
     }
   }, [])
 
@@ -283,9 +103,10 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
       if (!container) return
 
       const rect = container.getBoundingClientRect()
-      modelsRef.current.forEach(({ model }) => {
-        focusModelAtStagePoint(model, event.clientX - rect.left, event.clientY - rect.top)
-      })
+      engineRef.current?.setFocusFromRatio(
+        clamp((event.clientX - rect.left) / Math.max(1, rect.width), 0, 1),
+        clamp((event.clientY - rect.top) / Math.max(1, rect.height), 0, 1),
+      )
     }
 
     window.addEventListener('pointermove', handlePointerMove)
@@ -293,32 +114,12 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
   }, [])
 
   useEffect(() => {
-    const container = containerRef.current
-    if (!container || !focusPoint) return
-
-    const rect = container.getBoundingClientRect()
-    modelsRef.current.forEach(({ model }) => {
-      focusModelAtStagePoint(model, rect.width * focusPoint.x, rect.height * focusPoint.y)
-    })
+    if (!focusPoint) return
+    engineRef.current?.setFocusFromRatio(focusPoint.x, focusPoint.y)
   }, [focusPoint])
 
   const triggerCharacterFeedback = () => {
-    const feedbackIndex = feedbackIndexRef.current
-    feedbackIndexRef.current += 1
-
-    modelsRef.current.forEach(({ feedbackExpressions, model }) => {
-      const expressionName = feedbackExpressions?.[feedbackIndex % feedbackExpressions.length]
-
-      if (expressionName) {
-        void model.expression(expressionName).catch(() => {
-          void model.expression().catch(() => undefined)
-        })
-      } else {
-        void model.expression().catch(() => undefined)
-      }
-
-      void model.motion('').catch(() => undefined)
-    })
+    engineRef.current?.triggerFeedback()
   }
 
   return (
@@ -327,15 +128,163 @@ export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange 
       onPointerDown={triggerCharacterFeedback}
       ref={containerRef}
     >
+      <canvas className="live2d-canvas live2d-stage-canvas" ref={canvasRef} />
       {loadState === 'error' && <div className="live2d-status">Live2D model not found.</div>}
       {loadState === 'loading' && <div className="live2d-status">loading</div>}
     </div>
   )
 }
 
+class CubismStageEngine {
+  private animationFrame = 0
+  private readonly canvas: HTMLCanvasElement
+  private readonly container: HTMLDivElement
+  private gl: WebGLRenderingContext | null = null
+  private lastTime = performance.now()
+  private models: CubismSdkModel[] = []
+  private resizeObserver: ResizeObserver | null = null
+
+  public constructor(canvas: HTMLCanvasElement, container: HTMLDivElement) {
+    this.canvas = canvas
+    this.container = container
+  }
+
+  public async load() {
+    ensureCubismFramework()
+
+    const contextOptions = {
+      alpha: true,
+      antialias: true,
+      premultipliedAlpha: true,
+      preserveDrawingBuffer: false,
+    }
+    const gl =
+      (this.canvas.getContext('webgl2', contextOptions) as WebGLRenderingContext | null) ??
+      (this.canvas.getContext('webgl', contextOptions) as WebGLRenderingContext | null)
+
+    if (!gl) throw new Error('WebGL context is not available.')
+    this.gl = gl
+    this.resize()
+
+    const loadedModels = await Promise.all(stageModels.map((config) => this.loadModel(config)))
+    this.models = loadedModels.filter((model): model is CubismSdkModel => model !== null)
+
+    if (this.models.length === 0) throw new Error('No Live2D models loaded.')
+
+    this.resizeObserver = new ResizeObserver(() => this.resize())
+    this.resizeObserver.observe(this.container)
+    this.renderFrame(0)
+  }
+
+  public start() {
+    this.lastTime = performance.now()
+    const frame = (time: number) => {
+      const delta = Math.min(0.05, Math.max(0, (time - this.lastTime) / 1000))
+      this.lastTime = time
+      this.renderFrame(delta)
+      this.animationFrame = window.requestAnimationFrame(frame)
+    }
+
+    this.animationFrame = window.requestAnimationFrame(frame)
+  }
+
+  public stop() {
+    if (this.animationFrame) {
+      window.cancelAnimationFrame(this.animationFrame)
+      this.animationFrame = 0
+    }
+    this.resizeObserver?.disconnect()
+    this.resizeObserver = null
+    this.models.forEach((model) => model.release())
+    this.models = []
+  }
+
+  public setFocusFromRatio(xRatio: number, yRatio: number) {
+    const focusX = clamp((xRatio - 0.5) * 2, -1, 1)
+    const focusY = clamp((0.5 - yRatio) * 2, -1, 1)
+    this.models.forEach((model) => model.setFocus(focusX, focusY))
+  }
+
+  public triggerFeedback() {
+    this.models.forEach((model) => model.triggerFeedback())
+  }
+
+  public getDebugSnapshot = () => this.models.map((model) => model.debugSnapshot())
+
+  private async loadModel(config: CubismSdkModelConfig) {
+    if (!this.gl) return null
+
+    try {
+      const model = new CubismSdkModel(config)
+      await withTimeout(model.load(this.gl, this.canvas.width, this.canvas.height), MODEL_LOAD_TIMEOUT)
+      return model
+    } catch (error) {
+      console.warn('Live2D model failed to load.', config.url, error)
+      if (config.required) throw error
+      return null
+    }
+  }
+
+  private resize() {
+    if (!this.gl) return
+
+    const rect = this.container.getBoundingClientRect()
+    const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR)
+    const width = Math.max(1, Math.floor(rect.width * dpr))
+    const height = Math.max(1, Math.floor(rect.height * dpr))
+
+    if (this.canvas.width !== width || this.canvas.height !== height) {
+      this.canvas.width = width
+      this.canvas.height = height
+    }
+
+    this.gl.viewport(0, 0, width, height)
+    this.models.forEach((model) => model.resize(width, height))
+  }
+
+  private renderFrame(deltaTimeSeconds: number) {
+    const gl = this.gl
+    if (!gl) return
+
+    this.resize()
+    gl.clearColor(0, 0, 0, 0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+
+    this.models.forEach((model) => {
+      model.update(deltaTimeSeconds)
+      model.draw(this.canvas.width, this.canvas.height)
+    })
+
+    gl.flush()
+  }
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
+  let timeoutId = 0
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timeoutId = window.setTimeout(() => reject(new Error('Live2D load timed out.')), timeoutMs)
+      }),
+    ])
+  } finally {
+    window.clearTimeout(timeoutId)
+  }
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function isLocalhost() {
+  return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
+}
+
 declare global {
   interface Window {
-    Live2DCubismCore?: unknown
-    PIXI?: typeof PIXI
+    __sakuraCubismStage?: {
+      getSnapshot: () => Array<ReturnType<CubismSdkModel['debugSnapshot']>>
+    }
   }
 }

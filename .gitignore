@@ -7,3 +7,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+*.log
+*.zip
+*.bak
+/白天使dlc修改版3.0/
+/public/live2d/WhiteAngel/
+/public/cubism-shaders/
