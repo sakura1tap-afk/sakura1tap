@@ -40,9 +40,11 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
       exit={{ opacity: 0 }}
       transition={{ duration: 0.72, ease: 'easeOut' }}
     >
+      <div className="live2d-entry-bg" aria-hidden="true" />
       <div className="live2d-entry-grid" aria-hidden="true" />
       <div className="live2d-entry-vignette" aria-hidden="true" />
       <div className="live2d-entry-ink" aria-hidden="true" />
+      <div className="live2d-entry-foreground" aria-hidden="true" />
 
       <Live2DStage
         focusPoint={buttonHover ? { x: 0.5, y: 0.42 } : null}
