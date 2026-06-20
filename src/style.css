@@ -2291,3 +2291,266 @@ button {
     transform: translateX(-50%) scale(1.035);
   }
 }
+
+/* City gate light entry overrides */
+.live2d-entry-bg {
+  background-position: center center;
+  filter: saturate(0.92) contrast(0.98) brightness(0.9);
+  transform: scale(1.045);
+  animation: fantasy-bg-breathe 9s ease-in-out infinite;
+}
+
+.live2d-entry-vignette {
+  background:
+    radial-gradient(circle at 61% 42%, rgba(255, 235, 154, 0.18), transparent 11rem),
+    radial-gradient(circle at 50% 56%, transparent 0 26rem, rgba(20, 18, 11, 0.22) 48rem),
+    linear-gradient(90deg, rgba(6, 8, 4, 0.36), transparent 34%, transparent 66%, rgba(20, 15, 9, 0.2));
+}
+
+.live2d-entry-ink {
+  background:
+    radial-gradient(circle at 61% 41%, rgba(255, 242, 190, 0.2), transparent 13rem),
+    radial-gradient(ellipse at 50% 82%, rgba(255, 230, 154, 0.16), transparent 30rem);
+  filter: blur(18px);
+  opacity: 0.72;
+}
+
+.live2d-entry-foreground {
+  z-index: 4;
+  background:
+    linear-gradient(0deg, rgba(11, 13, 7, 0.58), rgba(11, 13, 7, 0.22) 6.8rem, transparent 17rem),
+    radial-gradient(ellipse at 27% 94%, rgba(16, 26, 9, 0.48), transparent 17rem),
+    radial-gradient(ellipse at 76% 95%, rgba(62, 43, 15, 0.34), transparent 19rem),
+    radial-gradient(ellipse at 50% 84%, rgba(255, 239, 184, 0.18), transparent 25rem);
+}
+
+.live2d-stage {
+  z-index: 3;
+  filter:
+    drop-shadow(0 1.4rem 2.4rem rgba(38, 24, 8, 0.3))
+    drop-shadow(0 0 1.2rem rgba(255, 224, 149, 0.12));
+}
+
+.live2d-entry-status {
+  z-index: 6;
+}
+
+.city-gate-entry {
+  left: 61.2%;
+  top: 42.2%;
+  z-index: 6;
+  width: clamp(8.5rem, 12vw, 13rem);
+  height: clamp(7rem, 10vw, 10rem);
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: none;
+  color: transparent;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition:
+    filter 260ms ease,
+    opacity 260ms ease,
+    transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.city-gate-entry:hover,
+.city-gate-entry:focus-visible {
+  box-shadow: none;
+  filter: brightness(1.15) saturate(1.05);
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.city-gate-entry:focus-visible {
+  outline: 1px solid rgba(255, 236, 178, 0.5);
+  outline-offset: 0.7rem;
+}
+
+.city-gate-entry::before,
+.city-gate-entry::after {
+  position: absolute;
+  inset: auto;
+  width: auto;
+  height: auto;
+  content: "";
+  pointer-events: none;
+}
+
+.city-gate-entry::before {
+  left: 50%;
+  top: 50%;
+  width: 5.8rem;
+  height: 5.8rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(255, 249, 215, 0.9) 0 0.38rem, rgba(255, 226, 135, 0.42) 1.2rem, rgba(255, 205, 88, 0.16) 2.4rem, transparent 70%);
+  opacity: 0.78;
+  transform: translate(-50%, -50%);
+  animation: city-gate-pulse 2.8s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+
+.city-gate-entry::after {
+  left: 50%;
+  top: 50%;
+  width: 17rem;
+  height: 8rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse, rgba(255, 236, 174, 0.26), rgba(255, 209, 102, 0.09) 42%, transparent 70%);
+  opacity: 0.48;
+  transform: translate(-50%, -50%) rotate(-9deg);
+  animation: city-gate-halo 4.8s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+
+.city-gate-entry:hover::before,
+.city-gate-entry:focus-visible::before {
+  opacity: 1;
+  animation-duration: 1.45s;
+}
+
+.city-gate-entry:hover::after,
+.city-gate-entry:focus-visible::after {
+  opacity: 0.82;
+}
+
+.city-gate-entry-core,
+.city-gate-entry-rays,
+.city-gate-entry-particles {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.city-gate-entry-core {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  background: rgba(255, 249, 220, 0.92);
+  box-shadow:
+    0 0 1.1rem rgba(255, 241, 196, 0.85),
+    0 0 3.2rem rgba(255, 201, 88, 0.46),
+    0 0 6rem rgba(255, 190, 66, 0.22);
+  opacity: 0.74;
+  mix-blend-mode: screen;
+}
+
+.city-gate-entry-rays {
+  width: 20rem;
+  height: 8rem;
+  background:
+    conic-gradient(from -14deg, transparent 0 42%, rgba(255, 239, 184, 0.28), transparent 48% 59%, rgba(255, 216, 119, 0.18), transparent 64% 100%);
+  filter: blur(0.6rem);
+  opacity: 0.28;
+  animation: city-gate-rays 6.4s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+
+.city-gate-entry-particles {
+  width: 1px;
+  height: 1px;
+}
+
+.city-gate-entry-particles i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--particle-size);
+  height: var(--particle-size);
+  border-radius: 999px;
+  background: rgba(255, 245, 207, 0.86);
+  box-shadow: 0 0 0.8rem rgba(255, 223, 145, 0.74);
+  opacity: 0.16;
+  transform: rotate(var(--particle-angle)) translateX(calc(var(--particle-distance) * 0.35));
+  animation: city-particle-drift 2.9s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  animation-delay: var(--particle-delay);
+  mix-blend-mode: screen;
+}
+
+.city-gate-entry:hover .city-gate-entry-particles i,
+.city-gate-entry:focus-visible .city-gate-entry-particles i {
+  opacity: 0.86;
+  animation-duration: 1.35s;
+}
+
+.live2d-entry.is-entering .city-gate-entry {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(1.7);
+  filter: blur(10px) brightness(1.5);
+}
+
+@keyframes fantasy-bg-breathe {
+  0%, 100% {
+    filter: saturate(0.9) contrast(0.98) brightness(0.88);
+    transform: scale(1.045);
+  }
+  50% {
+    filter: saturate(0.98) contrast(1.01) brightness(0.94);
+    transform: scale(1.058);
+  }
+}
+
+@keyframes city-gate-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.82);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.22);
+  }
+}
+
+@keyframes city-gate-halo {
+  0%, 100% {
+    transform: translate(-50%, -50%) rotate(-9deg) scale(0.92);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(-4deg) scale(1.08);
+  }
+}
+
+@keyframes city-gate-rays {
+  0%, 100% {
+    opacity: 0.22;
+    transform: translate(-50%, -50%) rotate(-5deg) scaleX(0.94);
+  }
+  50% {
+    opacity: 0.42;
+    transform: translate(-50%, -50%) rotate(2deg) scaleX(1.08);
+  }
+}
+
+@keyframes city-particle-drift {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--particle-angle)) translateX(calc(var(--particle-distance) * 0.18)) scale(0.4);
+  }
+  38% {
+    opacity: 0.72;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--particle-angle)) translateX(var(--particle-distance)) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .city-gate-entry {
+    left: 58%;
+    top: 38%;
+    width: 8rem;
+    height: 7rem;
+    bottom: auto;
+    transform: translate(-50%, -50%);
+  }
+
+  .city-gate-entry:hover {
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+}

@@ -1,5 +1,4 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowDownRight } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { useEffect, useState } from 'react'
 import Live2DStage from './Live2DStage'
@@ -10,10 +9,12 @@ type Live2DEntryProps = {
   onReadyChange?: (isReady: boolean) => void
 }
 
-const inkParticles = Array.from({ length: 18 }, (_, index) => ({
+const gateParticles = Array.from({ length: 28 }, (_, index) => ({
   index,
-  x: `${28 + index * 2.6 + Math.sin(index * 1.7) * 4}%`,
-  y: `${42 + Math.cos(index * 1.25) * 18}%`,
+  angle: `${index * 23 + Math.sin(index * 1.9) * 18}deg`,
+  distance: `${2.3 + (index % 7) * 0.42}rem`,
+  size: `${0.12 + (index % 4) * 0.035}rem`,
+  delay: `${index * 46}ms`,
 }))
 
 export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DEntryProps) {
@@ -58,33 +59,32 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
       </div>
 
       <motion.button
-        animate={{ opacity: isReady ? 1 : 0.44, y: isReady ? 0 : 8 }}
-        className="live2d-enter-button"
+        animate={{ opacity: isReady ? 1 : 0.44 }}
+        aria-label="进入"
+        className="live2d-enter-button city-gate-entry"
         disabled={!isReady || isEntering}
         onClick={handleEnter}
         onPointerEnter={() => setButtonHover(true)}
         onPointerLeave={() => setButtonHover(false)}
         type="button"
       >
-        <span className="live2d-enter-ink" aria-hidden="true">
-          {inkParticles.map((particle) => (
+        <span className="city-gate-entry-core" aria-hidden="true" />
+        <span className="city-gate-entry-rays" aria-hidden="true" />
+        <span className="city-gate-entry-particles" aria-hidden="true">
+          {gateParticles.map((particle) => (
             <i
               key={particle.index}
               style={
                 {
-                  '--ink-index': particle.index,
-                  '--ink-x': particle.x,
-                  '--ink-y': particle.y,
+                  '--particle-angle': particle.angle,
+                  '--particle-distance': particle.distance,
+                  '--particle-size': particle.size,
+                  '--particle-delay': particle.delay,
                 } as CSSProperties
               }
             />
           ))}
         </span>
-        <span className="live2d-enter-mark" aria-hidden="true">
-          <ArrowDownRight size={17} strokeWidth={1.8} />
-        </span>
-        <span className="live2d-enter-text">进入</span>
-        <span className="live2d-enter-line" aria-hidden="true" />
       </motion.button>
 
       <AnimatePresence>
