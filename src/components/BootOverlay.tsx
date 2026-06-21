@@ -1,15 +1,17 @@
-import { motion } from 'framer-motion'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 type BootOverlayProps = {
   canComplete?: boolean
   modelUrl: string
   onComplete: (loadedModelBuffer: ArrayBuffer) => void
+  onModelLoaded?: (loadedModelBuffer: ArrayBuffer) => void
 }
 
 type BootState = 'loading' | 'complete' | 'error'
 
-export default function BootOverlay({ canComplete = true, modelUrl, onComplete }: BootOverlayProps) {
+const ENTRY_BACKGROUND_URL = '/images/fantasy-road.png'
+
+export default function BootOverlay({ canComplete = true, modelUrl, onComplete, onModelLoaded }: BootOverlayProps) {
   const [attempt, setAttempt] = useState(0)
   const [bootState, setBootState] = useState<BootState>('loading')
   const [minimumElapsed, setMinimumElapsed] = useState(false)
@@ -18,9 +20,8 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete }
   const [progress, setProgress] = useState(0)
   const [targetProgress, setTargetProgress] = useState(0)
   const bootStartRef = useRef(0)
-  const bootSegments = useMemo(() => Array.from({ length: 18 }, (_, index) => index), [])
+  const modelLoadedNotifiedRef = useRef(false)
   const displayProgress = useMemo(() => Math.min(100, Math.max(0, Math.round(progress))), [progress])
-  const activeSegments = Math.round((displayProgress / 100) * bootSegments.length)
   const readyToFinish = minimumElapsed && bootState === 'complete' && canComplete
   const isRevealing = readyToFinish && displayProgress >= 100
 
@@ -35,13 +36,20 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete }
   }, [readyToFinish])
 
   useEffect(() => {
+    if (!loadedModelBuffer || modelLoadedNotifiedRef.current) return
+
+    modelLoadedNotifiedRef.current = true
+    onModelLoaded?.(loadedModelBuffer)
+  }, [loadedModelBuffer, onModelLoaded])
+
+  useEffect(() => {
     if (!readyToFinish || displayProgress < 100) return
 
     const hideTimer = window.setTimeout(() => {
       if (loadedModelBuffer) {
         onComplete(loadedModelBuffer)
       }
-    }, 980)
+    }, 520)
     return () => window.clearTimeout(hideTimer)
   }, [displayProgress, loadedModelBuffer, onComplete, readyToFinish])
 
@@ -51,7 +59,7 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete }
     const progressTimer = window.setInterval(() => {
       setProgress((current) => {
         const elapsed = window.performance.now() - bootStartRef.current
-        const timedProgress = Math.min(targetProgress, (elapsed / 4300) * 100)
+        const timedProgress = Math.min(targetProgress, (elapsed / 2600) * 100)
         const distance = targetProgress - current
 
         if (distance <= 0) return Math.max(current, timedProgress)
@@ -87,16 +95,18 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete }
     let simulatedProgress = 2
 
     bootStartRef.current = window.performance.now()
+    modelLoadedNotifiedRef.current = false
     setBootState('loading')
     setMinimumElapsed(false)
     setLoadedModelBuffer(null)
     setMessage('CONNECTING')
     setProgress(0)
     setTargetProgress(0)
+    void preloadImage(ENTRY_BACKGROUND_URL)
 
     const minimumTimer = window.setTimeout(() => {
       if (alive) setMinimumElapsed(true)
-    }, 3200)
+    }, 1700)
 
     const timeoutTimer = window.setTimeout(() => {
       controller.abort()
@@ -127,6 +137,7 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete }
         if (!response.body) {
           const buffer = await response.arrayBuffer()
           if (!alive) return
+          setTargetProgress((current) => Math.max(current, 90))
           setLoadedModelBuffer(buffer)
           setTargetProgress((current) => Math.max(current, 94))
           setBootState('complete')
@@ -160,6 +171,7 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete }
           modelView.set(chunk, offset)
           offset += chunk.byteLength
         }
+        setTargetProgress((current) => Math.max(current, 90))
         setLoadedModelBuffer(modelBuffer)
         setTargetProgress((current) => Math.max(current, 94))
         setBootState('complete')
@@ -171,11 +183,17 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete }
       }
     }
 
-    preloadModel()
+    let preloadFrame = 0
+    preloadFrame = window.requestAnimationFrame(() => {
+      preloadFrame = window.requestAnimationFrame(() => {
+        if (alive) void preloadModel()
+      })
+    })
 
     return () => {
       alive = false
       controller.abort()
+      window.cancelAnimationFrame(preloadFrame)
       window.clearTimeout(minimumTimer)
       window.clearTimeout(timeoutTimer)
       window.clearInterval(simulationTimer)
@@ -183,46 +201,22 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete }
   }, [attempt, modelUrl])
 
   return (
-    <motion.div className={`boot-overlay boot-${bootState} ${isRevealing ? 'boot-revealing' : ''}`} initial={{ opacity: 1 }}>
-      <div className="boot-grid" aria-hidden="true" />
+    <div
+      className={`boot-overlay boot-${bootState} ${isRevealing ? 'boot-revealing' : ''}`}
+      style={{ '--boot-progress': displayProgress / 100 } as CSSProperties}
+    >
+      <div className="boot-image" aria-hidden="true" />
       <div className="boot-vignette" aria-hidden="true" />
-      <div className="boot-reveal" aria-hidden="true" />
-      <motion.div
-        className="boot-sweep"
-        aria-hidden="true"
-        animate={{ y: ['-18vh', '118vh'] }}
-        transition={{ duration: 2.8, ease: 'easeInOut', repeat: Infinity }}
-      />
 
       <section className="boot-console" aria-live="polite" aria-label="Loading 3D entry scene">
-        <div className="boot-topline">
+        <div className="boot-wordmark" aria-hidden="true">
           <span>SAKURA1TAP</span>
-          <span>{readyToFinish && displayProgress >= 100 ? 'OPEN' : 'LOADING'}</span>
+          <i />
         </div>
-
-        <div className="boot-percent">
-          <span>{displayProgress.toString().padStart(3, '0')}</span>
-          <em>%</em>
-        </div>
-
-        <div className="boot-segments" aria-hidden="true">
-          {bootSegments.map((segment) => (
-            <span
-              className={segment < activeSegments ? 'is-active' : undefined}
-              key={segment}
-              style={{ transitionDelay: `${segment * 18}ms` }}
-            />
-          ))}
-        </div>
-
         <div className="boot-track">
-          <motion.span animate={{ width: `${displayProgress}%` }} transition={{ ease: 'easeOut' }} />
+          <span />
         </div>
-
-        <div className="boot-meta">
-          <span>{message}</span>
-          <span>{readyToFinish && displayProgress >= 100 ? 'READY' : 'SYNC'}</span>
-        </div>
+        <span className="boot-status-text">{readyToFinish && displayProgress >= 100 ? 'OPEN' : message}</span>
 
         {bootState === 'error' && (
           <div className="boot-error">
@@ -233,6 +227,20 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete }
           </div>
         )}
       </section>
-    </motion.div>
+    </div>
   )
+}
+
+async function preloadImage(url: string) {
+  try {
+    await new Promise<void>((resolve) => {
+      const image = new Image()
+      image.decoding = 'async'
+      image.onload = () => resolve()
+      image.onerror = () => resolve()
+      image.src = url
+    })
+  } catch {
+    // Decorative background preloading should never block the entry.
+  }
 }

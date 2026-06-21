@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import type { CSSProperties } from 'react'
 import { useEffect, useState } from 'react'
+import CursorParticles from './CursorParticles'
 import Live2DStage from './Live2DStage'
 
 type Live2DEntryProps = {
@@ -46,6 +47,7 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
       <div className="live2d-entry-vignette" aria-hidden="true" />
       <div className="live2d-entry-ink" aria-hidden="true" />
       <div className="live2d-entry-foreground" aria-hidden="true" />
+      <CursorParticles isEntering={isEntering} />
 
       <Live2DStage
         focusPoint={buttonHover ? { x: 0.5, y: 0.42 } : null}

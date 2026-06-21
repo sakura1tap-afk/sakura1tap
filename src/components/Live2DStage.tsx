@@ -21,12 +21,12 @@ const stageModels: CubismSdkModelConfig[] = [
     feedbackExpressions: ['expression15', 'expression2', 'expression3', 'expression5', 'expression8', 'expression9'],
     parameterOverrides: { Param80: 1 },
     layout: {
-      height: 1.82,
+      height: 1.74,
       mobileHeight: 1.48,
       mobileX: 0.34,
       mobileY: 0.78,
-      x: 0.31,
-      y: 0.69,
+      x: 0.27,
+      y: 0.58,
     },
   },
   {
@@ -34,12 +34,12 @@ const stageModels: CubismSdkModelConfig[] = [
     required: true,
     parameterOverrides: { Param33: 1 },
     layout: {
-      height: 1.92,
+      height: 1.84,
       mobileHeight: 1.48,
       mobileX: 0.66,
       mobileY: 0.78,
-      x: 0.79,
-      y: 0.69,
+      x: 0.83,
+      y: 0.58,
     },
   },
 ]
@@ -166,8 +166,19 @@ class CubismStageEngine {
     this.gl = gl
     this.resize()
 
-    const loadedModels = await Promise.all(stageModels.map((config) => this.loadModel(config)))
-    this.models = loadedModels.filter((model): model is CubismSdkModel => model !== null)
+    const loadedModels: CubismSdkModel[] = []
+    for (const [index, config] of stageModels.entries()) {
+      if (index > 0) await waitForFrame()
+      const model = await this.loadModel(config)
+      if (model) {
+        loadedModels.push(model)
+        this.models = loadedModels.slice()
+        this.resize()
+        this.renderFrame(0)
+      }
+    }
+
+    this.models = loadedModels
 
     if (this.models.length === 0) throw new Error('No Live2D models loaded.')
 
@@ -271,6 +282,12 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
   } finally {
     window.clearTimeout(timeoutId)
   }
+}
+
+async function waitForFrame() {
+  await new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => resolve())
+  })
 }
 
 function clamp(value: number, min: number, max: number) {

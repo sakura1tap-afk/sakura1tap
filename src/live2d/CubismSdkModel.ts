@@ -358,7 +358,7 @@ function getBaseUrl(url: string) {
 }
 
 async function loadTexture(gl: WebGLRenderingContext, url: string) {
-  const image = await loadImage(url)
+  const image = await loadTextureSource(url)
   const texture = gl.createTexture()
   if (!texture) throw new Error(`Failed to create WebGL texture: ${url}`)
 
@@ -376,15 +376,32 @@ async function loadTexture(gl: WebGLRenderingContext, url: string) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
   }
 
+  if ('close' in image && typeof image.close === 'function') {
+    image.close()
+  }
+
   gl.bindTexture(gl.TEXTURE_2D, null)
   return texture
 }
 
-function loadImage(url: string) {
+async function loadTextureSource(url: string): Promise<(HTMLImageElement | ImageBitmap) & { height: number; width: number }> {
+  if ('createImageBitmap' in window) {
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(`Failed to load texture: ${url}`)
+
+    return createImageBitmap(await response.blob(), { premultiplyAlpha: 'premultiply' })
+  }
+
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image()
     image.decoding = 'async'
-    image.onload = () => resolve(image)
+    image.onload = () => {
+      if (image.decode) {
+        image.decode().then(() => resolve(image)).catch(() => resolve(image))
+      } else {
+        resolve(image)
+      }
+    }
     image.onerror = () => reject(new Error(`Failed to load texture: ${url}`))
     image.src = url
   })

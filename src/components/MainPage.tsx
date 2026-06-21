@@ -13,7 +13,7 @@ import {
   Waypoints,
   X,
 } from 'lucide-react'
-import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, type WheelEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Group, MathUtils, Points, Vector3 } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
@@ -22,6 +22,7 @@ type GamePhase = 'idle' | 'running' | 'over'
 
 type MainPageProps = {
   modelBuffer: ArrayBuffer | null
+  onOpenPlay: () => void
 }
 
 type DetailCard = {
@@ -107,24 +108,29 @@ const sections: Record<SectionKey, SectionConfig> = {
   },
   play: {
     accent: '#c8ffdf',
-    body: '小游戏区会成为隐藏记忆点：一个黑白躲避原型，鼠标或手指控制光点，在扫描线里存活。',
+    body: 'Play 是一个持续扩展的互动工具箱：小游戏、视觉实验、反应训练和前端玩法都会被收纳到这里。',
     camera: [0.72, 0.98, 4.55],
     details: [
-      { label: 'CONTROL', meta: 'pointer / touch', body: '鼠标或手指拖动光点，躲开白色扫描块，存活越久分数越高。' },
-      { label: 'STYLE', meta: 'black / white', body: '保持和主场景一致的黑白视觉，不做花哨 UI，重点是紧张和流畅。' },
-      { label: 'UPGRADE', meta: 'future 3D', body: '玩法确认后，可以把障碍投射到 3D 场景里，做成真正的空间小游戏。' },
+      { label: 'ARENA', meta: 'playable module', body: '先迁移现有黑白躲避原型，后续扩展更多可交互玩法。' },
+      { label: 'TOOLS', meta: 'creative utility', body: '这里也可以放颜色、粒子、模型、图像类的前端小工具。' },
+      { label: 'LAB', meta: 'future experiments', body: '每个实验都可以变成独立模式，而不是挤在一个详情小框里。' },
     ],
     hotspot: { left: '54%', top: '69%' },
     icon: Gamepad2,
     label: 'PLAY',
-    metric: '04 / DODGE',
+    metric: '04 / TOOLBOX',
     modelRotation: [0, 0.08, 0],
     orbit: [-0.18, 0.0, -0.16],
-    title: 'Blackout Run',
+    title: 'Play Toolbox',
   },
 }
 
 const sectionOrder = Object.keys(sections) as SectionKey[]
+export const playModes = [
+  { label: 'DODGE', meta: 'available', body: '黑白躲避原型，先作为第一个可玩模块迁移进工具箱。' },
+  { label: 'SIGNAL', meta: 'planned', body: '未来用于测试鼠标轨迹、粒子跟随和节奏反馈。' },
+  { label: 'FORGE', meta: 'planned', body: '未来放模型、颜色、材质和小型生成工具。' },
+]
 
 function SceneRig({ active, nodeOpen }: { active: SectionKey; nodeOpen: boolean }) {
   const { camera } = useThree()
@@ -327,7 +333,7 @@ function MainScene({
   )
 }
 
-function DodgeGame() {
+export function DodgeGame() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const hazardsRef = useRef<Hazard[]>([])
   const playerRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 })
@@ -585,38 +591,126 @@ function DetailLayer({ active, onClose }: { active: SectionKey; onClose: () => v
         </button>
       </header>
 
-      {active === 'play' ? (
-        <DodgeGame />
-      ) : (
-        <div className="node-detail-grid">
-          {section.details.map((detail) => (
-            <article className="node-detail-card" key={detail.label}>
-              <span>{detail.meta}</span>
-              <h3>{detail.label}</h3>
-              <p>{detail.body}</p>
-            </article>
-          ))}
-        </div>
-      )}
+      <div className="node-detail-grid">
+        {section.details.map((detail) => (
+          <article className="node-detail-card" key={detail.label}>
+            <span>{detail.meta}</span>
+            <h3>{detail.label}</h3>
+            <p>{detail.body}</p>
+          </article>
+        ))}
+      </div>
     </motion.section>
   )
 }
 
-export default function MainPage({ modelBuffer }: MainPageProps) {
+export function PlayPage({ onClose }: { onClose: () => void }) {
+  return (
+    <motion.section
+      className="play-page"
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 18 }}
+      transition={{ duration: 0.46, ease: [0.2, 0.8, 0.2, 1] }}
+      onWheel={(event) => event.stopPropagation()}
+    >
+      <div className="play-page-bg" aria-hidden="true" />
+      <header className="play-page-header">
+        <button aria-label="退出 Play 页面" onClick={onClose} type="button">
+          <X size={17} strokeWidth={1.8} />
+          <span>EXIT PLAY</span>
+        </button>
+        <div>
+          <span>04 / TOOLBOX</span>
+          <h1>Play Toolbox</h1>
+        </div>
+      </header>
+
+      <aside className="play-page-brief">
+        <span>INTERACTIVE MODULES</span>
+        <p>这里会逐步收纳可玩的实验：小游戏、反应训练、粒子交互、模型工具和视觉玩法。现在先把第一个黑白躲避原型迁移进来。</p>
+      </aside>
+
+      <section className="play-arena-panel" aria-label="Play toolbox arena">
+        <div className="play-arena-title">
+          <span>AVAILABLE MODULE</span>
+          <strong>BLACKOUT RUN</strong>
+        </div>
+        <DodgeGame />
+      </section>
+
+      <nav className="play-mode-list" aria-label="Play modes">
+        {playModes.map((mode, index) => (
+          <article className={index === 0 ? 'is-active' : undefined} key={mode.label}>
+            <span>{mode.meta}</span>
+            <h2>{mode.label}</h2>
+            <p>{mode.body}</p>
+          </article>
+        ))}
+      </nav>
+    </motion.section>
+  )
+}
+
+export default function MainPage({ modelBuffer, onOpenPlay }: MainPageProps) {
   const [active, setActive] = useState<SectionKey>('about')
   const [openNode, setOpenNode] = useState<SectionKey | null>(null)
   const [cursor, setCursor] = useState({ x: 50, y: 50 })
+  const [wheelDirection, setWheelDirection] = useState<'next' | 'prev' | null>(null)
+  const wheelAccumulatorRef = useRef(0)
+  const wheelCooldownRef = useRef(0)
+  const wheelResetRef = useRef(0)
   const activeSection = sections[active]
   const isNodeOpen = openNode !== null
+  const activeIndex = sectionOrder.indexOf(active)
 
   const activateSection = (key: SectionKey) => {
     setActive(key)
     setOpenNode(null)
   }
 
+  const shiftSection = useCallback(
+    (direction: 'next' | 'prev') => {
+      const currentIndex = sectionOrder.indexOf(active)
+      const offset = direction === 'next' ? 1 : -1
+      const nextIndex = (currentIndex + offset + sectionOrder.length) % sectionOrder.length
+
+      setActive(sectionOrder[nextIndex])
+      setOpenNode(null)
+      setWheelDirection(direction)
+      window.clearTimeout(wheelResetRef.current)
+      wheelResetRef.current = window.setTimeout(() => setWheelDirection(null), 560)
+    },
+    [active],
+  )
+
+  const handleWheel = useCallback(
+    (event: WheelEvent<HTMLElement>) => {
+      if (isNodeOpen) return
+
+      event.preventDefault()
+
+      const now = window.performance.now()
+      if (now - wheelCooldownRef.current < 680) return
+
+      wheelAccumulatorRef.current += event.deltaY
+      if (Math.abs(wheelAccumulatorRef.current) < 72) return
+
+      const direction = wheelAccumulatorRef.current > 0 ? 'next' : 'prev'
+      wheelAccumulatorRef.current = 0
+      wheelCooldownRef.current = now
+      shiftSection(direction)
+    },
+    [isNodeOpen, shiftSection],
+  )
+
+  useEffect(() => {
+    return () => window.clearTimeout(wheelResetRef.current)
+  }, [])
+
   return (
     <motion.section
-      className={`main-page main-experience ${isNodeOpen ? 'has-node-open' : ''}`}
+      className={`main-page main-experience ${isNodeOpen ? 'has-node-open' : ''} ${wheelDirection ? `is-wheel-${wheelDirection}` : ''}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.72, ease: 'easeOut' }}
@@ -625,6 +719,7 @@ export default function MainPage({ modelBuffer }: MainPageProps) {
           '--accent': activeSection.accent,
           '--cursor-x': `${cursor.x}%`,
           '--cursor-y': `${cursor.y}%`,
+          '--section-index': activeIndex,
         } as CSSProperties
       }
       onPointerMove={(event) => {
@@ -633,9 +728,11 @@ export default function MainPage({ modelBuffer }: MainPageProps) {
           y: (event.clientY / window.innerHeight) * 100,
         })
       }}
+      onWheel={handleWheel}
     >
       <div className="main-light-field" aria-hidden="true" />
       <div className="main-grid" aria-hidden="true" />
+      <div className="wheel-transition" aria-hidden="true" />
       <div className="main-scene">
         <MainScene active={active} modelBuffer={modelBuffer} nodeOpen={isNodeOpen} />
       </div>
@@ -696,8 +793,19 @@ export default function MainPage({ modelBuffer }: MainPageProps) {
             <p>{activeSection.body}</p>
           </motion.div>
         </AnimatePresence>
-        <button className="main-panel-action" onClick={() => setOpenNode(active)} type="button">
-          <span>{active === 'play' ? 'START GAME' : 'OPEN NODE'}</span>
+        <button
+          className="main-panel-action"
+          onClick={() => {
+            if (active === 'play') {
+              setOpenNode(null)
+              onOpenPlay()
+            } else {
+              setOpenNode(active)
+            }
+          }}
+          type="button"
+        >
+          <span>{active === 'play' ? 'OPEN TOOLBOX' : 'OPEN NODE'}</span>
           <ArrowUpRight size={16} strokeWidth={1.7} />
         </button>
       </aside>
@@ -709,9 +817,15 @@ export default function MainPage({ modelBuffer }: MainPageProps) {
       <div className="tech-strip" aria-hidden="true">
         <BookOpen size={14} strokeWidth={1.7} />
         <span>R3F CAMERA</span>
+        <span>WHEEL BOUND</span>
         <span>CANVAS GAME</span>
-        <span>STATEFUL NODES</span>
         <Sparkles size={14} strokeWidth={1.7} />
+      </div>
+
+      <div className="wheel-rail" aria-hidden="true">
+        <span>{String(activeIndex + 1).padStart(2, '0')}</span>
+        <i />
+        <span>{String(sectionOrder.length).padStart(2, '0')}</span>
       </div>
     </motion.section>
   )
