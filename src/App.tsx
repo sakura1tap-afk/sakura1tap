@@ -6,7 +6,6 @@ const Live2DEntry = lazy(() => import('./components/Live2DEntry'))
 const MainPage = lazy(() => import('./components/MainPage'))
 const PlayPage = lazy(() => import('./components/PlayPage'))
 const PlayGamePage = lazy(() => import('./components/PlayGamePage'))
-const SCENE_MOUNT_DELAY_MS = 120
 
 type AppPage = 'main' | 'play' | 'play-game'
 
@@ -28,11 +27,9 @@ function canUseWebGL() {
 export default function App() {
   const [entered, setEntered] = useState(() => getPageFromPath(window.location.pathname) !== 'main')
   const [bootComplete, setBootComplete] = useState(false)
-  const [bootModelLoaded, setBootModelLoaded] = useState(false)
   const [live2dReady, setLive2dReady] = useState(false)
   const [modelBuffer, setModelBuffer] = useState<ArrayBuffer | null>(null)
   const [page, setPage] = useState<AppPage>(() => getPageFromPath(window.location.pathname))
-  const [sceneMountAllowed, setSceneMountAllowed] = useState(false)
   const [webglAvailable] = useState(canUseWebGL)
   const entryReady = bootComplete && live2dReady
 
@@ -48,17 +45,10 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (!bootModelLoaded) {
-      setSceneMountAllowed(false)
-      return undefined
-    }
+    if (!webglAvailable || entered) return
 
-    const mountTimer = window.setTimeout(() => {
-      setSceneMountAllowed(true)
-    }, SCENE_MOUNT_DELAY_MS)
-
-    return () => window.clearTimeout(mountTimer)
-  }, [bootModelLoaded])
+    void import('./components/Live2DEntry')
+  }, [entered, webglAvailable])
 
   useEffect(() => {
     if (!entryReady) return
@@ -98,23 +88,17 @@ export default function App() {
           >
             {webglAvailable ? (
               <>
-                {sceneMountAllowed && (
-                  <Suspense fallback={null}>
-                    <Live2DEntry
-                      isReady={entryReady}
-                      onEnter={navigateToMain}
-                      onReadyChange={setLive2dReady}
-                    />
-                  </Suspense>
-                )}
+                <Suspense fallback={null}>
+                  <Live2DEntry
+                    isReady={entryReady}
+                    onEnter={navigateToMain}
+                    onReadyChange={setLive2dReady}
+                  />
+                </Suspense>
                 {!entryReady && (
                   <BootOverlay
                     canComplete={live2dReady}
                     modelUrl="/models/study.glb"
-                    onModelLoaded={(loadedModelBuffer) => {
-                      setModelBuffer(loadedModelBuffer)
-                      setBootModelLoaded(true)
-                    }}
                     onComplete={(loadedModelBuffer) => {
                       setModelBuffer(loadedModelBuffer)
                       setBootComplete(true)
