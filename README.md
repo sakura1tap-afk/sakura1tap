@@ -1,12 +1,12 @@
 # Sakura1Tap
 
-> 一个仍在持续开发中的互动式个人网站与前端实验入口。
+> 一个仍在持续开发中的互动式个人网站。
 
-`Sakura1Tap` 目前定位为个人网站 / 作品集入口 / 前端交互实验站。它不是传统的静态个人主页，而是尝试把 Live2D、Three.js、Canvas 小游戏、滚轮绑定和动效转场组合成一个更有记忆点的网页体验。
+`Sakura1Tap` 的核心定位是一个个人网站。它首先是一个面向访问者的网页入口，用来承载个人介绍、作品展示、学习记录、设计来源和一些可玩的前端实验。
 
-当前项目仍处于开发阶段，页面内容、文案、移动端适配和功能模块都会继续迭代。本 README 会随着项目进展持续更新。
+这个网站目前仍在开发中。现阶段重点不是把它做成传统意义上的开源项目模板，而是先打磨网站本身的第一印象、进入流程、视觉风格和互动体验。README 会随着网站内容和功能持续更新。
 
-## 当前进度
+## 网站当前进度
 
 目前已经实现的主要内容：
 
@@ -34,69 +34,9 @@
   - 随时间生成障碍物并提升难度。
   - 支持分数、最高分、开始和重新开始状态。
 
-## 技术栈
+## 网站体验流程
 
-| 分类 | 技术 |
-| --- | --- |
-| 前端框架 | React |
-| 开发语言 | TypeScript |
-| 构建工具 | Vite |
-| 3D 渲染 | Three.js、React Three Fiber、Drei |
-| Live2D | Live2D Cubism Core、自定义 Cubism SDK 封装 |
-| 动效 | Framer Motion |
-| 小游戏 | HTML5 Canvas 2D |
-| 图标 | Lucide React |
-| 样式 | CSS |
-
-## 本地运行
-
-请先确保本地已经安装 Node.js。
-
-安装依赖：
-
-```bash
-npm install
-```
-
-启动开发环境：
-
-```bash
-npm run dev
-```
-
-构建项目：
-
-```bash
-npm run build
-```
-
-本地预览构建结果：
-
-```bash
-npm run preview
-```
-
-## 项目结构
-
-```text
-index.html                         页面入口，加载 Live2D Cubism Core
-src/main.tsx                       React 根节点挂载
-src/App.tsx                        顶层状态、入口流程、手写路由控制
-src/components/BootOverlay.tsx     启动加载层与 GLB 模型预加载
-src/components/Live2DEntry.tsx     Live2D 入口页与进入按钮
-src/components/Live2DStage.tsx     Live2D WebGL 舞台与模型调度
-src/live2d/CubismSdkModel.ts       自定义 Cubism 模型加载、更新、渲染逻辑
-src/components/MainPage.tsx        3D 主页面、节点配置、滚轮切换
-src/components/PlayPage.tsx        Play 工具箱介绍页
-src/components/PlayGamePage.tsx    Blackout Run 全屏程序页
-src/components/DodgeGame.tsx       Canvas 躲避小游戏
-src/components/CursorParticles.tsx 入口粒子与萤火效果
-src/style.css                      当前全局样式文件
-```
-
-## 页面与交互流程
-
-当前页面流程大致如下：
+当前访问流程大致如下：
 
 ```text
 打开网站
@@ -155,16 +95,61 @@ Play 是未来承载小游戏、视觉实验和前端工具的区域。目前已
 
 `Blackout Run` 是一个黑白风格的 Canvas 躲避小游戏。玩家通过鼠标控制白色光点移动，躲避不断出现的扫描障碍物，存活越久分数越高。
 
+## 技术栈
+
+| 分类 | 技术 |
+| --- | --- |
+| 前端框架 | React |
+| 开发语言 | TypeScript |
+| 构建工具 | Vite |
+| 3D 渲染 | Three.js、React Three Fiber、Drei |
+| Live2D | Live2D Cubism Core、自定义 Cubism SDK 封装 |
+| 动效 | Framer Motion |
+| 小游戏 | HTML5 Canvas 2D |
+| 图标 | Lucide React |
+| 样式 | CSS |
+
+## 项目结构
+
+```text
+index.html                         页面入口，加载 Live2D Cubism Core
+src/main.tsx                       React 根节点挂载
+src/App.tsx                        顶层状态、入口流程、手写路由控制
+src/components/BootOverlay.tsx     启动加载层与 GLB 模型预加载
+src/components/Live2DEntry.tsx     Live2D 入口页与进入按钮
+src/components/Live2DStage.tsx     Live2D WebGL 舞台与模型调度
+src/live2d/CubismSdkModel.ts       自定义 Cubism 模型加载、更新、渲染逻辑
+src/components/MainPage.tsx        3D 主页面、节点配置、滚轮切换
+src/components/PlayPage.tsx        Play 工具箱介绍页
+src/components/PlayGamePage.tsx    Blackout Run 全屏程序页
+src/components/DodgeGame.tsx       Canvas 躲避小游戏
+src/components/CursorParticles.tsx 入口粒子与萤火效果
+src/style.css                      当前全局样式文件
+```
+
+## 本地开发
+
+本仓库主要服务于网站本身，本地运行说明仅作为开发记录保留。
+
+请先确保本地已经安装 Node.js。
+
+```bash
+npm install
+npm run dev
+npm run build
+npm run preview
+```
+
 ## 开发状态
 
-当前项目仍在开发中，已有功能更偏向“体验骨架”和“技术验证”。后续会继续补充真实内容、优化移动端、拆分样式并扩展 Play 模块。
+当前网站仍在开发中，已有功能更偏向“体验骨架”和“技术验证”。后续会继续补充真实内容、优化移动端、拆分样式并扩展 Play 模块。
 
 ## 后续计划
 
 短期计划：
 
 - 补充更完整的个人介绍与项目内容。
-- 优化 README 和项目说明。
+- 优化 README 和网站说明。
 - 检查移动端 Live2D、3D 主页面和小游戏体验。
 - 整理模型、图片和素材来源说明。
 - 优化加载速度与资源体积。
@@ -189,7 +174,7 @@ Play 是未来承载小游戏、视觉实验和前端工具的区域。目前已
 
 核心原则包括：
 
-- 保持 Sakura1Tap 的 Live2D + 3D + 互动实验站定位。
+- 保持 Sakura1Tap 的 Live2D + 3D + 互动网站定位。
 - 不要把项目改成普通模板个人主页。
 - 修改前先阅读相关文件，不猜测结构。
 - 尽量做小而安全的改动。
@@ -198,7 +183,7 @@ Play 是未来承载小游戏、视觉实验和前端工具的区域。目前已
 
 ## 注意事项
 
-- 当前项目包含较重的模型、Live2D 和图片资源，首次加载速度仍有继续优化空间。
+- 当前网站包含较重的模型、Live2D 和图片资源，首次加载速度仍有继续优化空间。
 - 当前内容文案仍有占位性质，后续会持续替换为真实内容。
 - 当前样式主要集中在 `src/style.css`，后续可能拆分。
 - 当前路由为手写 History API，页面继续增加后可能调整。
