@@ -43,6 +43,14 @@ type TextureRecord = {
   url: string
 }
 
+type TextureSource = (HTMLImageElement | ImageBitmap) & { height: number; width: number }
+
+type PendingTextureRecord = {
+  index: number
+  source: TextureSource
+  url: string
+}
+
 export function ensureCubismFramework() {
   if (frameworkStarted) return
 
@@ -258,15 +266,25 @@ export class CubismSdkModel extends CubismUserModel {
     if (!this.modelSetting) return
 
     const count = this.modelSetting.getTextureCount()
-    for (let index = 0; index < count; index += 1) {
-      const texturePath = this.modelSetting.getTextureFileName(index)
-      if (!texturePath) continue
+    const pendingTextures = await Promise.all(
+      Array.from({ length: count }, async (_, index): Promise<PendingTextureRecord | null> => {
+        const texturePath = this.modelSetting?.getTextureFileName(index)
+        if (!texturePath) return null
 
-      const url = this.resolve(texturePath)
-      const texture = await loadTexture(gl, url)
+        const url = this.resolve(texturePath)
+        return {
+          index,
+          source: await loadTextureSource(url),
+          url,
+        }
+      }),
+    )
+
+    pendingTextures.filter(isPendingTextureRecord).forEach(({ index, source, url }) => {
+      const texture = createTexture(gl, source, url)
       this.textures.push({ id: texture, url })
       this.getRenderer().bindTexture(index, texture)
-    }
+    })
   }
 
   private setupEyeBlink() {
@@ -348,7 +366,7 @@ export class CubismSdkModel extends CubismUserModel {
 }
 
 async function fetchArrayBuffer(url: string) {
-  const response = await fetch(url)
+  const response = await fetch(url, { cache: 'force-cache' })
   if (!response.ok) throw new Error(`Failed to load ${url}: ${response.status}`)
   return response.arrayBuffer()
 }
@@ -357,8 +375,7 @@ function getBaseUrl(url: string) {
   return url.slice(0, url.lastIndexOf('/') + 1)
 }
 
-async function loadTexture(gl: WebGLRenderingContext, url: string) {
-  const image = await loadTextureSource(url)
+function createTexture(gl: WebGLRenderingContext, source: TextureSource, url: string) {
   const texture = gl.createTexture()
   if (!texture) throw new Error(`Failed to create WebGL texture: ${url}`)
 
@@ -368,25 +385,25 @@ async function loadTexture(gl: WebGLRenderingContext, url: string) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source)
 
-  if (isPowerOfTwo(image.width) && isPowerOfTwo(image.height)) {
+  if (isPowerOfTwo(source.width) && isPowerOfTwo(source.height)) {
     gl.generateMipmap(gl.TEXTURE_2D)
   } else {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
   }
 
-  if ('close' in image && typeof image.close === 'function') {
-    image.close()
+  if ('close' in source && typeof source.close === 'function') {
+    source.close()
   }
 
   gl.bindTexture(gl.TEXTURE_2D, null)
   return texture
 }
 
-async function loadTextureSource(url: string): Promise<(HTMLImageElement | ImageBitmap) & { height: number; width: number }> {
+async function loadTextureSource(url: string): Promise<TextureSource> {
   if ('createImageBitmap' in window) {
-    const response = await fetch(url)
+    const response = await fetch(url, { cache: 'force-cache' })
     if (!response.ok) throw new Error(`Failed to load texture: ${url}`)
 
     return createImageBitmap(await response.blob(), { premultiplyAlpha: 'premultiply' })
@@ -405,6 +422,10 @@ async function loadTextureSource(url: string): Promise<(HTMLImageElement | Image
     image.onerror = () => reject(new Error(`Failed to load texture: ${url}`))
     image.src = url
   })
+}
+
+function isPendingTextureRecord(record: PendingTextureRecord | null): record is PendingTextureRecord {
+  return record != null
 }
 
 function isPowerOfTwo(value: number) {
