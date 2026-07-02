@@ -200,7 +200,13 @@ src/components/BootOverlay.tsx     Boot/loading overlay and GLB preload
 src/components/Live2DEntry.tsx     Live2D entry UI and enter button
 src/components/Live2DStage.tsx     WebGL Live2D stage and model orchestration
 src/live2d/CubismSdkModel.ts       Custom Cubism model loader, update, draw, focus
-src/components/MainPage.tsx        3D main scene, sections, wheel navigation
+src/data/mainSections.ts           Main page section content, camera, hotspot, and icon config
+src/components/MainPage.tsx        3D main scene, section rendering, wheel navigation
+src/components/main/MainScene.tsx  R3F/Three main scene, camera rig, model, and energy field
+src/components/main/DetailLayer.tsx Main page node detail overlay
+src/components/main/MainPanel.tsx  Main page title, body, and primary action
+src/components/main/SceneHotspots.tsx Main page scene hotspot buttons
+src/components/main/TechStrip.tsx  Main page bottom tech strip
 src/components/PlayPage.tsx        Play toolbox intro page
 src/components/PlayGamePage.tsx    Fullscreen Blackout Run wrapper
 src/components/DodgeGame.tsx       Canvas game implementation
@@ -212,7 +218,7 @@ src/style.css                      Global visual system and responsive styling
 
 ### Add or edit a main-page section
 
-1. Update the `sections` config in `src/components/MainPage.tsx`.
+1. Update the section config in `src/data/mainSections.ts`.
 2. Keep the section key type-safe.
 3. Provide label, metric, camera, model rotation, hotspot, title, body, and details.
 4. Check wheel navigation and hotspot placement.

@@ -29,12 +29,21 @@ Sakura1Tap 当前是一个基于 React + Vite 的个人网站入口项目。它�
 4. `src/components/Live2DEntry.tsx`：入口页视觉编排，连接 Live2D 舞台、粒子和进入按钮。
 5. `src/components/Live2DStage.tsx`：Live2D WebGL 舞台，管理模型加载、渲染、鼠标注视和点击反馈。
 6. `src/live2d/CubismSdkModel.ts`：Live2D Cubism SDK 封装，负责 model3、贴图、动作、表情、物理、呼吸和渲染。
-7. `src/components/MainPage.tsx`：进入后的主页面，包含 3D 主场景、节点系统和旧版残留 Play 逻辑。
-8. `src/components/PlayPage.tsx`：Play Toolbox 介绍页。
-9. `src/components/PlayGamePage.tsx`：独立游戏页面容器。
-10. `src/components/DodgeGame.tsx`：黑白躲避小游戏核心逻辑。
-11. `src/style.css`：全局样式、入口页、主页面、Play 页面、Live2D 舞台和小游戏样式。
-12. `public/_redirects`：Cloudflare 路由 fallback 配置。
+7. `src/data/mainSections.ts`：主页面节点内容、镜头、热点和图标配置。
+8. `src/motion/gsap.ts`：GSAP 注册和统一导出。
+9. `src/motion/motionTokens.ts`：动效时长、缓动和媒体查询 token。
+10. `src/components/MainPage.tsx`：进入后的主页面，包含 3D 主场景、节点系统和交互逻辑。
+11. `src/components/main/MainScene.tsx`：主页面 R3F/Three 场景、模型渲染、镜头和能量场。
+12. `src/components/main/DetailLayer.tsx`：主页面节点详情弹层。
+13. `src/components/main/MainPanel.tsx`：主页面标题、正文和主操作按钮。
+14. `src/components/main/SceneHotspots.tsx`：主页面场景热点按钮。
+15. `src/components/main/TechStrip.tsx`：主页面底部技术条。
+16. `src/components/PlayPage.tsx`：Play Toolbox 介绍页。
+17. `src/components/PlayGamePage.tsx`：独立游戏页面容器。
+18. `src/components/DodgeGame.tsx`：黑白躲避小游戏核心逻辑。
+19. `src/style.css`：全局样式、入口页、主页面、Play 页面、Live2D 舞台和小游戏样式。
+20. `docs/HISTORICAL_COMPONENT_AUDIT.md`：历史入口组件审计记录。
+21. `public/_redirects`：Cloudflare 路由 fallback 记录文件。
 
 ---
 
@@ -64,22 +73,42 @@ sakura1tap/
 │  ├─ main.tsx
 │  ├─ App.tsx
 │  ├─ style.css
+│  ├─ motion/
+│  │  ├─ gsap.ts
+│  │  └─ motionTokens.ts
 │  ├─ components/
 │  │  ├─ BootOverlay.tsx
 │  │  ├─ CursorParticles.tsx
 │  │  ├─ Live2DEntry.tsx
 │  │  ├─ Live2DStage.tsx
 │  │  ├─ MainPage.tsx
+│  │  ├─ main/
+│  │  │  ├─ DetailLayer.tsx
+│  │  │  ├─ MainPanel.tsx
+│  │  │  ├─ SceneHotspots.tsx
+│  │  │  ├─ TechStrip.tsx
+│  │  │  └─ MainScene.tsx
 │  │  ├─ PlayPage.tsx
 │  │  ├─ PlayGamePage.tsx
 │  │  └─ DodgeGame.tsx
+│  ├─ data/
+│  │  └─ mainSections.ts
 │  ├─ live2d/
 │  │  └─ CubismSdkModel.ts
 │  └─ vendor/
 │     └─ cubism/
 │        └─ Live2D Cubism SDK TypeScript 源码封装
 └─ docs/
+   ├─ BACKLOG.md
    ├─ PROJECT_OVERVIEW.md
+   ├─ MAIN_PAGE_SPLIT_DESIGN.md
+   ├─ MAIN_PAGE_SPLIT_LOG.md
+   ├─ HISTORICAL_COMPONENT_AUDIT.md
+   ├─ OPTIMIZATION_PLAN.md
+   ├─ specs/
+   │  ├─ README.md
+   │  └─ SPEC_TEMPLATE.md
+   ├─ WORKFLOW.md
    └─ CHANGELOG.md
 ```
 
@@ -269,14 +298,13 @@ Live2D 舞台层，负责 canvas、WebGL 上下文和多模型渲染。
 
 当前包含内容：
 
-- 主页面节点配置 `sections`。
-- React Three Fiber 场景：`MainScene`。
-- 镜头控制：`SceneRig`。
-- GLB 模型解析：`MainStudyModel`。
-- 能量环和粒子：`EnergyField`。
-- 节点详情弹层：`DetailLayer`。
 - 主页面交互：滚轮切换、热点切换、节点打开。
-- 旧版内嵌 `PlayPage` 和 `DodgeGame` 导出逻辑。
+- 从 `src/data/mainSections.ts` 读取主页面节点配置。
+- 挂载 `src/components/main/MainScene.tsx` 作为 3D 场景层。
+- 挂载 `src/components/main/DetailLayer.tsx` 作为节点详情层。
+- 挂载 `src/components/main/MainPanel.tsx` 作为主面板。
+- 挂载 `src/components/main/SceneHotspots.tsx` 作为场景热点层。
+- 挂载 `src/components/main/TechStrip.tsx` 作为底部技术条。
 
 当前四个节点：
 
@@ -289,9 +317,110 @@ PLAY    -> 互动实验工具箱入口
 
 维护建议：
 
-- `sections` 后续可以独立成 `src/data/sections.ts`。
-- `MainScene`、`MainStudyModel`、`EnergyField` 可以拆到 `src/components/main-scene/`。
-- 旧版 `PlayPage`、`DodgeGame` 已经有独立文件，应从 `MainPage.tsx` 清理，避免重复维护。
+- 后续可以继续将节点导航、详情层等 DOM 子组件拆到 `src/components/main/`。
+
+---
+
+### 4.10.1 `src/data/mainSections.ts`
+
+主页面节点配置文件。
+
+负责内容：
+
+- 定义 `SectionKey`。
+- 存放 About、Work、Source、Play 四个节点的标题、正文、详情卡片、主题色、热点位置、镜头位置、模型旋转和图标。
+- 导出 `sectionOrder`，供主页面保持稳定的节点顺序。
+
+维护建议：
+
+- 后续改主页面文案、详情卡片、热点位置或节点主题色，优先改这里。
+- 不在这里写 React 状态逻辑、Three.js 渲染逻辑或路由逻辑。
+
+---
+
+### 4.10.2 `src/components/main/MainScene.tsx`
+
+主页面 3D 场景层。
+
+负责内容：
+
+- React Three Fiber `Canvas`。
+- `SceneRig` 镜头缓动。
+- `MainStudyModel` GLB buffer 解析和模型姿态响应。
+- `EnergyField` 能量环与粒子。
+- 主场景灯光、雾和模型加载状态提示。
+
+维护建议：
+
+- 后续优化 3D 性能、模型渲染、镜头运动和能量场时，优先改这里。
+- 不在这里写页面路由、Play 入口、节点详情 DOM 或主页面文案。
+
+---
+
+### 4.10.3 `src/components/main/DetailLayer.tsx`
+
+主页面节点详情层。
+
+负责内容：
+
+- 根据当前节点读取详情数据。
+- 渲染详情标题、关闭按钮和详情卡片。
+- 保持详情层的 Framer Motion 入场和离场动画参数。
+
+维护建议：
+
+- 后续调整详情卡片结构、详情层动效或关闭按钮时，优先改这里。
+- 不在这里管理当前 active 节点状态、滚轮切换或 Play 路由跳转。
+
+---
+
+### 4.10.4 `src/components/main/MainPanel.tsx`
+
+主页面主面板。
+
+负责内容：
+
+- 渲染当前节点的 metric、title 和 body。
+- 保持主面板切换动画。
+- 渲染主操作按钮和按钮文案。
+
+维护建议：
+
+- 后续调整主面板文字布局、按钮表现或面板动画时，优先改这里。
+- 不在这里决定 Play 路由跳转；按钮行为由 `MainPage.tsx` 传入。
+
+---
+
+### 4.10.5 `src/components/main/SceneHotspots.tsx`
+
+主页面场景热点层。
+
+负责内容：
+
+- 渲染场景热点按钮。
+- 根据当前节点设置热点激活态。
+- 从 `mainSections` 读取热点位置 CSS 变量。
+
+维护建议：
+
+- 后续调整热点可访问性、热点布局或热点交互时，优先改这里。
+- 不在这里写节点顺序或主页面状态，顺序和内容继续来自数据层。
+
+---
+
+### 4.10.6 `src/components/main/TechStrip.tsx`
+
+主页面底部技术条。
+
+负责内容：
+
+- 渲染底部技术标签。
+- 渲染技术条两侧图标。
+
+维护建议：
+
+- 后续调整技术标签内容或展示方式时，优先改这里。
+- 当前是静态展示组件，不需要提前设计 props。
 
 ---
 
@@ -373,24 +502,69 @@ Play Toolbox 介绍页。
 
 ### 4.15 `public/_redirects`
 
-Cloudflare 路由 fallback 文件。
+Cloudflare 路由 fallback 记录文件。
 
 当前内容：
 
 ```text
-/play /index.html 200
-/play/* /index.html 200
+# Cloudflare redirects intentionally disabled.
+# The Workers/Assets deployment path rejects SPA rewrites to /index.html as an infinite loop.
 ```
+
+当前状态：
+
+- `_redirects` 规则已暂时禁用。
+- 之前使用过 `/* /index.html 200`，Cloudflare Workers/Assets 部署链路报错 infinite loop。
+- 后续也尝试过只覆盖 `/play` 与 `/play/*`，但当前仓库以禁用 rewrite 为准，避免部署链路再次进入无限循环。
+- 如果未来需要支持直接刷新 `/play` 或 `/play/blackout`，应先确认 Cloudflare Pages/Workers 的实际托管模式，再重新设计 fallback 规则。
+
+---
+
+### 4.16 `docs/MAIN_PAGE_SPLIT_LOG.md`
+
+主页面拆分专项日志。
 
 用途：
 
-- 让用户直接刷新 `/play` 或 `/play/blackout` 时，Cloudflare 仍返回 `index.html`，再由前端 `App.tsx` 判断路径并渲染对应页面。
+- 记录主页面拆分项目的时间线。
+- 说明每一刀拆了什么、为什么拆、如何验证。
+- 保留当前结果和未完成事项，避免后续重复讨论。
 
-背景：
+---
 
-- 之前使用过 `/* /index.html 200`。
-- Cloudflare Workers/Assets 部署链路报错 infinite loop。
-- 当前改成只覆盖实际需要的 SPA 路由，避免全局 fallback 循环。
+### 4.17 `docs/MAIN_PAGE_SPLIT_DESIGN.md`
+
+主页面拆分设计文档。
+
+用途：
+
+- 定义主页面拆分的目标架构。
+- 约束 `mainSections`、`MainPage`、`MainScene`、`DetailLayer` 等模块边界。
+- 规划后续阶段：DOM 子组件拆分、历史组件审计、样式模块化和 bundle 优化。
+
+---
+
+### 4.18 `docs/HISTORICAL_COMPONENT_AUDIT.md`
+
+历史组件审计记录。
+
+用途：
+
+- 记录旧入口实验组件的引用审计。
+- 说明哪些组件已删除，以及当前活入口由哪些文件承载。
+- 保留删除依据，避免后续误以为文件丢失。
+
+---
+
+### 4.19 `docs/specs/`
+
+功能规格目录。
+
+用途：
+
+- 为新功能、内容改版、Play 模块和交互优化提供规格文档入口。
+- 在实现前记录目标、边界、验收标准和风险。
+- 使用 `SPEC_TEMPLATE.md` 创建新规格。
 
 ---
 
@@ -446,10 +620,10 @@ MainPage
 
 ### 6.1 需要优先清理
 
-1. `MainPage.tsx` 文件过大，后续维护困难。
-2. `MainPage.tsx` 内仍保留旧版 `PlayPage` 和 `DodgeGame` 导出，和独立文件重复。
-3. 所有样式集中在 `style.css`，后续模块增多后会难以定位。
-4. 路由当前由 `App.tsx` 手写，页面继续增加后可考虑引入更清晰的路由表。
+1. `MainPage.tsx` 仍包含节点导航、热点和页面 DOM，后续可以继续拆分。
+2. 所有样式集中在 `style.css`，后续模块增多后会难以定位。
+3. 路由当前由 `App.tsx` 手写，页面继续增加后可考虑引入更清晰的路由表。
+4. 历史入口组件仍需要审计，确认是删除、归档还是保留为参考。
 
 ### 6.2 可以继续增强
 

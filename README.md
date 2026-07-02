@@ -106,7 +106,7 @@ Play 是未来承载小游戏、视觉实验和前端工具的区域。目前已
 | 构建工具 | Vite |
 | 3D 渲染 | Three.js、React Three Fiber、Drei |
 | Live2D | Live2D Cubism Core、自定义 Cubism SDK 封装 |
-| 动效 | Framer Motion |
+| 动效 | Framer Motion、GSAP |
 | 小游戏 | HTML5 Canvas 2D |
 | 图标 | Lucide React |
 | 样式 | CSS |
@@ -117,11 +117,19 @@ Play 是未来承载小游戏、视觉实验和前端工具的区域。目前已
 index.html                         页面入口，加载 Live2D Cubism Core
 src/main.tsx                       React 根节点挂载
 src/App.tsx                        顶层状态、入口流程、手写路由控制
+src/motion/gsap.ts                 GSAP 注册和统一导出
+src/motion/motionTokens.ts         动效时长、缓动和媒体查询 token
 src/components/BootOverlay.tsx     启动加载层与 GLB 模型预加载
 src/components/Live2DEntry.tsx     Live2D 入口页与进入按钮
 src/components/Live2DStage.tsx     Live2D WebGL 舞台与模型调度
 src/live2d/CubismSdkModel.ts       自定义 Cubism 模型加载、更新、渲染逻辑
-src/components/MainPage.tsx        3D 主页面、节点配置、滚轮切换
+src/data/mainSections.ts           主页面节点内容、镜头、热点和图标配置
+src/components/MainPage.tsx        3D 主页面、节点渲染、滚轮切换
+src/components/main/MainScene.tsx  主页面 R3F/Three 场景和模型渲染
+src/components/main/DetailLayer.tsx 主页面节点详情弹层
+src/components/main/MainPanel.tsx  主页面标题、正文和主操作按钮
+src/components/main/SceneHotspots.tsx 主页面场景热点按钮
+src/components/main/TechStrip.tsx  主页面底部技术条
 src/components/PlayPage.tsx        Play 工具箱介绍页
 src/components/PlayGamePage.tsx    Blackout Run 全屏程序页
 src/components/DodgeGame.tsx       Canvas 躲避小游戏
