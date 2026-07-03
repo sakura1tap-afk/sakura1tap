@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import type { CSSProperties } from 'react'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, type CSSProperties, useEffect, useRef, useState } from 'react'
 import CursorParticles from './CursorParticles'
+import EntryMiniGame from './EntryMiniGame'
 import Live2DStage from './Live2DStage'
 
 type Live2DEntryProps = {
@@ -18,10 +18,13 @@ const gateParticles = Array.from({ length: 28 }, (_, index) => ({
   delay: `${index * 46}ms`,
 }))
 
+const EntryMotionController = lazy(() => import('./EntryMotionController'))
+
 export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DEntryProps) {
   const [isEntering, setIsEntering] = useState(false)
   const [buttonHover, setButtonHover] = useState(false)
   const [modelLoadState, setModelLoadState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const rootRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     onReadyChange?.(modelLoadState !== 'loading')
@@ -37,16 +40,21 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
   return (
     <motion.div
       className={`live2d-entry ${isEntering ? 'is-entering' : ''}`}
+      ref={rootRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.72, ease: 'easeOut' }}
     >
+      <Suspense fallback={null}>
+        <EntryMotionController isEntering={isEntering} modelReady={modelLoadState === 'ready'} rootRef={rootRef} />
+      </Suspense>
       <div className="live2d-entry-bg" aria-hidden="true" />
       <div className="live2d-entry-grid" aria-hidden="true" />
       <div className="live2d-entry-vignette" aria-hidden="true" />
       <div className="live2d-entry-ink" aria-hidden="true" />
       <div className="live2d-entry-foreground" aria-hidden="true" />
+      <EntryMiniGame disabled={!isReady} isEntering={isEntering} />
       <CursorParticles isEntering={isEntering} />
 
       <Live2DStage
@@ -55,21 +63,17 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
         onLoadStateChange={setModelLoadState}
       />
 
-      <div className="live2d-entry-status" aria-hidden="true">
-        <span>SAKURA1TAP</span>
-        <span>{modelLoadState === 'ready' ? 'LIVE2D READY' : modelLoadState === 'error' ? 'MODEL OFFLINE' : 'SYNCING'}</span>
-      </div>
-
       <motion.button
         animate={{ opacity: isReady ? 1 : 0.44 }}
-        aria-label="进入"
-        className="live2d-enter-button city-gate-entry"
+        aria-label="Enter the realm"
+        className="live2d-enter-button city-gate-entry realm-enter-button"
         disabled={!isReady || isEntering}
         onClick={handleEnter}
         onPointerEnter={() => setButtonHover(true)}
         onPointerLeave={() => setButtonHover(false)}
         type="button"
       >
+        <span className="realm-enter-label">ENTER</span>
         <span className="city-gate-entry-core" aria-hidden="true" />
         <span className="city-gate-entry-rays" aria-hidden="true" />
         <span className="city-gate-entry-particles" aria-hidden="true">

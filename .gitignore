@@ -10,6 +10,12 @@ pnpm-debug.log*
 *.log
 *.zip
 *.bak
+/素材库/
+/public/art/game/kenney-new-platformer/Sprites/
+/public/art/game/kenney-new-platformer/Sounds/
+/public/art/game/kenney-new-platformer/Preview*.png
+/public/art/game/kenney-new-platformer/Sample*.png
+/public/art/game/kenney-new-platformer/*.url
 /白天使dlc修改版3.0/
 /public/live2d/WhiteAngel/
 /public/cubism-shaders/

@@ -139,7 +139,7 @@ export default function App() {
           </Suspense>
         ) : (
           <Suspense key="main" fallback={null}>
-            <MainPage modelBuffer={modelBuffer} onOpenPlay={navigateToPlay} />
+            <MainPage modelBuffer={modelBuffer} />
           </Suspense>
         )}
       </AnimatePresence>

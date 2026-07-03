@@ -9,8 +9,6 @@ type BootOverlayProps = {
 
 type BootState = 'loading' | 'complete' | 'error'
 
-const ENTRY_BACKGROUND_URL = '/images/fantasy-road.png'
-
 export default function BootOverlay({ canComplete = true, modelUrl, onComplete, onModelLoaded }: BootOverlayProps) {
   const [attempt, setAttempt] = useState(0)
   const [bootState, setBootState] = useState<BootState>('loading')
@@ -20,6 +18,7 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete, 
   const [progress, setProgress] = useState(0)
   const [targetProgress, setTargetProgress] = useState(0)
   const bootStartRef = useRef(0)
+  const rootRef = useRef<HTMLDivElement | null>(null)
   const modelLoadedNotifiedRef = useRef(false)
   const displayProgress = useMemo(() => Math.min(100, Math.max(0, Math.round(progress))), [progress])
   const readyToFinish = minimumElapsed && bootState === 'complete' && canComplete
@@ -102,8 +101,6 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete, 
     setMessage('CONNECTING')
     setProgress(0)
     setTargetProgress(0)
-    void preloadImage(ENTRY_BACKGROUND_URL)
-
     const minimumTimer = window.setTimeout(() => {
       if (alive) setMinimumElapsed(true)
     }, 1700)
@@ -203,20 +200,15 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete, 
   return (
     <div
       className={`boot-overlay boot-${bootState} ${isRevealing ? 'boot-revealing' : ''}`}
+      ref={rootRef}
       style={{ '--boot-progress': displayProgress / 100 } as CSSProperties}
     >
-      <div className="boot-image" aria-hidden="true" />
-      <div className="boot-vignette" aria-hidden="true" />
-
+      <div className="boot-cross boot-cross-a" aria-hidden="true" />
+      <div className="boot-cross boot-cross-b" aria-hidden="true" />
       <section className="boot-console" aria-live="polite" aria-label="Loading 3D entry scene">
-        <div className="boot-wordmark" aria-hidden="true">
-          <span>SAKURA1TAP</span>
-          <i />
-        </div>
         <div className="boot-track">
           <span />
         </div>
-        <span className="boot-status-text">{readyToFinish && displayProgress >= 100 ? 'OPEN' : message}</span>
 
         {bootState === 'error' && (
           <div className="boot-error">
@@ -229,18 +221,4 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete, 
       </section>
     </div>
   )
-}
-
-async function preloadImage(url: string) {
-  try {
-    await new Promise<void>((resolve) => {
-      const image = new Image()
-      image.decoding = 'async'
-      image.onload = () => resolve()
-      image.onerror = () => resolve()
-      image.src = url
-    })
-  } catch {
-    // Decorative background preloading should never block the entry.
-  }
 }

@@ -7,6 +7,13 @@
 
 ## 2026-07-01
 
+### 调整：主场景影片框聚焦与 Entry 小游戏手感
+
+- 主场景临时撤下手部模型、粒子、环、底座和背景光影等堆叠层，只保留四个 MP4 影片框作为下一阶段功能入口原型。
+- 删除影片框拖拽交互，改为点击某个影片框后平滑移动到屏幕中心成为焦点；非焦点影片框保留更大的左右旋转角度。
+- Entry 缓冲小游戏降低左右移动速度和跳跃高度，修正按住跳跃键导致落地反复弹起的问题。
+- Entry 小游戏世界宽度拉长，加入镜头跟随和背景相对移动，避免人物在固定画布上高速滑动。
+
 ### 新增：GSAP / 3D / 立体滑动重设计规格
 
 - 新增 `docs/specs/FRONTEND_REDESIGN_GSAP_3D_MOTION.md`。
@@ -100,6 +107,115 @@
 - 指针移动从 React `setState` 改为直接写入根元素 CSS variables，减少高频 pointer move 触发的 React 重渲染。
 - 新增 `genome-experience`、`genome-stage`、`genome-backdrop`、`genome-system-strip` 等样式，旧 `main-experience` 不再是主体验结构的主语。
 - `npm run build` 已通过；`MainPage` chunk 从约 953 kB 降到约 11.64 kB，R3F/Three 集中到懒加载 `GenomeStage` chunk。
+
+## 2026-07-02
+
+### 重定向：按中世纪幻想风设计文档重做方向
+
+- 新增 `docs/specs/MEDIEVAL_FANTASY_REALM_DESIGN.md`，根据用户提供的视觉设计文档截图整理正式规格。
+- 设计方向从 Black Sakura Genome Observatory 调整为 Medieval Fantasy Realm：森林、远山、城堡、玻璃拟态、暖金光标水波和沉浸式页面切换。
+- `src/data/mainSections.ts` 将主 IA 改为 Home / Universe / Portfolio / Blog / About。
+- `src/components/main/RealmInterface.tsx` 新增幻想风主界面：顶部导航、玻璃 hero panel、realm map card 和底部进度轨。
+- `src/components/main/MainExperience.tsx` 改用 `realm-experience` Shell；Home 默认不加载 3D 舞台，只有 Universe 节点懒加载 `GenomeStage`。
+- `src/components/Live2DEntry.tsx` 入口文案改为 `ENTER THE REALM`，状态语言改为 Realm Gate / Gate Ready。
+- `src/components/BootOverlay.tsx` 加载文案改为 Realm Boot / Forest Gate。
+
+### 第二阶段：清理旧 Genome 视觉骨架
+
+- `src/components/BootOverlay.tsx` 和 `src/components/BootMotionController.tsx` 将加载层结构从 `boot-genome-*` 改为 `boot-realm-*`，减少旧赛博/DNA 语义残留。
+- `src/components/Live2DEntry.tsx` 和 `src/components/EntryMotionController.tsx` 将入口中心环从 observatory 改为 `realm-entry-sigil`。
+- `src/components/main/MainExperience.tsx` 新增像素级光标变量，修正主页面金色水波跟手位置。
+- `src/style.css` 将 Boot/Entry 的主光色统一到暖金与灰白，并拆开 Boot gate 与 readout 的退场过渡。
+- 删除未引用的 `src/components/main/GenomeInterface.tsx`，并移除对应旧 `genome-interface` / `genome-experience` CSS 块；保留 Universe 懒加载使用的 `GenomeStage`。
+
+### 第三阶段：Universe 3D 舞台语义改造
+
+- `src/components/main/GenomeStage.tsx` 重命名为 `src/components/main/RealmWorldStage.tsx`，主页面懒加载引用同步改为 Realm / World 语义。
+- `src/components/main/DnaHologram.tsx` 重命名为 `src/components/main/ArcaneRelicHologram.tsx`，将现有 GLB 明确降级为 Universe 临时奥术遗物占位。
+- `src/assets/assetManifest.ts` 将资产 id 从 `dna-hologram` 调整为 `arcane-relic-hologram`，运行时 URL 暂时沿用 `/art/models/dna_hologram.glb`。
+- `src/components/main/MainScene.tsx` 将 fallback 从 `GenomeMotif` 改为 `WorldSigilFallback`，并把 Universe 3D 光色从青粉收敛到暖金与灰白。
+- `src/components/main/MainMotionController.tsx` 移除未使用的旧 `genome-*` 动效选择器。
+- `docs/ASSET_LIBRARY.md` 更新该 GLB 的定位：临时占位，不再作为网站身份主题。
+- 删除未引用的旧主页面组件 `MainPanel`、`MainNodeMap`、`SceneHotspots` 和 `TechStrip`；当前主界面由 `RealmInterface` 接管。
+- `MainMotionController` 进一步收敛到当前 Realm DOM 目标，不再扫描旧主页面组件选择器。
+
+### 第四阶段：减少文字，转向视觉主导
+
+- `RealmInterface` 移除主屏长段落和 `PLAY LAB` 次按钮，只保留栏目标题、序号和一个 ENTER 动作。
+- `Live2DEntry` 移除入口说明段，首屏更接近视觉海报。
+- `src/style.css` 弱化玻璃卡片感，放大标题，隐藏地图列表和系统条，强化暗角、雾、金色光源与轨道符号。
+- Play 路由仍保留 `/play` 直达入口，但不再占用主视觉。
+- 新增主场景前景暗框、金尘粒子和呼吸轨道；入口页同步加深暗角与封面式标题。
+
+### 第五阶段：对齐 Active Theory / Lusion / Bruno 的 3D 装置方向
+
+- 重写 `docs/specs/MEDIEVAL_FANTASY_REALM_DESIGN.md`，方向从“中世纪大字海报”改为“3D installation portfolio”。
+- `RealmWorldStage` 改为主页面进入后即懒加载，不再只在 Universe 节点显示。
+- `MainScene` 新增 `InstallationPanels`，用程序化玻璃屏、金属环、装置框架承接参考截图中的 3D 展厅结构。
+- `EnergyField` 粒子数量从 260 增加到 900，形成更密的粒子体。
+- `src/style.css` 缩小主标题与按钮，降低背景图存在感，提高 3D 舞台透明度与视觉优先级。
+- 移除 Boot 百分比数字和装饰文字，只保留进度条。
+- 移除主页面数字式底部进度、metric 标签和地图列表数字；文字进一步缩小。
+- 移除 Entry 栏目文字堆栈与 Detail 层数字 metric，避免回到控制台式说明界面。
+- `MainScene` 新增 `ParticleBloom` 和 `LiquidReflection`，用高密粒子云、光流和地面反射强化 3D 装置感。
+- `RealmInterface` 推翻旧的可读菜单/标题/按钮结构，改为边缘品牌、小点导航、图标入口和纯进度线，中心区域交还给 3D 装置。
+
+### 性能：3D 舞台 chunk 与运行时算法优化
+
+- 移除 `RealmWorldStage` 内对 `@react-three/drei` 的 `Center/Html` 依赖，改用 Three `Box3` 包围盒算法居中模型，减少 3D chunk 依赖面。
+- `ArcaneRelicHologram` 改为 GLB clone 一次，栏目切换时只更新材质颜色、发光和透明度，避免重复 clone 场景树与重建材质。
+- `MainStudyModel` 解析入口预加载的 `ArrayBuffer` 时不再额外 `slice` 复制，降低内存峰值。
+- 主 Canvas DPR 上限从 2 降到 1.5，移动端降低粒子数量，并移除当前无明显视觉收益的 shadow 管线。
+
+### 素材：接入超现实手部装置模型
+
+- 将 `素材库/2d_hand_creation_rigged.glb` 复制到 `public/art/models/2d_hand_creation_rigged.glb`，作为可部署运行时模型。
+- 新增 `SurrealHandRelic`，以 Three `Box3` 居中模型，并用透明发光材质接入主 3D installation 舞台。
+- `MainScene` 在 DNA/奥术遗物之外新增手部装置物，增强“创作者装置 / surreal artifact”方向。
+- 更新 `src/assets/assetManifest.ts`、`public/art/ASSET_SOURCES.md` 和 `docs/ASSET_LIBRARY.md`，记录运行时路径、来源路径和授权待补充提醒。
+
+### 性能：秒级切入与素材图层错峰加载
+
+- `MainExperience` 新增 `stagePhase` 秒级时间表：背景、氛围、边缘 UI、Three 舞台、DNA GLB、手部 GLB 分阶段出现。
+- `RealmWorldStage` / `MainScene` 新增 `assetPhase`，Three 舞台先渲染程序化 fallback，再延迟挂载 DNA 与手部模型，避免重 GLB 同时请求。
+- `src/style.css` 新增主页面图层淡入变量：`--layer-backdrop`、`--layer-atmosphere`、`--layer-ui`、`--layer-stage`，用 opacity/transform 做低成本切入。
+- 当前节奏：0.18s 背景，0.55s 氛围，0.95s UI，1.35s Three 舞台，2.25s DNA，3.20s 手部模型。
+
+### 性能：Vite vendor 分包
+
+- `vite.config.ts` 新增 `manualChunks`，将 React、Three/R3F、GSAP、Framer Motion、Live2D/Pixi 分离为稳定 vendor chunk。
+- `RealmWorldStage` 从约 939 kB 降到约 17.55 kB；Three/R3F 进入独立 `three-vendor`，用于浏览器长期缓存。
+- 当前构建警告主要来自 `three-vendor` 体积，这是 3D 引擎层，不再是业务场景代码膨胀。
+
+### 第一版补齐：媒体玻璃屏与线缆装置层
+
+- `MainScene` 新增程序化 media-glass textures，用 CanvasTexture 生成暗色光斑、曲线和半透明显示屏效果，不额外下载图片。
+- 新增 `MediaGlassPanels`，把左右两块玻璃屏作为主舞台内容层，替代纯色平面。
+- 新增 `CableRig`，用线段和悬挂环把模型、面板和地面反射绑定成一个完整空间装置。
+- 第一版可以在没有真实作品截图的情况下先呈现完整视觉骨架；后续将程序化纹理替换为真实项目封面。
+
+### 视觉校正：降低惊悚感
+
+- 回应截图反馈：第一版手部模型过大、过白、过像标本，整体黑场过空，容易变成恐怖实验室气质。
+- `SurrealHandRelic` 缩小并移到舞台边缘，材质从惨白发光改为暖灰、低透明、低发光。
+- `MainScene` 调暖背景、雾、半球光和媒体玻璃屏透明度，让主视觉更像神秘展厅而不是断手标本。
+- `src/style.css` 提高背景图和暖色环境层存在感，减少纯黑空洞。
+
+### 交互：媒体屏与 Entry 小游戏缓冲层
+
+- `MediaGlassPanels` 增加点击播放/暂停状态，播放中的屏幕会提高亮度并显示进度条动效。
+- `MediaGlassPanels` 增加基础拖拽偏移，可用鼠标拖动左右玻璃屏，后续可接 GSAP Draggable 或物理惯性。
+- 新增 `EntryMiniGame`，把 Entry 从静态门面改成轻量小游戏缓冲层；支持方向键 / WASD 横向移动，空格 / W / 上方向键跳跃。
+- `Live2DEntry` 不再显示大标题和 sigil，Live2D 退为背景氛围，ENTER 按钮固定到底部。
+- `EntryMotionController` 改为驱动小游戏层入场，移除旧 sigil 动效目标。
+
+### 重做：黑白 Boot、Kenney Entry 小游戏、MP4 媒体屏
+
+- `BootOverlay` 移除背景图、彩色晕影、realm gate 和 BootMotionController 挂载，改成纯黑底、白色十字和底部进度线。
+- 解压 `素材库/kenney_new-platformer-pack-1.1.zip` 到 `public/art/game/kenney-new-platformer/`。
+- `EntryMiniGame` 重写为带重力、摩擦、平台碰撞、跳跃和金币收集判定的 Kenney 2D platformer buffer。
+- 复制用户提供的 4 个 mp4 到 `public/art/videos/`；当前左右玻璃屏使用 `272021_medium.mp4` 和 `285205_medium.mp4` 作为 VideoTexture。
+- 旧 Entry 壁纸、网格、晕影、Live2D 舞台和粒子视觉层通过 CSS 覆盖为隐藏，Entry 只保留小游戏和底部 ENTER。
 
 ### 新增：主页面拆分专项文档
 
