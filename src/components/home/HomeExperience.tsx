@@ -1,7 +1,8 @@
 import { type CSSProperties, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { voidRelicDataUri } from "../../assets/voidRelic";\nimport "./HomeExperience.css";
+import { voidRelicDataUri } from "../../assets/voidRelic";
+import "./HomeExperience.css";
 
 const scenes = [
   { index: "01", label: "OPENING", title: "Signal", sub: "A quiet frequency appears." },
