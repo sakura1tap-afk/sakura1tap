@@ -43,7 +43,7 @@ body.signal-mode { margin:0; background:var(--black); color:var(--ink); overflow
 .signal-button:hover>i span { transform:scale(2.4); }
 
 .relic-field { --parallax-x:0; --parallax-y:0; position:absolute; z-index:3; left:48%; top:9%; width:min(50vw,690px); height:82%; transform:translate3d(calc(var(--parallax-x)*1px),calc(var(--parallax-y)*1px),0); transform-style:preserve-3d; will-change:transform,filter,opacity; }
-.relic-image { position:absolute; z-index:3; left:8%; top:1%; width:78%; height:82%; object-fit:contain; filter:drop-shadow(0 0 28px rgba(138,219,231,.12)) drop-shadow(0 8px 42px rgba(231,183,122,.12)); user-select:none; mix-blend-mode:screen; }
+.relic-image { position:absolute; z-index:3; left:8%; top:1%; width:78%; height:82%; object-fit:contain; border:0; color:transparent; filter:drop-shadow(0 0 28px rgba(138,219,231,.12)) drop-shadow(0 8px 42px rgba(231,183,122,.12)); user-select:none; mix-blend-mode:screen; }
 .relic-aura { position:absolute; left:28%; top:18%; width:44%; aspect-ratio:1; border-radius:50%; background:radial-gradient(circle,rgba(231,183,122,.16),rgba(138,219,231,.05) 38%,transparent 68%); filter:blur(24px); animation:breathe 5s ease-in-out infinite; }
 .relic-core { position:absolute; z-index:4; left:43%; top:29%; width:7%; height:34%; border-radius:50%; background:linear-gradient(180deg,transparent,rgba(255,224,177,.7),#fff1cf,rgba(231,183,122,.16),transparent); filter:blur(5px); opacity:.72; mix-blend-mode:screen; animation:corePulse 3.4s ease-in-out infinite; }
 .water-plane { position:absolute; left:-5%; right:0; bottom:4%; height:21%; transform:perspective(600px) rotateX(68deg); border-radius:50%; background:radial-gradient(ellipse,rgba(231,183,122,.1),rgba(7,20,24,.22) 37%,transparent 70%); }
