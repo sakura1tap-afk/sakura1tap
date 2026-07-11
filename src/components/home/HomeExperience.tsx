@@ -169,7 +169,15 @@ export default function HomeExperience() {
 
         <div className="relic-field" ref={relicRef} aria-hidden="true">
           <div className="relic-aura" />
-          <img src={voidRelicDataUri} alt="" className="relic-image" draggable={false} />
+          <img
+            src={voidRelicDataUri}
+            alt=""
+            className="relic-image"
+            draggable={false}
+            onError={(event) => {
+              event.currentTarget.hidden = true
+            }}
+          />
           <div className="relic-core" />
           <div className="water-plane"><i /><i /><i /></div>
           <div className="particle-field">{Array.from({ length: 28 }, (_, index) => <i key={index} style={{ "--i": index } as CSSProperties} />)}</div>
@@ -214,8 +222,8 @@ export default function HomeExperience() {
 
         <section className="story-panel exit-copy" aria-label="Contact">
           <p className="scene-kicker">05 — EXIT / THE KEEPER</p>
-          <h2>KONG<br />MINGZHE</h2>
-          <p>Software engineering student building interactive systems between logic and atmosphere.</p>
+          <h2>SAKURA<br />1TAP</h2>
+          <p>An evolving digital realm built between logic, motion and atmosphere.</p>
           <div className="exit-actions">
             <a href="https://github.com/sakura1tap-afk" target="_blank" rel="noreferrer">GITHUB <span>↗</span></a>
             <button onClick={() => scrollToScene(0)}>REPLAY <span>↑</span></button>
