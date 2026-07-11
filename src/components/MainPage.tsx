@@ -1,1 +1,10 @@
-import HomeExperience from './home/HomeExperience'\n\ntype MainPageProps = {\n  modelBuffer: ArrayBuffer | null\n}\n\nexport default function MainPage({ modelBuffer }: MainPageProps) {\n  void modelBuffer\n  return <HomeExperience />\n}\n
+import HomeExperience from './home/HomeExperience'
+
+type MainPageProps = {
+  modelBuffer: ArrayBuffer | null
+}
+
+export default function MainPage({ modelBuffer }: MainPageProps) {
+  void modelBuffer
+  return <HomeExperience />
+}
