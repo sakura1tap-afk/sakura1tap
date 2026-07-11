@@ -3,12 +3,12 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import BootOverlay from './components/BootOverlay'
 
 const Live2DEntry = lazy(() => import('./components/Live2DEntry'))
-const MainPage = lazy(() => import('./components/MainPage'))
+const MainPage = lazy(() => import('./components/MainPage'))\nconst LegacyMainExperience = lazy(() => import('./components/main/MainExperience'))
 const PlayPage = lazy(() => import('./components/PlayPage'))
 const PlayGamePage = lazy(() => import('./components/PlayGamePage'))
 const SCENE_MOUNT_DELAY_MS = 120
 
-type AppPage = 'main' | 'play' | 'play-game'
+type AppPage = 'main' | 'lab' | 'play' | 'play-game'
 
 function getPageFromPath(pathname: string): AppPage {
   if (pathname === '/play/blackout') return 'play-game'
