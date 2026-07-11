@@ -6,6 +6,10 @@
 
 这个网站目前仍在开发中。现阶段重点不是把它做成传统意义上的开源项目模板，而是先打磨网站本身的第一印象、进入流程、视觉风格和互动体验。换句话说：先把门面支起来，再往里面慢慢装修。README 会随着网站内容和功能持续更新。
 
+## Current signature experience — Void Relic
+
+The production homepage now uses a five-act GSAP scroll narrative built around a luminous obsidian relic: Opening → Compression → Expansion → Drift → Exit. The previous fantasy-realm installation remains available at `/lab`, while `/play` and `/play/blackout` are preserved.
+
 ## 网站当前进度 🚧
 
 目前已经实现的主要内容：

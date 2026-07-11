@@ -4,13 +4,15 @@ import BootOverlay from './components/BootOverlay'
 
 const Live2DEntry = lazy(() => import('./components/Live2DEntry'))
 const MainPage = lazy(() => import('./components/MainPage'))
+const LegacyMainExperience = lazy(() => import('./components/main/MainExperience'))
 const PlayPage = lazy(() => import('./components/PlayPage'))
 const PlayGamePage = lazy(() => import('./components/PlayGamePage'))
 const SCENE_MOUNT_DELAY_MS = 120
 
-type AppPage = 'main' | 'play' | 'play-game'
+type AppPage = 'main' | 'lab' | 'play' | 'play-game'
 
 function getPageFromPath(pathname: string): AppPage {
+  if (pathname === '/lab') return 'lab'
   if (pathname === '/play/blackout') return 'play-game'
   if (pathname === '/play') return 'play'
   return 'main'
@@ -136,6 +138,10 @@ export default function App() {
         ) : page === 'play' ? (
           <Suspense key="play" fallback={null}>
             <PlayPage onClose={navigateToMain} onStartGame={navigateToPlayGame} />
+          </Suspense>
+        ) : page === 'lab' ? (
+          <Suspense key="lab" fallback={null}>
+            <LegacyMainExperience modelBuffer={modelBuffer} />
           </Suspense>
         ) : (
           <Suspense key="main" fallback={null}>
