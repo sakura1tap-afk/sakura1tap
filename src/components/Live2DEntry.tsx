@@ -1,22 +1,13 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { lazy, Suspense, type CSSProperties, useEffect, useRef, useState } from 'react'
-import CursorParticles from './CursorParticles'
-import EntryMiniGame from './EntryMiniGame'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import Live2DStage from './Live2DStage'
+import './CinematicEntry.css'
 
 type Live2DEntryProps = {
   isReady: boolean
   onEnter: () => void
   onReadyChange?: (isReady: boolean) => void
 }
-
-const gateParticles = Array.from({ length: 28 }, (_, index) => ({
-  index,
-  angle: `${index * 23 + Math.sin(index * 1.9) * 18}deg`,
-  distance: `${2.3 + (index % 7) * 0.42}rem`,
-  size: `${0.12 + (index % 4) * 0.035}rem`,
-  delay: `${index * 46}ms`,
-}))
 
 const EntryMotionController = lazy(() => import('./EntryMotionController'))
 
@@ -32,71 +23,59 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
 
   const handleEnter = () => {
     if (!isReady || isEntering) return
-
     setIsEntering(true)
     window.setTimeout(onEnter, 680)
   }
 
   return (
     <motion.div
-      className={`live2d-entry ${isEntering ? 'is-entering' : ''}`}
+      className={`live2d-entry cinematic-entry ${isEntering ? 'is-entering' : ''}`}
       ref={rootRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.72, ease: 'easeOut' }}
     >
+      <picture className="entry-cinematic-bg" aria-hidden="true">
+        <source media="(max-width: 760px)" srcSet="/cinematic/awakening-mobile.webp" />
+        <img src="/cinematic/awakening.webp" alt="" draggable={false} />
+      </picture>
+      <div className="entry-cinematic-shade" aria-hidden="true" />
       <Suspense fallback={null}>
         <EntryMotionController isEntering={isEntering} modelReady={modelLoadState === 'ready'} rootRef={rootRef} />
       </Suspense>
-      <div className="live2d-entry-bg" aria-hidden="true" />
-      <div className="live2d-entry-grid" aria-hidden="true" />
-      <div className="live2d-entry-vignette" aria-hidden="true" />
-      <div className="live2d-entry-ink" aria-hidden="true" />
-      <div className="live2d-entry-foreground" aria-hidden="true" />
-      <EntryMiniGame disabled={!isReady} isEntering={isEntering} />
-      <CursorParticles isEntering={isEntering} />
-
       <Live2DStage
         focusPoint={buttonHover ? { x: 0.5, y: 0.42 } : null}
         isEntering={isEntering}
         onLoadStateChange={setModelLoadState}
       />
 
+      <header className="entry-cinematic-header">
+        <strong>SAKURA1TAP</strong>
+        <span>AN INTERACTIVE REALM</span>
+      </header>
+      <div className="entry-cinematic-copy">
+        <span>PROLOGUE / 00</span>
+        <p>Touch the quiet.<br />Let the world answer.</p>
+      </div>
       <motion.button
         animate={{ opacity: isReady ? 1 : 0.44 }}
         aria-label="Enter the realm"
-        className="live2d-enter-button city-gate-entry realm-enter-button"
+        className="live2d-enter-button realm-enter-button"
         disabled={!isReady || isEntering}
         onClick={handleEnter}
         onPointerEnter={() => setButtonHover(true)}
         onPointerLeave={() => setButtonHover(false)}
         type="button"
       >
-        <span className="realm-enter-label">ENTER</span>
-        <span className="city-gate-entry-core" aria-hidden="true" />
-        <span className="city-gate-entry-rays" aria-hidden="true" />
-        <span className="city-gate-entry-particles" aria-hidden="true">
-          {gateParticles.map((particle) => (
-            <i
-              key={particle.index}
-              style={
-                {
-                  '--particle-angle': particle.angle,
-                  '--particle-distance': particle.distance,
-                  '--particle-size': particle.size,
-                  '--particle-delay': particle.delay,
-                } as CSSProperties
-              }
-            />
-          ))}
-        </span>
+        <span className="realm-enter-label">ENTER THE WEATHER</span>
+        <i aria-hidden="true">↘</i>
       </motion.button>
 
       <AnimatePresence>
         {isEntering && (
           <motion.div
-            className="live2d-entry-curtain"
+            className="live2d-entry-curtain cinematic-curtain"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

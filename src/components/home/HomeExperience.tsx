@@ -1,255 +1,276 @@
-import { type CSSProperties, useEffect, useRef } from "react";
+import { type CSSProperties, type PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { voidRelicDataUri } from "../../assets/voidRelic";
-import "./HomeExperience.css";
+import CinematicCanvas from "./CinematicCanvas";
 
-const scenes = [
-  { index: "01", label: "OPENING" },
-  { index: "02", label: "COMPRESSION" },
-  { index: "03", label: "EXPANSION" },
-  { index: "04", label: "DRIFT" },
-  { index: "05", label: "EXIT" },
-];
+const chapters = ["ARRIVAL", "PROXIMITY", "ARCHIVE", "AFTERIMAGE", "EXIT"];
 
-const projects = [
-  { no: "01", name: "SAKURA1TAP", type: "IMMERSIVE WEB", note: "Live2D / Three.js / GSAP", href: "https://www.sakura1tap.com" },
-  { no: "02", name: "BLACKOUT RUN", type: "CANVAS GAME", note: "Motion / Collision / Rhythm", href: "https://www.sakura1tap.com/play/blackout" },
-  { no: "03", name: "MOTION LAB", type: "INTERACTION R&D", note: "Scroll / Cursor / Material", href: "https://www.sakura1tap.com/lab" },
+const destinations = [
+  {
+    index: "01",
+    name: "SAKURA1TAP",
+    kind: "THE ORIGIN",
+    line: "Enter the living interface.",
+    href: "https://www.sakura1tap.com",
+  },
+  {
+    index: "02",
+    name: "BLACKOUT RUN",
+    kind: "PLAYABLE SIGNAL",
+    line: "Run until the light remembers you.",
+    href: "https://www.sakura1tap.com/play/blackout",
+  },
+  {
+    index: "03",
+    name: "MOTION LAB",
+    kind: "EXPERIMENTAL ROOM",
+    line: "Touch the unfinished ideas.",
+    href: "https://www.sakura1tap.com/lab",
+  },
 ];
 
 export default function HomeExperience() {
   const experienceRef = useRef<HTMLElement>(null);
-  const relicRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
-  const progressRef = useRef<HTMLSpanElement>(null);
+  const progressLabelRef = useRef<HTMLSpanElement>(null);
+  const progressRef = useRef(0);
+  const readyTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    document.body.classList.add("signal-mode");
+    document.body.classList.add("cinematic-mode");
+    return () => document.body.classList.remove("cinematic-mode");
+  }, []);
+
+  const revealExperience = useCallback(() => {
+    if (readyTimerRef.current !== null) return;
+    readyTimerRef.current = window.setTimeout(() => {
+      experienceRef.current?.setAttribute("data-render-ready", "true");
+    }, 720);
+  }, []);
+
+  useEffect(() => {
+    const fallback = window.setTimeout(revealExperience, 1800);
+    return () => {
+      window.clearTimeout(fallback);
+      if (readyTimerRef.current !== null) window.clearTimeout(readyTimerRef.current);
+    };
+  }, [revealExperience]);
+
+  useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
     const root = experienceRef.current;
-    const relic = relicRef.current;
-    if (!root || !relic) return;
+    if (!root) return;
 
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const pointerFine = window.matchMedia("(pointer: fine)").matches;
-    const ctx = gsap.context(() => {
-      gsap.set("[data-reveal]", { yPercent: 112, opacity: 0 });
-      gsap.set(".hud-line, .brand-lockup, .top-nav, .runtime-strip", { opacity: 0 });
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const context = gsap.context(() => {
+      gsap.set("[data-intro]", { y: 34, opacity: 0 });
+      gsap.set(".site-chrome", { opacity: 0 });
+      gsap.timeline({ defaults: { ease: "power3.out" } })
+        .to(".site-chrome", { opacity: 1, duration: 1.1 }, 0.2)
+        .to("[data-intro]", { y: 0, opacity: 1, duration: 1.25, stagger: 0.09 }, 0.35);
 
-      const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
-      intro
-        .to(".hud-line", { opacity: 1, duration: 0.8, stagger: 0.05 })
-        .to(".brand-lockup, .top-nav", { opacity: 1, duration: 0.8 }, 0.15)
-        .to("[data-reveal]", { yPercent: 0, opacity: 1, duration: 1.15, stagger: 0.11 }, 0.3)
-        .fromTo(relic, { opacity: 0, scale: 0.82, filter: "blur(18px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 1.7 }, 0.4)
-        .to(".runtime-strip", { opacity: 1, duration: 0.8 }, 0.85);
-
-      if (reduced) {
-        gsap.set(".story-panel", { opacity: 1 });
+      if (reducedMotion) {
+        gsap.set(".chapter-panel:first-of-type", { opacity: 1 });
         return;
       }
 
-      const story = gsap.timeline({
+      const timeline = gsap.timeline({
         scrollTrigger: {
           trigger: root,
           start: "top top",
           end: "bottom bottom",
-          scrub: 1.15,
+          scrub: 1.05,
           invalidateOnRefresh: true,
-          onUpdate: (self) => {
-            const active = Math.min(4, Math.floor(self.progress * 5));
+          onUpdate: ({ progress }) => {
+            progressRef.current = progress;
+            const active = Math.min(chapters.length - 1, Math.floor(progress * chapters.length));
             root.dataset.scene = String(active);
-            root.style.setProperty("--story-progress", self.progress.toFixed(4));
-            if (progressRef.current) progressRef.current.textContent = String(Math.round(self.progress * 100)).padStart(3, "0");
-            root.querySelectorAll<HTMLElement>("[data-nav], [data-rail]").forEach((item) => {
-              const itemIndex = item.dataset.nav ?? item.dataset.rail;
-              if (Number(itemIndex) === active) item.setAttribute("aria-current", "step");
-              else item.removeAttribute("aria-current");
+            root.style.setProperty("--journey", progress.toFixed(4));
+            if (progressLabelRef.current) {
+              progressLabelRef.current.textContent = String(Math.round(progress * 100)).padStart(3, "0");
+            }
+            root.querySelectorAll<HTMLElement>("[data-chapter]").forEach((element) => {
+              if (Number(element.dataset.chapter) === active) element.setAttribute("aria-current", "step");
+              else element.removeAttribute("aria-current");
             });
           },
         },
       });
 
-      story
-        .to(".opening-copy", { opacity: 0, y: -80, filter: "blur(10px)", duration: 0.15 }, 0.13)
-        .to(relic, { xPercent: -28, rotate: -18, scale: 0.76, duration: 0.2 }, 0.12)
-        .fromTo(".compression-copy", { opacity: 0, x: 90 }, { opacity: 1, x: 0, duration: 0.13 }, 0.2)
-        .to(".compression-copy", { opacity: 0, x: -70, duration: 0.1 }, 0.34)
-        .to(relic, { xPercent: 31, rotate: 22, scale: 1.18, duration: 0.2 }, 0.32)
-        .fromTo(".archive-copy", { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 0.14 }, 0.4)
-        .fromTo(".project-row", { opacity: 0, x: 70 }, { opacity: 1, x: 0, stagger: 0.025, duration: 0.11 }, 0.43)
-        .to(".archive-copy, .project-row", { opacity: 0, y: -45, duration: 0.1 }, 0.56)
-        .to(relic, { xPercent: -3, rotate: 132, scale: 0.58, yPercent: -8, duration: 0.2 }, 0.55)
-        .fromTo(".drift-copy", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.15 }, 0.62)
-        .to(".drift-copy", { opacity: 0, filter: "blur(12px)", duration: 0.1 }, 0.75)
-        .to(relic, { rotate: 180, scale: 0.9, xPercent: 34, yPercent: 2, duration: 0.18 }, 0.74)
-        .fromTo(".exit-copy", { opacity: 0, x: -75 }, { opacity: 1, x: 0, duration: 0.15 }, 0.82);
-
-      if (!pointerFine) return;
-
-      const xTo = gsap.quickTo(relic, "--parallax-x", { duration: 0.8, ease: "power3.out" });
-      const yTo = gsap.quickTo(relic, "--parallax-y", { duration: 0.8, ease: "power3.out" });
-      const onMove = (event: PointerEvent) => {
-        const nx = event.clientX / window.innerWidth - 0.5;
-        const ny = event.clientY / window.innerHeight - 0.5;
-        xTo(nx * 26);
-        yTo(ny * 20);
-      };
-      window.addEventListener("pointermove", onMove, { passive: true });
-      return () => window.removeEventListener("pointermove", onMove);
+      timeline
+        .to(".arrival-panel", { opacity: 0, y: -90, filter: "blur(10px)", duration: 0.12 }, 0.11)
+        .fromTo(".proximity-panel", { opacity: 0, y: 65 }, { opacity: 1, y: 0, duration: 0.13 }, 0.18)
+        .to(".proximity-panel", { opacity: 0, x: -70, filter: "blur(9px)", duration: 0.1 }, 0.34)
+        .fromTo(".archive-panel", { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 0.14 }, 0.4)
+        .fromTo(".destination", { opacity: 0, x: 60 }, { opacity: 1, x: 0, stagger: 0.025, duration: 0.12 }, 0.43)
+        .to(".archive-panel", { opacity: 0, y: -65, filter: "blur(8px)", duration: 0.12 }, 0.58)
+        .fromTo(".afterimage-panel", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.14 }, 0.64)
+        .fromTo(".afterimage-portrait", { opacity: 0, scale: 1.12 }, { opacity: 0.32, scale: 1, duration: 0.18 }, 0.63)
+        .to(".afterimage-panel, .afterimage-portrait", { opacity: 0, filter: "blur(14px)", duration: 0.1 }, 0.76)
+        .fromTo(".exit-panel", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.15 }, 0.82);
     }, root);
 
-    return () => {
-      ctx.revert();
-      document.body.classList.remove("signal-mode");
-    };
+    return () => context.revert();
   }, []);
 
   useEffect(() => {
     const cursor = cursorRef.current;
     const pointerFine = window.matchMedia("(pointer: fine)").matches;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!cursor || !pointerFine || reduced) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!cursor || !pointerFine || reducedMotion) return;
 
-    const xTo = gsap.quickTo(cursor, "x", { duration: 0.26, ease: "power3.out" });
-    const yTo = gsap.quickTo(cursor, "y", { duration: 0.26, ease: "power3.out" });
+    const moveX = gsap.quickTo(cursor, "x", { duration: 0.24, ease: "power3.out" });
+    const moveY = gsap.quickTo(cursor, "y", { duration: 0.24, ease: "power3.out" });
     const onMove = (event: PointerEvent) => {
-      xTo(event.clientX);
-      yTo(event.clientY);
+      moveX(event.clientX);
+      moveY(event.clientY);
       cursor.dataset.visible = "true";
     };
-    const onDown = (event: PointerEvent) => {
-      if (!event.isPrimary || event.pointerType === "touch") return;
-      const ripple = document.createElement("i");
-      ripple.className = "click-ripple";
-      ripple.style.left = `${event.clientX}px`;
-      ripple.style.top = `${event.clientY}px`;
-      document.body.appendChild(ripple);
-      window.setTimeout(() => ripple.remove(), 900);
+    const onOver = (event: PointerEvent) => {
+      cursor.dataset.hover = (event.target as HTMLElement).closest("a, button") ? "true" : "false";
     };
-    const onLeave = () => {
-      cursor.dataset.visible = "false";
-    };
+    const onLeave = () => { cursor.dataset.visible = "false"; };
     window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointerover", onOver, { passive: true });
     document.documentElement.addEventListener("mouseleave", onLeave);
     window.addEventListener("blur", onLeave);
     return () => {
       window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointerover", onOver);
       document.documentElement.removeEventListener("mouseleave", onLeave);
       window.removeEventListener("blur", onLeave);
     };
   }, []);
 
-  const scrollToScene = (index: number) => {
+  const scrollToChapter = (index: number) => {
     const root = experienceRef.current;
     if (!root) return;
-    const travel = root.scrollHeight - window.innerHeight;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    window.scrollTo({ top: root.offsetTop + travel * (index / 4), behavior: reduced ? "auto" : "smooth" });
+    const distance = root.scrollHeight - window.innerHeight;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({
+      top: root.offsetTop + distance * (index / (chapters.length - 1)),
+      behavior: reducedMotion ? "auto" : "smooth",
+    });
+  };
+
+  const tiltDestination = (event: ReactPointerEvent<HTMLAnchorElement>) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.style.setProperty("--tilt-x", `${((event.clientX - bounds.left) / bounds.width - 0.5) * 8}deg`);
+    event.currentTarget.style.setProperty("--tilt-y", `${((event.clientY - bounds.top) / bounds.height - 0.5) * -7}deg`);
+  };
+
+  const resetTilt = (event: ReactPointerEvent<HTMLAnchorElement>) => {
+    event.currentTarget.style.setProperty("--tilt-x", "0deg");
+    event.currentTarget.style.setProperty("--tilt-y", "0deg");
   };
 
   return (
-    <main className="signal-experience" data-scene="0" ref={experienceRef}>
-      <div className="grain" aria-hidden="true" />
-      <div className="cursor-lens" ref={cursorRef} aria-hidden="true"><span /></div>
+    <main className="cinematic-experience" data-scene="0" ref={experienceRef}>
+      <div className="awakening-veil" aria-hidden="true">
+        <picture>
+          <source media="(max-width: 760px)" srcSet="/cinematic/awakening-mobile.webp" />
+          <img src="/cinematic/awakening.webp" alt="" draggable={false} />
+        </picture>
+        <div className="veil-shade" />
+        <div className="veil-copy"><strong>SAKURA1TAP</strong><span>AWAKENING THE SILENCE</span></div>
+      </div>
 
-      <div className="sticky-stage">
-        <div className="hud-corners" aria-hidden="true"><i /><i /><i /><i /></div>
-        <div className="coordinate coordinate-left hud-line">35.6762° N</div>
-        <div className="coordinate coordinate-right hud-line">139.6503° E</div>
+      <div className="cursor-orbit" ref={cursorRef} aria-hidden="true"><i /><span>DRAG</span></div>
 
-        <header className="site-header">
-          <button type="button" className="brand-lockup" onClick={() => scrollToScene(0)} aria-label="返回开场">
-            <strong>SAKURA1TAP</strong>
-            <span><i /> DIGITAL REALM 01</span>
+      <div className="cinematic-stage">
+        <picture className="scene-fallback">
+          <source media="(max-width: 760px)" srcSet="/cinematic/scene-mobile.webp" />
+          <img src="/cinematic/bridge.webp" alt="" draggable={false} />
+        </picture>
+        <CinematicCanvas progressRef={progressRef} onReady={revealExperience} />
+        <div className="color-wash" aria-hidden="true" />
+        <div className="soft-grain" aria-hidden="true" />
+        <div className="scanline" aria-hidden="true" />
+        <div className="petals" aria-hidden="true">
+          {Array.from({ length: 16 }, (_, index) => <i key={index} style={{ "--petal": index } as CSSProperties} />)}
+        </div>
+
+        <header className="site-chrome site-header">
+          <button className="identity" type="button" onClick={() => scrollToChapter(0)} aria-label="Return to arrival">
+            <strong>SAKURA1TAP</strong><span>INTERACTIVE REALM / 01</span>
           </button>
-          <nav className="top-nav" aria-label="章节导航">
-            {scenes.map((scene, index) => (
-              <button type="button" key={scene.label} onClick={() => scrollToScene(index)} data-nav={index} aria-label={`前往 ${scene.label} 章节`}>
-                <span>0{index + 1}</span>{scene.label}
+          <nav className="chapter-nav" aria-label="Journey chapters">
+            {chapters.map((chapter, index) => (
+              <button key={chapter} type="button" data-chapter={index} onClick={() => scrollToChapter(index)}>
+                <i>0{index + 1}</i><span>{chapter}</span>
               </button>
             ))}
           </nav>
         </header>
 
-        <div className="relic-field" ref={relicRef} aria-hidden="true">
-          <div className="relic-aura" />
-          <img
-            src={voidRelicDataUri}
-            alt=""
-            className="relic-image"
-            draggable={false}
-            onLoad={(event) => {
-              event.currentTarget.dataset.loaded = "true";
-            }}
-            onError={(event) => {
-              event.currentTarget.hidden = true;
-            }}
-          />
-          <div className="relic-core" />
-          <div className="water-plane"><i /><i /><i /></div>
-          <div className="particle-field">{Array.from({ length: 28 }, (_, index) => <i key={index} style={{ "--i": index } as CSSProperties} />)}</div>
-        </div>
-
-        <section className="story-panel opening-copy" aria-label="Opening">
-          <p className="eyebrow"><span /> INTERACTIVE SYSTEM / 2026</p>
-          <h1><span><b data-reveal>A WORLD BETWEEN</b></span><span><b data-reveal>SIGNAL <em>&amp;</em> DREAM</b></span></h1>
-          <p className="hero-note" data-reveal>Not a portfolio to browse.<br />A frequency to enter.</p>
-          <button type="button" className="signal-button" data-reveal onClick={() => scrollToScene(1)}>
-            <i><span /></i><b>ENTER THE SIGNAL</b><span>↘</span>
+        <section className="chapter-panel arrival-panel" aria-label="Arrival">
+          <p className="chapter-mark" data-intro>01 / ARRIVAL · SOMEWHERE AFTER THE RAIN</p>
+          <h1><span data-intro>BETWEEN</span><span data-intro>SILENCE <em>&amp;</em> SIGNAL</span></h1>
+          <p className="opening-line" data-intro>A living interface by Sakura1tap.<br />Scroll to cross the distance.</p>
+          <button className="weather-button" type="button" data-intro onClick={() => scrollToChapter(1)}>
+            <span>ENTER THE WEATHER</span><i>↓</i>
           </button>
         </section>
 
-        <section className="story-panel compression-copy" aria-label="Compression">
-          <p className="scene-kicker">02 — COMPRESSION</p>
-          <h2>NOISE<br />BECOMES<br /><em>MATTER.</em></h2>
-          <div className="spec-list">
-            <span><b>INPUT</b> curiosity / pressure / time</span>
-            <span><b>PROCESS</b> prototype → break → rebuild</span>
-            <span><b>OUTPUT</b> interaction with a pulse</span>
-          </div>
+        <section className="chapter-panel proximity-panel" aria-label="Proximity">
+          <p className="chapter-mark">02 / PROXIMITY</p>
+          <h2>THE IMAGE<br />REMEMBERS<br /><em>YOUR TOUCH.</em></h2>
+          <div className="gesture-note"><i /><span>MOVE TO DISTURB THE LIGHT<br />HOLD + DRAG TO BEND THE AIR</span></div>
         </section>
 
-        <section className="story-panel archive-copy" aria-label="Archive">
-          <p className="scene-kicker">03 — EXPANSION / SELECTED SIGNALS</p>
-          <h2>THE<br />ARCHIVE</h2>
-          <div className="project-list">
-            {projects.map((project) => (
-              <a className="project-row" key={project.no} href={project.href}>
-                <span>{project.no}</span><strong>{project.name}</strong><em>{project.type}</em><small>{project.note}</small>
-                <b aria-hidden="true">↗</b>
+        <section className="chapter-panel archive-panel" aria-label="Archive">
+          <div className="archive-heading">
+            <p className="chapter-mark">03 / ARCHIVE · SELECTED SIGNALS</p>
+            <h2>THREE<br />DOORS<br /><em>REMAIN.</em></h2>
+          </div>
+          <div className="destination-list">
+            {destinations.map((item) => (
+              <a
+                className="destination"
+                href={item.href}
+                key={item.name}
+                onPointerMove={tiltDestination}
+                onPointerLeave={resetTilt}
+              >
+                <span className="destination-index">{item.index}</span>
+                <span className="destination-main"><strong>{item.name}</strong><small>{item.line}</small></span>
+                <em>{item.kind}</em><b>↗</b>
               </a>
             ))}
           </div>
         </section>
 
-        <section className="story-panel drift-copy" aria-label="Process">
-          <p className="scene-kicker">04 — DRIFT / WORKING PRINCIPLE</p>
-          <blockquote>“The interface should not decorate the idea. It should <em>become</em> the idea.”</blockquote>
-          <div className="drift-meta"><span>DESIGN</span><span>CODE</span><span>MOTION</span><span>FEEDBACK</span></div>
+        <div className="afterimage-portrait" aria-hidden="true">
+          <img src="/cinematic/awakening.webp" alt="" draggable={false} />
+        </div>
+        <section className="chapter-panel afterimage-panel" aria-label="Afterimage">
+          <p className="chapter-mark">04 / AFTERIMAGE</p>
+          <blockquote>“NOT EVERYTHING<br />THAT DISAPPEARS<br /><em>IS GONE.</em>”</blockquote>
+          <span>THE ARCHIVE KEEPS BREATHING</span>
         </section>
 
-        <section className="story-panel exit-copy" aria-label="Contact">
-          <p className="scene-kicker">05 — EXIT / THE KEEPER</p>
-          <h2>SAKURA<br />1TAP</h2>
-          <p>An evolving digital realm built between logic, motion and atmosphere.</p>
+        <section className="chapter-panel exit-panel" aria-label="Exit">
+          <p className="chapter-mark">05 / EXIT · OR BEGIN AGAIN</p>
+          <h2>STAY<br />A LITTLE<br /><em>LONGER.</em></h2>
+          <p>There is no final page here. Only another signal waiting to be touched.</p>
           <div className="exit-actions">
+            <button type="button" onClick={() => scrollToChapter(0)}>REPLAY <span>↺</span></button>
             <a href="https://github.com/sakura1tap-afk" target="_blank" rel="noreferrer">GITHUB <span>↗</span></a>
-            <button type="button" onClick={() => scrollToScene(0)}>REPLAY <span>↑</span></button>
           </div>
         </section>
 
-        <aside className="scene-rail" aria-label="当前章节">
-          {scenes.map((scene, index) => <button type="button" key={scene.label} onClick={() => scrollToScene(index)} data-rail={index} aria-label={`前往 ${scene.label} 章节`}><i /><span>{scene.index}</span><b>{scene.label}</b></button>)}
+        <aside className="chapter-rail site-chrome" aria-label="Chapter position">
+          {chapters.map((chapter, index) => (
+            <button key={chapter} type="button" data-chapter={index} onClick={() => scrollToChapter(index)} aria-label={`Go to ${chapter}`}>
+              <i /><span>0{index + 1}</span>
+            </button>
+          ))}
         </aside>
 
-        <footer className="runtime-strip">
-          <span><i /> REACT / THREE / GSAP / 60 FPS</span>
-          <span className="scroll-readout"><b ref={progressRef}>000</b> / 100</span>
-          <span>SIGNAL STABLE <i /></span>
+        <footer className="runtime site-chrome">
+          <span><i /> SAKURA1TAP / DIGITAL REALM</span>
+          <span className="journey-count"><b ref={progressLabelRef}>000</b> / 100</span>
+          <span>DRAG THE WEATHER <i /></span>
         </footer>
       </div>
     </main>

@@ -1,0 +1,55 @@
+.boot-overlay.boot-cinematic {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  overflow: hidden;
+  background: #05090a !important;
+  color: #f1eee7;
+  opacity: 1;
+  transition: opacity 920ms cubic-bezier(.7,0,.25,1), visibility 920ms;
+}
+
+.boot-overlay.boot-cinematic::before,
+.boot-overlay.boot-cinematic::after { display: none !important; }
+.boot-still, .boot-still img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.boot-still img { object-fit: cover; filter: saturate(.72) brightness(.58); transform: scale(1.02); animation: cinematicBootBreath 5s ease-out both; user-select: none; -webkit-user-drag: none; }
+.boot-cinematic-shade { position: absolute; inset: 0; background: radial-gradient(circle at 60% 40%,transparent 0 13%,rgba(2,6,7,.24) 38%,rgba(1,3,4,.88) 100%),linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.48)); }
+.boot-cinematic-copy { position: absolute; left: 6vw; bottom: 7vh; display: grid; gap: .55rem; padding-left: 1.1rem; border-left: 1px solid rgba(240,173,112,.68); }
+.boot-cinematic-copy strong { font-size: clamp(1rem,1.5vw,1.5rem); font-weight: 500; letter-spacing: .34em; }
+.boot-cinematic-copy span { color: rgba(255,255,255,.5); font: .5rem/1 ui-monospace,SFMono-Regular,monospace; letter-spacing: .28em; }
+.boot-cinematic-error { position: absolute; right: 5vw; bottom: 6vh; display: flex; align-items: center; gap: 1rem; color: rgba(255,255,255,.7); font: .55rem/1 ui-monospace,SFMono-Regular,monospace; letter-spacing: .16em; }
+.boot-cinematic-error button { border: 1px solid rgba(240,173,112,.65); border-radius: 999px; background: rgba(2,6,7,.45); color: #f1eee7; padding: .65rem 1rem; cursor: pointer; }
+.boot-cinematic.boot-revealing { opacity: 0; visibility: hidden; pointer-events: none; }
+@keyframes cinematicBootBreath { from { transform: scale(1.06); filter: saturate(.52) brightness(.44) blur(2px); } to { transform: scale(1.015); filter: saturate(.76) brightness(.62) blur(0); } }
+
+.live2d-entry.cinematic-entry { background: #040708 !important; color: #f1eee7; isolation: isolate; user-select: none; -webkit-user-select: none; }
+.entry-cinematic-bg, .entry-cinematic-bg img { position: absolute; inset: 0; z-index: -4; width: 100%; height: 100%; }
+.entry-cinematic-bg img { object-fit: cover; filter: saturate(.68) brightness(.48); transform: scale(1.025); -webkit-user-drag: none; }
+.entry-cinematic-shade { position: absolute; inset: 0; z-index: -2; pointer-events: none; background: radial-gradient(circle at 50% 44%,transparent 0 14%,rgba(1,4,5,.22) 38%,rgba(1,3,4,.83) 100%),linear-gradient(90deg,rgba(2,5,6,.55),transparent 48%,rgba(2,5,6,.48)); }
+.live2d-entry.cinematic-entry .live2d-stage { z-index: -1; opacity: .58 !important; filter: saturate(.72) brightness(.72) contrast(1.05) !important; mix-blend-mode: screen; }
+.entry-cinematic-header { position: absolute; z-index: 8; left: 4.5vw; top: 2.4rem; display: grid; gap: .45rem; padding-left: .9rem; border-left: 1px solid rgba(240,173,112,.55); }
+.entry-cinematic-header strong { font-size: clamp(.9rem,1.4vw,1.35rem); font-weight: 500; letter-spacing: .31em; }
+.entry-cinematic-header span { color: rgba(255,255,255,.43); font: .48rem/1 ui-monospace,SFMono-Regular,monospace; letter-spacing: .2em; }
+.entry-cinematic-copy { position: absolute; z-index: 8; left: 8vw; top: 38%; }
+.entry-cinematic-copy > span { color: rgba(255,255,255,.46); font: .5rem/1 ui-monospace,SFMono-Regular,monospace; letter-spacing: .24em; }
+.entry-cinematic-copy p { margin: 1rem 0 0; color: rgba(255,255,255,.78); font-size: clamp(1.8rem,4.2vw,4.4rem); font-weight: 300; line-height: .95; letter-spacing: -.04em; }
+.live2d-entry.cinematic-entry .realm-enter-button { left: 8vw !important; right: auto !important; top: auto !important; bottom: 7vh !important; z-index: 12; display: flex; align-items: center; justify-content: space-between; width: min(15rem,calc(100vw - 3rem)); height: auto; min-height: 3.15rem; margin: 0; padding: .75rem .8rem .75rem 1.15rem; border: 1px solid rgba(240,173,112,.58) !important; border-radius: 999px; background: rgba(2,6,7,.38) !important; color: #f1eee7 !important; box-shadow: 0 0 2.5rem rgba(240,173,112,.08) !important; transform: none !important; backdrop-filter: blur(14px); cursor: pointer; }
+.live2d-entry.cinematic-entry .realm-enter-button:hover { background: rgba(240,173,112,.1) !important; }
+.live2d-entry.cinematic-entry .realm-enter-button i { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; background: #f0ad70; color: #172022; font-style: normal; }
+.live2d-entry.cinematic-entry .realm-enter-label { color: inherit; font: .55rem/1 ui-monospace,SFMono-Regular,monospace; letter-spacing: .18em; }
+.cinematic-curtain { z-index: 40 !important; background: #020506 !important; }
+
+@media (max-width: 760px) {
+  .boot-still img, .entry-cinematic-bg img { object-position: 52% center; }
+  .boot-cinematic-copy { left: 1.4rem; }
+  .entry-cinematic-header { left: 1.3rem; top: max(1.4rem,env(safe-area-inset-top)); }
+  .entry-cinematic-copy { left: 1.4rem; top: 32%; }
+  .entry-cinematic-copy p { font-size: clamp(2rem,10vw,3.4rem); }
+  .live2d-entry.cinematic-entry .realm-enter-button { left: 1.4rem !important; bottom: max(1.5rem,env(safe-area-inset-bottom)) !important; }
+  .live2d-entry.cinematic-entry .live2d-stage { opacity: .44 !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot-still img { animation: none; }
+  .boot-overlay.boot-cinematic { transition-duration: .2s; }
+}
