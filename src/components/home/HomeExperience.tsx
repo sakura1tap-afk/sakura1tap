@@ -2,6 +2,7 @@ import { type CSSProperties, type PointerEvent as ReactPointerEvent, useEffect, 
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import CinematicCanvas from "./CinematicCanvas";
+import "./HomeExperience.css";
 
 const chapters = ["ARRIVAL", "PROXIMITY", "ARCHIVE", "AFTERIMAGE", "EXIT"];
 
