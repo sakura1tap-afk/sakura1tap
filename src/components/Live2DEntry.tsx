@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, type PointerEvent as ReactPointerEvent, useEffect, useRef, useState } from 'react'
 import Live2DStage from './Live2DStage'
 import './CinematicEntry.css'
 
@@ -27,6 +27,21 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
     window.setTimeout(onEnter, 680)
   }
 
+  const moveEntryButton = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 12
+    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 8
+    event.currentTarget.style.setProperty('--entry-magnet-x', `${x}px`)
+    event.currentTarget.style.setProperty('--entry-magnet-y', `${y}px`)
+  }
+
+  const resetEntryButton = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    setButtonHover(false)
+    event.currentTarget.style.setProperty('--entry-magnet-x', '0px')
+    event.currentTarget.style.setProperty('--entry-magnet-y', '0px')
+    event.currentTarget.style.setProperty('--entry-press', '1')
+  }
+
   return (
     <motion.div
       className={`live2d-entry cinematic-entry ${isEntering ? 'is-entering' : ''}`}
@@ -37,8 +52,8 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
       transition={{ duration: 0.72, ease: 'easeOut' }}
     >
       <picture className="entry-cinematic-bg" aria-hidden="true">
-        <source media="(max-width: 760px)" srcSet="/cinematic/awakening-mobile.webp" />
-        <img src="/cinematic/awakening.webp" alt="" draggable={false} />
+        <source media="(max-width: 760px)" srcSet="/cinematic/entry-v2-mobile.webp" />
+        <img src="/cinematic/entry-v2.webp" alt="" draggable={false} />
       </picture>
       <div className="entry-cinematic-shade" aria-hidden="true" />
       <Suspense fallback={null}>
@@ -64,12 +79,19 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
         className="live2d-enter-button realm-enter-button"
         disabled={!isReady || isEntering}
         onClick={handleEnter}
+        onPointerMove={moveEntryButton}
         onPointerEnter={() => setButtonHover(true)}
-        onPointerLeave={() => setButtonHover(false)}
+        onPointerDown={(event) => event.currentTarget.style.setProperty('--entry-press', '.975')}
+        onPointerUp={(event) => event.currentTarget.style.setProperty('--entry-press', '1')}
+        onPointerLeave={resetEntryButton}
         type="button"
       >
-        <span className="realm-enter-label">ENTER THE WEATHER</span>
-        <i aria-hidden="true">↘</i>
+        <span className="entry-button-light" aria-hidden="true" />
+        <span className="entry-button-copy">
+          <small>00 / OPEN GATE</small>
+          <b className="realm-enter-label">{isEntering ? 'OPENING THE REALM' : 'ENTER THE WEATHER'}</b>
+        </span>
+        <span className="entry-button-orb" aria-hidden="true"><i>↘</i><em /></span>
       </motion.button>
 
       <AnimatePresence>
