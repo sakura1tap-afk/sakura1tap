@@ -1,4 +1,4 @@
-import { type CSSProperties, type PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef } from "react";
+import { type CSSProperties, type PointerEvent as ReactPointerEvent, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import CinematicCanvas from "./CinematicCanvas";
@@ -34,27 +34,12 @@ export default function HomeExperience() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const progressLabelRef = useRef<HTMLSpanElement>(null);
   const progressRef = useRef(0);
-  const readyTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     document.body.classList.add("cinematic-mode");
     return () => document.body.classList.remove("cinematic-mode");
   }, []);
 
-  const revealExperience = useCallback(() => {
-    if (readyTimerRef.current !== null) return;
-    readyTimerRef.current = window.setTimeout(() => {
-      experienceRef.current?.setAttribute("data-render-ready", "true");
-    }, 720);
-  }, []);
-
-  useEffect(() => {
-    const fallback = window.setTimeout(revealExperience, 1800);
-    return () => {
-      window.clearTimeout(fallback);
-      if (readyTimerRef.current !== null) window.clearTimeout(readyTimerRef.current);
-    };
-  }, [revealExperience]);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -166,15 +151,6 @@ export default function HomeExperience() {
 
   return (
     <main className="cinematic-experience" data-scene="0" ref={experienceRef}>
-      <div className="awakening-veil" aria-hidden="true">
-        <picture>
-          <source media="(max-width: 760px)" srcSet="/cinematic/awakening-mobile.webp" />
-          <img src="/cinematic/awakening.webp" alt="" draggable={false} />
-        </picture>
-        <div className="veil-shade" />
-        <div className="veil-copy"><strong>SAKURA1TAP</strong><span>AWAKENING THE SILENCE</span></div>
-      </div>
-
       <div className="cursor-orbit" ref={cursorRef} aria-hidden="true"><i /><span>DRAG</span></div>
 
       <div className="cinematic-stage">
@@ -182,7 +158,7 @@ export default function HomeExperience() {
           <source media="(max-width: 760px)" srcSet="/cinematic/scene-mobile.webp" />
           <img src="/cinematic/bridge.webp" alt="" draggable={false} />
         </picture>
-        <CinematicCanvas progressRef={progressRef} onReady={revealExperience} />
+        <CinematicCanvas progressRef={progressRef} />
         <div className="color-wash" aria-hidden="true" />
         <div className="soft-grain" aria-hidden="true" />
         <div className="scanline" aria-hidden="true" />

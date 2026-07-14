@@ -66,8 +66,8 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete, 
   return (
     <div className={`boot-overlay boot-cinematic ${state === 'ready' && canComplete ? 'boot-revealing' : ''}`}>
       <picture className="boot-still" aria-hidden="true">
-        <source media="(max-width: 760px)" srcSet="/cinematic/awakening-mobile.webp" />
-        <img src="/cinematic/awakening.webp" alt="" draggable={false} />
+        <source media="(max-width: 760px)" srcSet="/cinematic/entry-v2-mobile.webp" />
+        <img src="/cinematic/entry-v2.webp" alt="" draggable={false} />
       </picture>
       <div className="boot-cinematic-shade" aria-hidden="true" />
       <div className="boot-cinematic-copy">
