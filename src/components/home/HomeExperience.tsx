@@ -18,7 +18,7 @@ const projects = [
   { no: "03", name: "MOTION LAB", type: "INTERACTION R&D", note: "Scroll / Cursor / Material", href: "https://www.sakura1tap.com/lab" },
 ];
 
-export default function Home() {
+export default function HomeExperience() {
   const experienceRef = useRef<HTMLElement>(null);
   const relicRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
