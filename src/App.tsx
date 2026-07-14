@@ -12,9 +12,11 @@ const SCENE_MOUNT_DELAY_MS = 120
 type AppPage = 'main' | 'lab' | 'play' | 'play-game'
 
 function getPageFromPath(pathname: string): AppPage {
-  if (pathname === '/lab') return 'lab'
-  if (pathname === '/play/blackout') return 'play-game'
-  if (pathname === '/play') return 'play'
+  const normalizedPath = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
+
+  if (normalizedPath === '/lab') return 'lab'
+  if (normalizedPath === '/play/blackout') return 'play-game'
+  if (normalizedPath === '/play') return 'play'
   return 'main'
 }
 
