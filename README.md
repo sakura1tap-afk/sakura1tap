@@ -65,7 +65,8 @@ Live2D 入口页
 当前路由：
 
 ```text
-/                 主页面入口
+/                 Void Relic 五幕滚动主体验
+/lab              保留的 3D 实验场
 /play             Play 工具箱介绍页
 /play/blackout    Blackout Run 全屏小游戏
 ```
@@ -151,6 +152,14 @@ npm run dev
 npm run build
 npm run preview
 ```
+
+## 线上部署 ☁️
+
+- 正式域名：`https://www.sakura1tap.com`
+- 生产分支：`main`
+- 构建命令：`npm run build`
+- 输出目录：`dist`
+- Cloudflare 会在 `main` 更新后自动构建并发布。
 
 ## 开发状态 🌱
 
