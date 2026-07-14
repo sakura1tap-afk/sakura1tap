@@ -241,7 +241,6 @@ export default function HomeExperience() {
         </section>
 
         <div className="afterimage-portrait" aria-hidden="true">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/cinematic/awakening.webp" alt="" draggable={false} />
         </div>
         <section className="chapter-panel afterimage-panel" aria-label="Afterimage">

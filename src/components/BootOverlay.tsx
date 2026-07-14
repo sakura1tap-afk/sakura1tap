@@ -12,8 +12,15 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete, 
   const [attempt, setAttempt] = useState(0)
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading')
   const bufferRef = useRef<ArrayBuffer | null>(null)
+  const onCompleteRef = useRef(onComplete)
+  const onModelLoadedRef = useRef(onModelLoaded)
 
   const retry = useCallback(() => setAttempt((value) => value + 1), [])
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete
+    onModelLoadedRef.current = onModelLoaded
+  }, [onComplete, onModelLoaded])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -31,7 +38,7 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete, 
         const buffer = await response.arrayBuffer()
         if (!active) return
         bufferRef.current = buffer
-        onModelLoaded?.(buffer)
+        onModelLoadedRef.current?.(buffer)
         setState('ready')
       } catch (error) {
         if (!active) return
@@ -47,14 +54,14 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete, 
       window.cancelAnimationFrame(frame)
       window.clearTimeout(timeout)
     }
-  }, [attempt, modelUrl, onModelLoaded])
+  }, [attempt, modelUrl])
 
   useEffect(() => {
     if (!canComplete || state !== 'ready' || !bufferRef.current) return
     const buffer = bufferRef.current
-    const timer = window.setTimeout(() => onComplete(buffer), 920)
+    const timer = window.setTimeout(() => onCompleteRef.current(buffer), 920)
     return () => window.clearTimeout(timer)
-  }, [canComplete, onComplete, state])
+  }, [canComplete, state])
 
   return (
     <div className={`boot-overlay boot-cinematic ${state === 'ready' && canComplete ? 'boot-revealing' : ''}`}>
