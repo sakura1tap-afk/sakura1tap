@@ -5,17 +5,17 @@ import { voidRelicDataUri } from "../../assets/voidRelic";
 import "./HomeExperience.css";
 
 const scenes = [
-  { index: "01", label: "OPENING", title: "Signal", sub: "A quiet frequency appears." },
-  { index: "02", label: "COMPRESSION", title: "Matter", sub: "Noise collapses into form." },
-  { index: "03", label: "EXPANSION", title: "Archive", sub: "Experiments become worlds." },
-  { index: "04", label: "DRIFT", title: "Process", sub: "Systems learn to breathe." },
-  { index: "05", label: "EXIT", title: "Contact", sub: "Leave a trace in the realm." },
+  { index: "01", label: "OPENING" },
+  { index: "02", label: "COMPRESSION" },
+  { index: "03", label: "EXPANSION" },
+  { index: "04", label: "DRIFT" },
+  { index: "05", label: "EXIT" },
 ];
 
 const projects = [
-  { no: "01", name: "SAKURA1TAP", type: "IMMERSIVE WEB", note: "Live2D / Three.js / GSAP" },
-  { no: "02", name: "BLACKOUT RUN", type: "CANVAS GAME", note: "Motion / Collision / Rhythm" },
-  { no: "03", name: "MOTION LAB", type: "INTERACTION R&D", note: "Scroll / Cursor / Material" },
+  { no: "01", name: "SAKURA1TAP", type: "IMMERSIVE WEB", note: "Live2D / Three.js / GSAP", href: "https://www.sakura1tap.com" },
+  { no: "02", name: "BLACKOUT RUN", type: "CANVAS GAME", note: "Motion / Collision / Rhythm", href: "https://www.sakura1tap.com/play/blackout" },
+  { no: "03", name: "MOTION LAB", type: "INTERACTION R&D", note: "Scroll / Cursor / Material", href: "https://www.sakura1tap.com/lab" },
 ];
 
 export default function HomeExperience() {
@@ -32,6 +32,7 @@ export default function HomeExperience() {
     if (!root || !relic) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const pointerFine = window.matchMedia("(pointer: fine)").matches;
     const ctx = gsap.context(() => {
       gsap.set("[data-reveal]", { yPercent: 112, opacity: 0 });
       gsap.set(".hud-line, .brand-lockup, .top-nav, .runtime-strip", { opacity: 0 });
@@ -55,11 +56,17 @@ export default function HomeExperience() {
           start: "top top",
           end: "bottom bottom",
           scrub: 1.15,
+          invalidateOnRefresh: true,
           onUpdate: (self) => {
             const active = Math.min(4, Math.floor(self.progress * 5));
             root.dataset.scene = String(active);
             root.style.setProperty("--story-progress", self.progress.toFixed(4));
             if (progressRef.current) progressRef.current.textContent = String(Math.round(self.progress * 100)).padStart(3, "0");
+            root.querySelectorAll<HTMLElement>("[data-nav], [data-rail]").forEach((item) => {
+              const itemIndex = item.dataset.nav ?? item.dataset.rail;
+              if (Number(itemIndex) === active) item.setAttribute("aria-current", "step");
+              else item.removeAttribute("aria-current");
+            });
           },
         },
       });
@@ -78,6 +85,8 @@ export default function HomeExperience() {
         .to(".drift-copy", { opacity: 0, filter: "blur(12px)", duration: 0.1 }, 0.75)
         .to(relic, { rotate: 180, scale: 0.9, xPercent: 34, yPercent: 2, duration: 0.18 }, 0.74)
         .fromTo(".exit-copy", { opacity: 0, x: -75 }, { opacity: 1, x: 0, duration: 0.15 }, 0.82);
+
+      if (!pointerFine) return;
 
       const xTo = gsap.quickTo(relic, "--parallax-x", { duration: 0.8, ease: "power3.out" });
       const yTo = gsap.quickTo(relic, "--parallax-y", { duration: 0.8, ease: "power3.out" });
@@ -99,26 +108,19 @@ export default function HomeExperience() {
 
   useEffect(() => {
     const cursor = cursorRef.current;
-    if (!cursor) return;
+    const pointerFine = window.matchMedia("(pointer: fine)").matches;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!cursor || !pointerFine || reduced) return;
 
-    let frame = 0;
-    let targetX = window.innerWidth / 2;
-    let targetY = window.innerHeight / 2;
-    let x = targetX;
-    let y = targetY;
-
-    const render = () => {
-      x += (targetX - x) * 0.16;
-      y += (targetY - y) * 0.16;
-      cursor.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-      frame = requestAnimationFrame(render);
-    };
+    const xTo = gsap.quickTo(cursor, "x", { duration: 0.26, ease: "power3.out" });
+    const yTo = gsap.quickTo(cursor, "y", { duration: 0.26, ease: "power3.out" });
     const onMove = (event: PointerEvent) => {
-      targetX = event.clientX;
-      targetY = event.clientY;
+      xTo(event.clientX);
+      yTo(event.clientY);
       cursor.dataset.visible = "true";
     };
     const onDown = (event: PointerEvent) => {
+      if (!event.isPrimary || event.pointerType === "touch") return;
       const ripple = document.createElement("i");
       ripple.className = "click-ripple";
       ripple.style.left = `${event.clientX}px`;
@@ -126,13 +128,18 @@ export default function HomeExperience() {
       document.body.appendChild(ripple);
       window.setTimeout(() => ripple.remove(), 900);
     };
+    const onLeave = () => {
+      cursor.dataset.visible = "false";
+    };
     window.addEventListener("pointermove", onMove, { passive: true });
     window.addEventListener("pointerdown", onDown);
-    frame = requestAnimationFrame(render);
+    document.documentElement.addEventListener("mouseleave", onLeave);
+    window.addEventListener("blur", onLeave);
     return () => {
-      cancelAnimationFrame(frame);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerdown", onDown);
+      document.documentElement.removeEventListener("mouseleave", onLeave);
+      window.removeEventListener("blur", onLeave);
     };
   }, []);
 
@@ -140,7 +147,8 @@ export default function HomeExperience() {
     const root = experienceRef.current;
     if (!root) return;
     const travel = root.scrollHeight - window.innerHeight;
-    window.scrollTo({ top: root.offsetTop + travel * (index / 4), behavior: "smooth" });
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: root.offsetTop + travel * (index / 4), behavior: reduced ? "auto" : "smooth" });
   };
 
   return (
@@ -154,13 +162,13 @@ export default function HomeExperience() {
         <div className="coordinate coordinate-right hud-line">139.6503° E</div>
 
         <header className="site-header">
-          <button className="brand-lockup" onClick={() => scrollToScene(0)} aria-label="返回开场">
+          <button type="button" className="brand-lockup" onClick={() => scrollToScene(0)} aria-label="返回开场">
             <strong>SAKURA1TAP</strong>
             <span><i /> DIGITAL REALM 01</span>
           </button>
           <nav className="top-nav" aria-label="章节导航">
             {scenes.map((scene, index) => (
-              <button key={scene.label} onClick={() => scrollToScene(index)} data-nav={index}>
+              <button type="button" key={scene.label} onClick={() => scrollToScene(index)} data-nav={index} aria-label={`前往 ${scene.label} 章节`}>
                 <span>0{index + 1}</span>{scene.label}
               </button>
             ))}
@@ -174,8 +182,11 @@ export default function HomeExperience() {
             alt=""
             className="relic-image"
             draggable={false}
+            onLoad={(event) => {
+              event.currentTarget.dataset.loaded = "true";
+            }}
             onError={(event) => {
-              event.currentTarget.hidden = true
+              event.currentTarget.hidden = true;
             }}
           />
           <div className="relic-core" />
@@ -187,7 +198,7 @@ export default function HomeExperience() {
           <p className="eyebrow"><span /> INTERACTIVE SYSTEM / 2026</p>
           <h1><span><b data-reveal>A WORLD BETWEEN</b></span><span><b data-reveal>SIGNAL <em>&amp;</em> DREAM</b></span></h1>
           <p className="hero-note" data-reveal>Not a portfolio to browse.<br />A frequency to enter.</p>
-          <button className="signal-button" data-reveal onClick={() => scrollToScene(1)}>
+          <button type="button" className="signal-button" data-reveal onClick={() => scrollToScene(1)}>
             <i><span /></i><b>ENTER THE SIGNAL</b><span>↘</span>
           </button>
         </section>
@@ -207,9 +218,10 @@ export default function HomeExperience() {
           <h2>THE<br />ARCHIVE</h2>
           <div className="project-list">
             {projects.map((project) => (
-              <article className="project-row" key={project.no}>
+              <a className="project-row" key={project.no} href={project.href}>
                 <span>{project.no}</span><strong>{project.name}</strong><em>{project.type}</em><small>{project.note}</small>
-              </article>
+                <b aria-hidden="true">↗</b>
+              </a>
             ))}
           </div>
         </section>
@@ -226,12 +238,12 @@ export default function HomeExperience() {
           <p>An evolving digital realm built between logic, motion and atmosphere.</p>
           <div className="exit-actions">
             <a href="https://github.com/sakura1tap-afk" target="_blank" rel="noreferrer">GITHUB <span>↗</span></a>
-            <button onClick={() => scrollToScene(0)}>REPLAY <span>↑</span></button>
+            <button type="button" onClick={() => scrollToScene(0)}>REPLAY <span>↑</span></button>
           </div>
         </section>
 
         <aside className="scene-rail" aria-label="当前章节">
-          {scenes.map((scene, index) => <button key={scene.label} onClick={() => scrollToScene(index)} data-rail={index}><i /><span>{scene.index}</span><b>{scene.label}</b></button>)}
+          {scenes.map((scene, index) => <button type="button" key={scene.label} onClick={() => scrollToScene(index)} data-rail={index} aria-label={`前往 ${scene.label} 章节`}><i /><span>{scene.index}</span><b>{scene.label}</b></button>)}
         </aside>
 
         <footer className="runtime-strip">
