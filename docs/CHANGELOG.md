@@ -18,6 +18,7 @@
 - Cinematic Canvas 增加深色不透明清屏、静态 fallback 遮罩与轻微冷色校正，降低纹理加载时暴露浅色底的风险。
 - 本轮没有改变 Live2D 底层、路由、现有素材清晰度或 Play 功能。
 - 当前执行环境缺少完整私有仓库 checkout 与 GitHub CLI；完整 `npm run build` 和视觉验收留给 PR 检查或完整仓库环境补充。
+- 第一版上线后通过正式域名验证 Cloudflare 已切换中文标题；同时发现无 WebGL 环境仍显示旧米白降级页，现已将根节点和 `.webgl-fallback` 修正为统一暗色视觉。
 
 ## 2026-07-01
 
