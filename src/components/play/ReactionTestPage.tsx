@@ -26,6 +26,25 @@ const LONG_DELAY_THRESHOLD_MS = 5000
 const PLAYER_ID_KEY = 'sakura1tap.reaction.player-id'
 const PLAYER_NAME_KEY = 'sakura1tap.reaction.nickname'
 
+async function readApiPayload<T>(response: Response): Promise<T> {
+  const contentType = response.headers.get('content-type') ?? ''
+  const body = await response.text()
+
+  if (!body.trim()) {
+    throw new Error(`排行榜接口返回空响应（HTTP ${response.status}）`)
+  }
+
+  if (!contentType.includes('application/json')) {
+    throw new Error(`排行榜接口未返回 JSON（HTTP ${response.status}）`)
+  }
+
+  try {
+    return JSON.parse(body) as T
+  } catch {
+    throw new Error('排行榜接口返回了无效 JSON')
+  }
+}
+
 function getOrCreatePlayerId() {
   const stored = window.localStorage.getItem(PLAYER_ID_KEY)
   if (stored) return stored
@@ -99,8 +118,8 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
       const response = await window.fetch('/api/reaction-leaderboard', {
         headers: { Accept: 'application/json' },
       })
-      if (!response.ok) throw new Error('排行榜暂时不可用')
-      const payload = await response.json() as { entries?: LeaderboardEntry[] }
+      const payload = await readApiPayload<{ entries?: LeaderboardEntry[]; error?: string }>(response)
+      if (!response.ok) throw new Error(payload.error ?? '排行榜暂时不可用')
       setLeaderboard(payload.entries ?? [])
       setLeaderboardStatus('success')
     } catch {
@@ -174,7 +193,7 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       })
-      const payload = await response.json() as { entries?: LeaderboardEntry[]; error?: string; rank?: number }
+      const payload = await readApiPayload<{ entries?: LeaderboardEntry[]; error?: string; rank?: number }>(response)
       if (!response.ok) throw new Error(payload.error ?? '成绩保存失败')
       window.localStorage.setItem(PLAYER_NAME_KEY, cleanNickname)
       setNickname(cleanNickname)
