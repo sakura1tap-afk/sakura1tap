@@ -4,7 +4,7 @@ import BootOverlay from './components/BootOverlay'
 
 const Live2DEntry = lazy(() => import('./components/Live2DEntry'))
 const MainPage = lazy(() => import('./components/MainPage'))
-const LegacyMainExperience = lazy(() => import('./components/main/MainExperience'))
+const MotionLabPage = lazy(() => import('./components/lab/MotionLabPage'))
 const PlayPage = lazy(() => import('./components/PlayPage'))
 const PlayGamePage = lazy(() => import('./components/PlayGamePage'))
 const SCENE_MOUNT_DELAY_MS = 120
@@ -143,7 +143,7 @@ export default function App() {
           </Suspense>
         ) : page === 'lab' ? (
           <Suspense key="lab" fallback={null}>
-            <LegacyMainExperience modelBuffer={modelBuffer} />
+            <MotionLabPage onClose={navigateToMain} />
           </Suspense>
         ) : (
           <Suspense key="main" fallback={null}>
