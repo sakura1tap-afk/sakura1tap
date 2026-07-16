@@ -6,16 +6,16 @@ const Live2DEntry = lazy(() => import('./components/Live2DEntry'))
 const MainPage = lazy(() => import('./components/MainPage'))
 const MotionLabPage = lazy(() => import('./components/lab/MotionLabPage'))
 const PlayPage = lazy(() => import('./components/PlayPage'))
-const PlayGamePage = lazy(() => import('./components/PlayGamePage'))
+const ReactionTestPage = lazy(() => import('./components/play/ReactionTestPage'))
 const SCENE_MOUNT_DELAY_MS = 120
 
-type AppPage = 'main' | 'lab' | 'play' | 'play-game'
+type AppPage = 'main' | 'lab' | 'play' | 'reaction'
 
 function getPageFromPath(pathname: string): AppPage {
   const normalizedPath = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
 
   if (normalizedPath === '/lab') return 'lab'
-  if (normalizedPath === '/play/blackout') return 'play-game'
+  if (normalizedPath === '/play/reaction') return 'reaction'
   if (normalizedPath === '/play') return 'play'
   return 'main'
 }
@@ -88,9 +88,9 @@ export default function App() {
     setEntered(true)
   }
 
-  const navigateToPlayGame = () => {
-    window.history.pushState({}, '', '/play/blackout')
-    setPage('play-game')
+  const navigateToReaction = () => {
+    window.history.pushState({}, '', '/play/reaction')
+    setPage('reaction')
     setEntered(true)
   }
 
@@ -139,13 +139,13 @@ export default function App() {
               </div>
             )}
           </motion.section>
-        ) : page === 'play-game' ? (
-          <Suspense key="play-game" fallback={null}>
-            <PlayGamePage onBack={navigateToPlay} />
+        ) : page === 'reaction' ? (
+          <Suspense key="reaction" fallback={null}>
+            <ReactionTestPage onBack={navigateToPlay} />
           </Suspense>
         ) : page === 'play' ? (
           <Suspense key="play" fallback={null}>
-            <PlayPage onClose={navigateToMain} onOpenLab={navigateToLab} onStartGame={navigateToPlayGame} />
+            <PlayPage onClose={navigateToMain} onOpenLab={navigateToLab} onStartReaction={navigateToReaction} />
           </Suspense>
         ) : page === 'lab' ? (
           <Suspense key="lab" fallback={null}>
