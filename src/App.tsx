@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import BootOverlay from './components/BootOverlay'
+import LiteEntry from './components/LiteEntry'
 
 const Live2DEntry = lazy(() => import('./components/Live2DEntry'))
 const MainPage = lazy(() => import('./components/MainPage'))
@@ -8,8 +9,14 @@ const MotionLabPage = lazy(() => import('./components/lab/MotionLabPage'))
 const PlayPage = lazy(() => import('./components/PlayPage'))
 const ReactionTestPage = lazy(() => import('./components/play/ReactionTestPage'))
 const SCENE_MOUNT_DELAY_MS = 120
+const ENTRY_READY_TIMEOUT_MS = 15000
 
 type AppPage = 'main' | 'lab' | 'play' | 'reaction'
+
+type NavigatorWithHints = Navigator & {
+  connection?: { effectiveType?: string; saveData?: boolean }
+  deviceMemory?: number
+}
 
 function getPageFromPath(pathname: string): AppPage {
   const normalizedPath = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
@@ -29,6 +36,20 @@ function canUseWebGL() {
   }
 }
 
+function getEntryCapabilities() {
+  const webglAvailable = canUseWebGL()
+  const navigatorWithHints = window.navigator as NavigatorWithHints
+  const connection = navigatorWithHints.connection
+  const compactViewport = window.matchMedia('(max-width: 760px)').matches
+  const coarsePointer = window.matchMedia('(pointer: coarse)').matches
+  const lowMemory = typeof navigatorWithHints.deviceMemory === 'number' && navigatorWithHints.deviceMemory <= 4
+  const slowConnection = connection?.saveData === true || ['slow-2g', '2g'].includes(connection?.effectiveType ?? '')
+
+  return {
+    useLiteEntry: !webglAvailable || compactViewport || coarsePointer || lowMemory || slowConnection,
+  }
+}
+
 export default function App() {
   const [entered, setEntered] = useState(() => getPageFromPath(window.location.pathname) !== 'main')
   const [bootComplete, setBootComplete] = useState(false)
@@ -37,7 +58,7 @@ export default function App() {
   const [modelBuffer, setModelBuffer] = useState<ArrayBuffer | null>(null)
   const [page, setPage] = useState<AppPage>(() => getPageFromPath(window.location.pathname))
   const [sceneMountAllowed, setSceneMountAllowed] = useState(false)
-  const [webglAvailable] = useState(canUseWebGL)
+  const [entryCapabilities] = useState(getEntryCapabilities)
   const entryReady = bootComplete && live2dReady
 
   useEffect(() => {
@@ -65,10 +86,15 @@ export default function App() {
   }, [bootModelLoaded])
 
   useEffect(() => {
-    if (!entryReady) return
+    if (entryCapabilities.useLiteEntry || live2dReady) return undefined
+    const timeout = window.setTimeout(() => setLive2dReady(true), ENTRY_READY_TIMEOUT_MS)
+    return () => window.clearTimeout(timeout)
+  }, [entryCapabilities.useLiteEntry, live2dReady])
 
+  useEffect(() => {
+    if (!entryCapabilities.useLiteEntry && !entryReady) return
     void import('./components/MainPage')
-  }, [entryReady])
+  }, [entryCapabilities.useLiteEntry, entryReady])
 
   const navigateToMain = () => {
     window.history.pushState({}, '', '/')
@@ -106,7 +132,9 @@ export default function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.75, ease: 'easeInOut' }}
           >
-            {webglAvailable ? (
+            {entryCapabilities.useLiteEntry ? (
+              <LiteEntry onEnter={navigateToMain} />
+            ) : (
               <>
                 {sceneMountAllowed && (
                   <Suspense fallback={null}>
@@ -125,6 +153,11 @@ export default function App() {
                       setModelBuffer(loadedModelBuffer)
                       setBootModelLoaded(true)
                     }}
+                    onUnavailable={() => {
+                      setModelBuffer(null)
+                      setBootModelLoaded(true)
+                      setBootComplete(true)
+                    }}
                     onComplete={(loadedModelBuffer) => {
                       setModelBuffer(loadedModelBuffer)
                       setBootComplete(true)
@@ -132,11 +165,6 @@ export default function App() {
                   />
                 )}
               </>
-            ) : (
-              <div className="webgl-fallback">
-                <span>WEBGL UNAVAILABLE</span>
-                <strong>当前设备无法启动 3D 场景</strong>
-              </div>
             )}
           </motion.section>
         ) : page === 'reaction' ? (
