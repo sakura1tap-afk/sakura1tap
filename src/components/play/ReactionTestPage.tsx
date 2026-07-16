@@ -23,7 +23,6 @@ const SHORT_DELAY_MAX_MS = 3200
 const MEDIUM_DELAY_MAX_MS = 5000
 const MAX_DELAY_MS = 8000
 const LONG_DELAY_THRESHOLD_MS = 5000
-const PLAYER_ID_KEY = 'sakura1tap.reaction.player-id'
 const PLAYER_NAME_KEY = 'sakura1tap.reaction.nickname'
 
 async function readApiPayload<T>(response: Response): Promise<T> {
@@ -43,14 +42,6 @@ async function readApiPayload<T>(response: Response): Promise<T> {
   } catch {
     throw new Error('排行榜接口返回了无效 JSON')
   }
-}
-
-function getOrCreatePlayerId() {
-  const stored = window.localStorage.getItem(PLAYER_ID_KEY)
-  if (stored) return stored
-  const playerId = window.crypto.randomUUID()
-  window.localStorage.setItem(PLAYER_ID_KEY, playerId)
-  return playerId
 }
 
 function getRandomUnit() {
@@ -189,18 +180,31 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
     setSubmissionMessage('')
     try {
       const response = await window.fetch('/api/reaction-leaderboard', {
-        body: JSON.stringify({ nickname: cleanNickname, playerId: getOrCreatePlayerId(), results }),
+        body: JSON.stringify({ nickname: cleanNickname, results }),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       })
-      const payload = await readApiPayload<{ entries?: LeaderboardEntry[]; error?: string; rank?: number }>(response)
+      const payload = await readApiPayload<{
+        bestAverageMs?: number
+        entries?: LeaderboardEntry[]
+        error?: string
+        improved?: boolean
+        isNew?: boolean
+        rank?: number
+      }>(response)
       if (!response.ok) throw new Error(payload.error ?? '成绩保存失败')
       window.localStorage.setItem(PLAYER_NAME_KEY, cleanNickname)
       setNickname(cleanNickname)
       setLeaderboard(payload.entries ?? [])
       setLeaderboardStatus('success')
       setSubmissionStatus('success')
-      setSubmissionMessage(payload.rank ? `已保存 · 当前第 ${payload.rank} 名` : '成绩已保存')
+      if (payload.improved === false) {
+        setSubmissionMessage(`未超过最佳成绩 · 仍为 ${payload.bestAverageMs ?? average} ms`)
+      } else if (payload.isNew) {
+        setSubmissionMessage(payload.rank ? `首次上榜 · 当前第 ${payload.rank} 名` : '成绩已保存')
+      } else {
+        setSubmissionMessage(payload.rank ? `已刷新最佳成绩 · 当前第 ${payload.rank} 名` : '已刷新最佳成绩')
+      }
     } catch (error) {
       setSubmissionStatus('error')
       setSubmissionMessage(error instanceof Error ? error.message : '成绩保存失败')
@@ -262,11 +266,11 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
           {phase === 'complete' && (
             <form className="reaction-test-submit" onSubmit={submitScore}>
               <input
-                aria-label="排行榜昵称"
-                autoComplete="nickname"
+                aria-label="排行榜 ID"
+                autoComplete="username"
                 maxLength={16}
                 onChange={(event) => setNickname(event.target.value)}
-                placeholder="输入昵称"
+                placeholder="输入排行榜 ID"
                 value={nickname}
               />
               <button disabled={submissionStatus === 'loading'} type="submit">
