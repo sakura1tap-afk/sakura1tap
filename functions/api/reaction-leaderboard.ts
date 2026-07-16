@@ -52,6 +52,7 @@ function ensureSchema(database: D1Database) {
         )
       `).run()
       await database.prepare('CREATE INDEX IF NOT EXISTS idx_reaction_scores_average ON reaction_scores (average_ms, updated_at)').run()
+      await database.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_reaction_scores_nickname ON reaction_scores (nickname)').run()
     })().catch((error) => {
       schemaInitialization = null
       throw error
@@ -96,35 +97,36 @@ export const onRequestPost = async (context: FunctionContext) => {
     await ensureSchema(database)
     const body = await context.request.json() as {
       nickname?: unknown
-      playerId?: unknown
       results?: unknown
     }
 
     const nickname = typeof body.nickname === 'string' ? body.nickname.trim().normalize('NFKC') : ''
-    const playerId = typeof body.playerId === 'string' ? body.playerId : ''
     const results = Array.isArray(body.results) ? body.results : []
 
     if (!/^[\p{L}\p{N}_-]{2,16}$/u.test(nickname)) return json({ error: '昵称格式不正确' }, 400)
-    if (!/^[A-Za-z0-9_-]{16,64}$/.test(playerId)) return json({ error: '玩家标识不正确' }, 400)
     if (results.length !== 5 || !results.every((value) => Number.isInteger(value) && value >= 80 && value <= 1500)) {
       return json({ error: '成绩数据不正确' }, 400)
     }
 
     const averageMs = Math.round(results.reduce((sum: number, value) => sum + Number(value), 0) / results.length)
+    const existing = await database.prepare('SELECT average_ms AS averageMs FROM reaction_scores WHERE nickname = ?').bind(nickname).first<{ averageMs: number }>()
+    const isNew = existing === null
+    const improved = isNew || averageMs < existing.averageMs
+
     await database.prepare(`
       INSERT INTO reaction_scores (player_id, nickname, average_ms, trials_json)
       VALUES (?, ?, ?, ?)
-      ON CONFLICT(player_id) DO UPDATE SET
-        nickname = excluded.nickname,
-        average_ms = CASE WHEN excluded.average_ms < reaction_scores.average_ms THEN excluded.average_ms ELSE reaction_scores.average_ms END,
-        trials_json = CASE WHEN excluded.average_ms < reaction_scores.average_ms THEN excluded.trials_json ELSE reaction_scores.trials_json END,
+      ON CONFLICT(nickname) DO UPDATE SET
+        average_ms = excluded.average_ms,
+        trials_json = excluded.trials_json,
         updated_at = CURRENT_TIMESTAMP
-    `).bind(playerId, nickname, averageMs, JSON.stringify(results)).run()
+      WHERE excluded.average_ms < reaction_scores.average_ms
+    `).bind(`id:${nickname}`, nickname, averageMs, JSON.stringify(results)).run()
 
-    const saved = await database.prepare('SELECT average_ms AS averageMs FROM reaction_scores WHERE player_id = ?').bind(playerId).first<{ averageMs: number }>()
+    const saved = await database.prepare('SELECT average_ms AS averageMs FROM reaction_scores WHERE nickname = ?').bind(nickname).first<{ averageMs: number }>()
     const entries = await listScores(database)
     const rank = entries.find((entry) => entry.nickname === nickname && entry.averageMs === saved?.averageMs)?.rank ?? null
-    return json({ averageMs: saved?.averageMs ?? averageMs, entries, rank })
+    return json({ bestAverageMs: saved?.averageMs ?? averageMs, entries, improved, isNew, rank })
   } catch (error) {
     return errorResponse(error)
   }
