@@ -11,7 +11,7 @@
 
 - 线上诊断确认 GET 接口错误回退到 SPA HTML、POST 接口返回 405 空响应，说明静态部署未装载 `functions/`。
 - 新增 `worker/index.js` 与 `wrangler.jsonc`，按 Workers Static Assets 模式拦截排行榜 API，并将其他请求交回 `env.ASSETS`。
-- Wrangler 明确声明 `REACTION_DB (sakura1tap-reaction)`；配置通过 Wrangler 4 dry-run，部署时不再依赖 Pages Functions。
+- Wrangler 声明 `REACTION_DB` 并使用官方自动配置，避免真实部署因缺少既有数据库 UUID 而阻塞；配置通过 Wrangler 4 dry-run。
 - 前端读取接口时先校验响应体和 Content-Type，避免再次显示浏览器原始的 `Unexpected end of JSON input`。
 - Worker 语法检查与反应测试组件独立 TypeScript 检查通过；正式域名需在 Cloudflare 完成该提交部署后复验。
 
