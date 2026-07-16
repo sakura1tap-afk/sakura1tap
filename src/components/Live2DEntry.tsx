@@ -66,12 +66,11 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
       />
 
       <header className="entry-cinematic-header">
-        <strong>SAKURA1TAP</strong>
-        <span>交互式个人空间</span>
+        <strong>Sakura1Tap</strong>
       </header>
       <motion.button
         animate={{ opacity: isReady ? 1 : 0.44 }}
-        aria-label={isReady ? '进入个人空间' : '空间正在准备中'}
+        aria-label={isEntering ? '正在进入 Sakura1Tap' : isReady ? '进入 Sakura1Tap' : 'Sakura1Tap 正在准备'}
         className="live2d-enter-button realm-enter-button"
         disabled={!isReady || isEntering}
         onClick={handleEnter}
@@ -83,9 +82,7 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
         type="button"
       >
         <span className="entry-button-light" aria-hidden="true" />
-        <b className="realm-enter-label">
-          {isEntering ? '正在进入' : isReady ? '进入' : '准备中'}
-        </b>
+        <b className="realm-enter-label">进入</b>
         <span className="entry-button-arrow" aria-hidden="true">→</span>
       </motion.button>
 
