@@ -82,6 +82,12 @@ export default function App() {
     setEntered(true)
   }
 
+  const navigateToLab = () => {
+    window.history.pushState({}, '', '/lab')
+    setPage('lab')
+    setEntered(true)
+  }
+
   const navigateToPlayGame = () => {
     window.history.pushState({}, '', '/play/blackout')
     setPage('play-game')
@@ -139,7 +145,7 @@ export default function App() {
           </Suspense>
         ) : page === 'play' ? (
           <Suspense key="play" fallback={null}>
-            <PlayPage onClose={navigateToMain} onStartGame={navigateToPlayGame} />
+            <PlayPage onClose={navigateToMain} onOpenLab={navigateToLab} onStartGame={navigateToPlayGame} />
           </Suspense>
         ) : page === 'lab' ? (
           <Suspense key="lab" fallback={null}>
