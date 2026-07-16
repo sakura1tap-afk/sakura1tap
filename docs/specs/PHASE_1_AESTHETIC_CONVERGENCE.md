@@ -88,3 +88,10 @@
 - 同步 `docs/BACKLOG.md` 与 `docs/CHANGELOG.md`。
 
 由于当前执行环境没有本地完整私有仓库和 GitHub CLI，本轮先进行变更文件级 TypeScript/CSS 静态检查，并通过 GitHub 分支交付；完整 Vite 构建与视觉验收需要由 PR 检查或完整 checkout 补充。
+
+### 2026-07-15 · 生产降级页修正
+
+- 第一版合并到 `main` 后，正式域名标题已更新为中文版本，确认 Cloudflare 部署完成。
+- 公共云浏览器不支持 WebGL，实时验证时触发了旧版米白色 `.webgl-fallback`。
+- 修改 `src/style.css`，将根节点与 WebGL 降级页统一为深色基底，并使用低强度冷色光晕和暖金状态文字。
+- 此修正确保不支持 WebGL 或 WebGL 初始化失败的设备也不会再暴露旧版米白主题。
