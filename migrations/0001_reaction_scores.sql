@@ -10,3 +10,6 @@ CREATE TABLE IF NOT EXISTS reaction_scores (
 
 CREATE INDEX IF NOT EXISTS idx_reaction_scores_average
   ON reaction_scores (average_ms, updated_at);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_reaction_scores_nickname
+  ON reaction_scores (nickname);
