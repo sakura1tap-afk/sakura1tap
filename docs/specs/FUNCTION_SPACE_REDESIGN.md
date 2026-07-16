@@ -20,7 +20,7 @@
 
 ### 游戏
 
-- Blackout Run：可用，保留原全屏游戏入口。
+- 反应时间测试：可用，5 次有效测试后计算平均值。
 - 反应矩阵：制作中。
 - 信号追踪：规划中。
 
@@ -46,8 +46,8 @@
 
 ## 操作记录
 
-- 检查旧 `PlayPage`、Blackout Run 路由和 App 页面切换方式。
+- 检查旧 `PlayPage`、功能模块路由和 App 页面切换方式。
 - 重写 `PlayPage.tsx` 为数据驱动的功能模块库。
 - 新增独立 `FunctionSpace.css`，避免继续叠加旧 Play 样式覆盖。
 - 在 App 中增加功能空间到动效实验室的内部导航。
-- 保留 `/play/blackout` 和现有游戏实现，不修改 DodgeGame 核心。
+- 增加 `/play/reaction`，同时移除缺乏平衡性的 Blackout Run 及旧实现。
