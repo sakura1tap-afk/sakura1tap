@@ -10,23 +10,12 @@ const destinations = [
   {
     index: "01",
     name: "功能空间",
-    kind: "功能入口",
-    line: "查看小游戏与互动工具",
-    href: "https://www.sakura1tap.com/play",
+    href: "/play",
   },
   {
     index: "02",
-    name: "BLACKOUT RUN",
-    kind: "互动游戏",
-    line: "控制光点，避开不断出现的障碍",
-    href: "https://www.sakura1tap.com/play/blackout",
-  },
-  {
-    index: "03",
     name: "动效实验室",
-    kind: "前端实验",
-    line: "查看仍在生长的交互想法",
-    href: "https://www.sakura1tap.com/lab",
+    href: "/lab",
   },
 ];
 
@@ -169,7 +158,7 @@ export default function HomeExperience() {
 
         <header className="site-chrome site-header">
           <button className="identity" type="button" onClick={() => scrollToChapter(0)} aria-label="返回首页">
-            <strong>SAKURA1TAP</strong><span>交互式个人空间</span>
+            <strong>Sakura1Tap</strong>
           </button>
           <nav className="chapter-nav" aria-label="页面章节">
             {chapters.map((chapter, index) => (
@@ -182,8 +171,7 @@ export default function HomeExperience() {
 
         <section className="chapter-panel arrival-panel" aria-label="首页">
           <p className="chapter-mark" data-intro>01 / 首页</p>
-          <h1><span data-intro>交互式</span><span data-intro><em>个人空间</em></span></h1>
-          <p className="opening-line" data-intro>这里记录作品、实验与持续更新的想法。</p>
+          <h1 data-intro>Sakura1Tap</h1>
           <button className="weather-button" type="button" data-intro onClick={() => scrollToChapter(1)}>
             <span>开始探索</span><i>↓</i>
           </button>
@@ -191,14 +179,13 @@ export default function HomeExperience() {
 
         <section className="chapter-panel proximity-panel" aria-label="互动说明">
           <p className="chapter-mark">02 / 互动</p>
-          <h2>移动光标<br />或拖动<em>画面</em></h2>
-          <div className="gesture-note"><i /><span>光标会扰动光线<br />按住拖拽可以改变画面偏移</span></div>
+          <h2>互动</h2>
         </section>
 
         <section className="chapter-panel archive-panel" aria-label="功能入口">
           <div className="archive-heading">
             <p className="chapter-mark">03 / 功能</p>
-            <h2>功能<br />与<em>实验</em></h2>
+            <h2>功能</h2>
           </div>
           <div className="destination-list">
             {destinations.map((item) => (
@@ -210,8 +197,8 @@ export default function HomeExperience() {
                 onPointerLeave={resetTilt}
               >
                 <span className="destination-index">{item.index}</span>
-                <span className="destination-main"><strong>{item.name}</strong><small>{item.line}</small></span>
-                <em>{item.kind}</em><b>↗</b>
+                <span className="destination-main"><strong>{item.name}</strong></span>
+                <b>↗</b>
               </a>
             ))}
           </div>
@@ -229,7 +216,6 @@ export default function HomeExperience() {
         <section className="chapter-panel exit-panel" aria-label="继续探索">
           <p className="chapter-mark">05 / 继续</p>
           <h2>继续<br /><em>探索</em></h2>
-          <p>网站仍在更新，新的内容与实验会逐步加入。</p>
           <div className="exit-actions">
             <button type="button" onClick={() => scrollToChapter(0)}>返回首页 <span>↺</span></button>
             <a href="https://github.com/sakura1tap-afk" target="_blank" rel="noreferrer">GitHub <span>↗</span></a>
@@ -245,9 +231,8 @@ export default function HomeExperience() {
         </aside>
 
         <footer className="runtime site-chrome">
-          <span><i /> SAKURA1TAP / 个人空间</span>
+          <span><i /> Sakura1Tap</span>
           <span className="journey-count"><b ref={progressLabelRef}>000</b> / 100</span>
-          <span>滚动与拖拽 <i /></span>
         </footer>
       </div>
     </main>
