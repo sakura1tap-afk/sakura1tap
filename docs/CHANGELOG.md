@@ -7,6 +7,20 @@
 
 ## 2026-07-16
 
+### 重做：功能空间成为可扩展模块库
+
+- 重写 `PlayPage`，删除旧版巨型 Blackout 介绍区和重复 Play mode 列表。
+- 页面建立全部 / 游戏 / 工具 / 实验分类，并支持名称、说明和标签的全文搜索。
+- 模块统一显示分类、状态、名称、单句说明、标签与操作；状态限定为可用、制作中、规划中。
+- Blackout Run 保留为特色可用游戏，并继续进入原 `/play/blackout` 全屏程序。
+- 动效实验室作为第二个可用模块接入；App 新增 `/play` 到 `/lab` 的内部导航。
+- 第一版登记 8 个模块：3 个游戏、3 个工具、2 个实验；未完成模块不提供伪入口。
+- 新增独立 `src/components/play/FunctionSpace.css`，不再依赖旧 Play 样式层叠。
+- 新增 `docs/specs/FUNCTION_SPACE_REDESIGN.md`，记录信息架构、模块状态和扩展规则。
+- `PlayPage` 已通过 TypeScript 类型检查，独立 CSS 已通过 PostCSS 解析。
+
+## 2026-07-16
+
 ### 重做：动效实验室成为窗口放映场
 
 - 新增 `MotionLabPage`，将 `/lab` 从旧版 `LegacyMainExperience` 和 R3F/Three 视频纹理场景中独立出来。
