@@ -97,6 +97,7 @@ const fragmentShaderSource = `
     color *= mix(0.52, 1.0, vignette);
     color *= 0.82 + pointerField * 0.12 + uImpact * falloff * 0.08;
     color = mix(color, vec3(dot(color, vec3(0.299, 0.587, 0.114))), afterimage * 0.18);
+    color *= vec3(0.86, 0.94, 0.97);
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -127,6 +128,9 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
       onReady?.();
       return;
     }
+
+    gl.clearColor(0.008, 0.016, 0.018, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
     let frame = 0;
     let disposed = false;
