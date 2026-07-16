@@ -141,6 +141,19 @@ export default {
     if (url.pathname === '/api/reaction-leaderboard') {
       return handleLeaderboard(request, env)
     }
-    return env.ASSETS.fetch(request)
+
+    const response = await env.ASSETS.fetch(request)
+    const contentType = response.headers.get('content-type') ?? ''
+    if (!contentType.includes('text/html')) return response
+
+    const headers = new Headers(response.headers)
+    headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
+    headers.set('Expires', '0')
+    headers.set('Pragma', 'no-cache')
+    return new Response(response.body, {
+      headers,
+      status: response.status,
+      statusText: response.statusText,
+    })
   },
 }
