@@ -1,0 +1,205 @@
+.reaction-test {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #0b0d0e;
+  color: #f4f1e9;
+  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+  isolation: isolate;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.reaction-test * { box-sizing: border-box; }
+.reaction-test button { color: inherit; font: inherit; }
+
+.reaction-test-header {
+  position: absolute;
+  z-index: 20;
+  inset: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: 5.5rem;
+  padding: 1rem clamp(1rem, 3.5vw, 3.5rem);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(5, 7, 8, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.reaction-test-header > button {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 0.7rem;
+  padding: 0.7rem 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+}
+
+.reaction-test-header > button svg { transition: transform 220ms ease; }
+.reaction-test-header > button:hover svg { transform: translateX(-4px); }
+
+.reaction-test-progress { display: flex; gap: 0.45rem; }
+.reaction-test-progress i { width: clamp(1.4rem, 4vw, 3.8rem); height: 2px; background: rgba(255, 255, 255, 0.18); transition: background 260ms ease, box-shadow 260ms ease; }
+.reaction-test-progress i.is-complete { background: rgba(255, 255, 255, 0.82); }
+.reaction-test-progress i.is-current { background: #f0ad70; box-shadow: 0 0 1rem rgba(240, 173, 112, 0.65); }
+
+.reaction-test-counter { justify-self: end; display: flex; align-items: baseline; gap: 0.35rem; }
+.reaction-test-counter strong { font-size: 1rem; font-weight: 450; }
+.reaction-test-counter span { color: rgba(255, 255, 255, 0.4); font-size: 0.55rem; letter-spacing: 0.1em; }
+
+.reaction-test-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  outline: none;
+  cursor: pointer;
+  background: #111416;
+  transition: background 90ms linear;
+  touch-action: manipulation;
+}
+
+.reaction-test.is-waiting .reaction-test-stage { background: #b32636; }
+.reaction-test.is-ready .reaction-test-stage { background: #18a45b; }
+.reaction-test.is-false-start .reaction-test-stage { background: #c66a27; }
+.reaction-test.is-result .reaction-test-stage { background: #101a20; }
+.reaction-test.is-complete .reaction-test-stage { background: #071513; }
+
+.reaction-test-noise {
+  position: absolute;
+  inset: -50%;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  animation: reactionNoise 0.24s steps(2) infinite;
+}
+
+.reaction-test-stage::before,
+.reaction-test-stage::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+}
+
+.reaction-test-stage::before {
+  inset: 5.5rem 0 4.6rem;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+  background-size: 9vw 9vw;
+  mask-image: radial-gradient(circle, #000 0 20%, transparent 72%);
+  opacity: 0.36;
+}
+
+.reaction-test-stage::after { inset: 0; box-shadow: inset 0 0 12rem rgba(0, 0, 0, 0.42); }
+
+.reaction-test-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(42vw, 32rem);
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.reaction-test-ring::before,
+.reaction-test-ring::after {
+  position: absolute;
+  inset: 18%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: inherit;
+  content: "";
+}
+
+.reaction-test-ring::after { inset: 37%; }
+.reaction-test-ring i { position: absolute; left: 50%; top: -0.25rem; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: rgba(255, 255, 255, 0.8); box-shadow: 0 0 1rem rgba(255, 255, 255, 0.7); transform: translateX(-50%); }
+.reaction-test.is-waiting .reaction-test-ring { border-color: rgba(255, 255, 255, 0.3); }
+.reaction-test.is-ready .reaction-test-ring { width: min(48vw, 37rem); border-color: rgba(255, 255, 255, 0.62); box-shadow: 0 0 7rem rgba(255, 255, 255, 0.16); }
+
+.reaction-test-center {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  justify-items: center;
+  gap: 0.85rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.reaction-test-center > span { color: rgba(255, 255, 255, 0.62); font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; }
+.reaction-test-center > strong { font-size: clamp(2.8rem, 7vw, 6.8rem); font-weight: 350; letter-spacing: 0.04em; line-height: 1; }
+.reaction-test-center > p { margin: 0; color: rgba(255, 255, 255, 0.56); font-size: 0.72rem; letter-spacing: 0.08em; }
+.reaction-test.is-ready .reaction-test-center > strong { text-shadow: 0 0 3rem rgba(255, 255, 255, 0.24); transform: scale(1.04); }
+
+.reaction-test-results {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 7.4rem;
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  gap: 0.55rem;
+  transform: translateX(-50%);
+}
+
+.reaction-test-results > span { display: grid; grid-template-columns: auto auto auto; align-items: baseline; gap: 0.28rem; min-width: 6.4rem; padding: 0.7rem; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(0, 0, 0, 0.18); }
+.reaction-test-results i { color: rgba(255, 255, 255, 0.35); font-size: 0.5rem; font-style: normal; }
+.reaction-test-results b { font-size: 0.88rem; font-weight: 500; }
+.reaction-test-results small { color: rgba(255, 255, 255, 0.4); font-size: 0.48rem; }
+
+.reaction-test-footer {
+  position: absolute;
+  z-index: 20;
+  inset: auto 0 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: 4.6rem;
+  padding: 0.8rem clamp(1rem, 3.5vw, 3.5rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(5, 7, 8, 0.2);
+  backdrop-filter: blur(12px);
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+}
+
+.reaction-test-footer > span:nth-child(2) { justify-self: center; }
+.reaction-test-footer > span:last-child,
+.reaction-test-footer > button { justify-self: end; }
+.reaction-test-footer > button { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.7rem; border: 1px solid rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.08); cursor: pointer; font-size: 0.58rem; }
+
+@keyframes reactionNoise { 0% { transform: translate(-2%, 1%); } 50% { transform: translate(2%, -2%); } 100% { transform: translate(-1%, 2%); } }
+
+@media (max-width: 720px) {
+  .reaction-test-header { min-height: 4.8rem; padding: 0.8rem 1rem; }
+  .reaction-test-header > button span { display: none; }
+  .reaction-test-progress { gap: 0.28rem; }
+  .reaction-test-progress i { width: 1.8rem; }
+  .reaction-test-ring { width: 76vw; }
+  .reaction-test.is-ready .reaction-test-ring { width: 88vw; }
+  .reaction-test-center > strong { font-size: clamp(2.7rem, 15vw, 5rem); }
+  .reaction-test-results { bottom: 6rem; grid-template-columns: repeat(5, 1fr); width: calc(100% - 1.5rem); gap: 0.3rem; }
+  .reaction-test-results > span { grid-template-columns: 1fr; justify-items: center; min-width: 0; padding: 0.5rem 0.2rem; }
+  .reaction-test-results i { display: none; }
+  .reaction-test-footer { min-height: 4.2rem; padding: 0.6rem 1rem; grid-template-columns: 1fr auto; }
+  .reaction-test-footer > span:nth-child(2) { display: none; }
+  .reaction-test-footer > span:last-child,
+  .reaction-test-footer > button { justify-self: end; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reaction-test *,
+  .reaction-test *::before,
+  .reaction-test *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
