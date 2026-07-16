@@ -4,28 +4,28 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import CinematicCanvas from "./CinematicCanvas";
 import "./HomeExperience.css";
 
-const chapters = ["ARRIVAL", "PROXIMITY", "ARCHIVE", "AFTERIMAGE", "EXIT"];
+const chapters = ["首页", "互动", "功能", "片段", "继续"];
 
 const destinations = [
   {
     index: "01",
-    name: "SAKURA1TAP",
-    kind: "THE ORIGIN",
-    line: "Enter the living interface.",
-    href: "https://www.sakura1tap.com",
+    name: "功能空间",
+    kind: "功能入口",
+    line: "查看小游戏与互动工具",
+    href: "https://www.sakura1tap.com/play",
   },
   {
     index: "02",
     name: "BLACKOUT RUN",
-    kind: "PLAYABLE SIGNAL",
-    line: "Run until the light remembers you.",
+    kind: "互动游戏",
+    line: "控制光点，避开不断出现的障碍",
     href: "https://www.sakura1tap.com/play/blackout",
   },
   {
     index: "03",
-    name: "MOTION LAB",
-    kind: "EXPERIMENTAL ROOM",
-    line: "Touch the unfinished ideas.",
+    name: "动效实验室",
+    kind: "前端实验",
+    line: "查看仍在生长的交互想法",
     href: "https://www.sakura1tap.com/lab",
   },
 ];
@@ -152,7 +152,7 @@ export default function HomeExperience() {
 
   return (
     <main className="cinematic-experience" data-scene="0" ref={experienceRef}>
-      <div className="cursor-orbit" ref={cursorRef} aria-hidden="true"><i /><span>DRAG</span></div>
+      <div className="cursor-orbit" ref={cursorRef} aria-hidden="true"><i /></div>
 
       <div className="cinematic-stage">
         <picture className="scene-fallback">
@@ -168,10 +168,10 @@ export default function HomeExperience() {
         </div>
 
         <header className="site-chrome site-header">
-          <button className="identity" type="button" onClick={() => scrollToChapter(0)} aria-label="Return to arrival">
-            <strong>SAKURA1TAP</strong><span>INTERACTIVE REALM / 01</span>
+          <button className="identity" type="button" onClick={() => scrollToChapter(0)} aria-label="返回首页">
+            <strong>SAKURA1TAP</strong><span>交互式个人空间</span>
           </button>
-          <nav className="chapter-nav" aria-label="Journey chapters">
+          <nav className="chapter-nav" aria-label="页面章节">
             {chapters.map((chapter, index) => (
               <button key={chapter} type="button" data-chapter={index} onClick={() => scrollToChapter(index)}>
                 <i>0{index + 1}</i><span>{chapter}</span>
@@ -180,25 +180,25 @@ export default function HomeExperience() {
           </nav>
         </header>
 
-        <section className="chapter-panel arrival-panel" aria-label="Arrival">
-          <p className="chapter-mark" data-intro>01 / ARRIVAL · SOMEWHERE AFTER THE RAIN</p>
-          <h1><span data-intro>BETWEEN</span><span data-intro>SILENCE <em>&amp;</em> SIGNAL</span></h1>
-          <p className="opening-line" data-intro>A living interface by Sakura1tap.<br />Scroll to cross the distance.</p>
+        <section className="chapter-panel arrival-panel" aria-label="首页">
+          <p className="chapter-mark" data-intro>01 / 首页</p>
+          <h1><span data-intro>交互式</span><span data-intro><em>个人空间</em></span></h1>
+          <p className="opening-line" data-intro>这里记录作品、实验与持续更新的想法。</p>
           <button className="weather-button" type="button" data-intro onClick={() => scrollToChapter(1)}>
-            <span>ENTER THE WEATHER</span><i>↓</i>
+            <span>开始探索</span><i>↓</i>
           </button>
         </section>
 
-        <section className="chapter-panel proximity-panel" aria-label="Proximity">
-          <p className="chapter-mark">02 / PROXIMITY</p>
-          <h2>THE IMAGE<br />REMEMBERS<br /><em>YOUR TOUCH.</em></h2>
-          <div className="gesture-note"><i /><span>MOVE TO DISTURB THE LIGHT<br />HOLD + DRAG TO BEND THE AIR</span></div>
+        <section className="chapter-panel proximity-panel" aria-label="互动说明">
+          <p className="chapter-mark">02 / 互动</p>
+          <h2>移动光标<br />或拖动<em>画面</em></h2>
+          <div className="gesture-note"><i /><span>光标会扰动光线<br />按住拖拽可以改变画面偏移</span></div>
         </section>
 
-        <section className="chapter-panel archive-panel" aria-label="Archive">
+        <section className="chapter-panel archive-panel" aria-label="功能入口">
           <div className="archive-heading">
-            <p className="chapter-mark">03 / ARCHIVE · SELECTED SIGNALS</p>
-            <h2>THREE<br />DOORS<br /><em>REMAIN.</em></h2>
+            <p className="chapter-mark">03 / 功能</p>
+            <h2>功能<br />与<em>实验</em></h2>
           </div>
           <div className="destination-list">
             {destinations.map((item) => (
@@ -220,34 +220,34 @@ export default function HomeExperience() {
         <div className="afterimage-portrait" aria-hidden="true">
           <img src="/cinematic/awakening.webp" alt="" draggable={false} />
         </div>
-        <section className="chapter-panel afterimage-panel" aria-label="Afterimage">
-          <p className="chapter-mark">04 / AFTERIMAGE</p>
-          <blockquote>“NOT EVERYTHING<br />THAT DISAPPEARS<br /><em>IS GONE.</em>”</blockquote>
-          <span>THE ARCHIVE KEEPS BREATHING</span>
+        <section className="chapter-panel afterimage-panel" aria-label="设计片段">
+          <p className="chapter-mark">04 / 片段</p>
+          <blockquote>设计、代码与动效<br />在这里成为<em>同一件事</em></blockquote>
+          <span>持续记录，持续调整</span>
         </section>
 
-        <section className="chapter-panel exit-panel" aria-label="Exit">
-          <p className="chapter-mark">05 / EXIT · OR BEGIN AGAIN</p>
-          <h2>STAY<br />A LITTLE<br /><em>LONGER.</em></h2>
-          <p>There is no final page here. Only another signal waiting to be touched.</p>
+        <section className="chapter-panel exit-panel" aria-label="继续探索">
+          <p className="chapter-mark">05 / 继续</p>
+          <h2>继续<br /><em>探索</em></h2>
+          <p>网站仍在更新，新的内容与实验会逐步加入。</p>
           <div className="exit-actions">
-            <button type="button" onClick={() => scrollToChapter(0)}>REPLAY <span>↺</span></button>
-            <a href="https://github.com/sakura1tap-afk" target="_blank" rel="noreferrer">GITHUB <span>↗</span></a>
+            <button type="button" onClick={() => scrollToChapter(0)}>返回首页 <span>↺</span></button>
+            <a href="https://github.com/sakura1tap-afk" target="_blank" rel="noreferrer">GitHub <span>↗</span></a>
           </div>
         </section>
 
-        <aside className="chapter-rail site-chrome" aria-label="Chapter position">
+        <aside className="chapter-rail site-chrome" aria-label="章节位置">
           {chapters.map((chapter, index) => (
-            <button key={chapter} type="button" data-chapter={index} onClick={() => scrollToChapter(index)} aria-label={`Go to ${chapter}`}>
+            <button key={chapter} type="button" data-chapter={index} onClick={() => scrollToChapter(index)} aria-label={`前往${chapter}`}>
               <i /><span>0{index + 1}</span>
             </button>
           ))}
         </aside>
 
         <footer className="runtime site-chrome">
-          <span><i /> SAKURA1TAP / DIGITAL REALM</span>
+          <span><i /> SAKURA1TAP / 个人空间</span>
           <span className="journey-count"><b ref={progressLabelRef}>000</b> / 100</span>
-          <span>DRAG THE WEATHER <i /></span>
+          <span>滚动与拖拽 <i /></span>
         </footer>
       </div>
     </main>

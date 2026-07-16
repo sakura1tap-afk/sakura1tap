@@ -7,6 +7,18 @@
 
 ## Inbox
 
+### 第一阶段：中文暗色视觉收口
+
+- Status: doing
+- Priority: P1
+- Layer: Boot / Entry / Main Scene / Styling / Docs
+- Owner role: Designer / Builder / Archivist
+- Goal: 在保留 WebGL、GSAP 五幕与 Live2D 舞台的前提下，统一中文字体、暗色基底、玻璃入口和低文字密度体验。
+- Scope: Boot 中文化；入口按钮收口；主页中文化与字号调整；Canvas fallback 深色衔接；设计日志与变更记录。
+- Acceptance: 入口按钮完整可见；不暴露米白空画布；主要操作中文化；场景继续占据视觉主体；既有路由和 fallback 不被破坏。
+- Risks: 中文字体回退在不同平台存在差异；Canvas 冷色校正需要线上素材复核；Live2D 仍会影响首屏加载时间。
+- Notes: 2026-07-15 已完成第一版实现，规格和操作记录见 `docs/specs/PHASE_1_AESTHETIC_CONVERGENCE.md`。待完整构建和桌面/移动端视觉复核后更新为 done。
+
 ### 建立文档驱动开发流程
 
 - Status: done

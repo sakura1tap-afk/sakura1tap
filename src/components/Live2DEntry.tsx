@@ -29,8 +29,8 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
 
   const moveEntryButton = (event: ReactPointerEvent<HTMLButtonElement>) => {
     const rect = event.currentTarget.getBoundingClientRect()
-    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 12
-    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 8
+    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 4
+    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 3
     event.currentTarget.style.setProperty('--entry-magnet-x', `${x}px`)
     event.currentTarget.style.setProperty('--entry-magnet-y', `${y}px`)
   }
@@ -67,31 +67,26 @@ export default function Live2DEntry({ isReady, onEnter, onReadyChange }: Live2DE
 
       <header className="entry-cinematic-header">
         <strong>SAKURA1TAP</strong>
-        <span>AN INTERACTIVE REALM</span>
+        <span>交互式个人空间</span>
       </header>
-      <div className="entry-cinematic-copy">
-        <span>PROLOGUE / 00</span>
-        <p>Touch the quiet.<br />Let the world answer.</p>
-      </div>
       <motion.button
         animate={{ opacity: isReady ? 1 : 0.44 }}
-        aria-label="Enter the realm"
+        aria-label={isReady ? '进入个人空间' : '空间正在准备中'}
         className="live2d-enter-button realm-enter-button"
         disabled={!isReady || isEntering}
         onClick={handleEnter}
         onPointerMove={moveEntryButton}
         onPointerEnter={() => setButtonHover(true)}
-        onPointerDown={(event) => event.currentTarget.style.setProperty('--entry-press', '.975')}
+        onPointerDown={(event) => event.currentTarget.style.setProperty('--entry-press', '.98')}
         onPointerUp={(event) => event.currentTarget.style.setProperty('--entry-press', '1')}
         onPointerLeave={resetEntryButton}
         type="button"
       >
         <span className="entry-button-light" aria-hidden="true" />
-        <span className="entry-button-copy">
-          <small>00 / OPEN GATE</small>
-          <b className="realm-enter-label">{isEntering ? 'OPENING THE REALM' : 'ENTER THE WEATHER'}</b>
-        </span>
-        <span className="entry-button-orb" aria-hidden="true"><i>↘</i><em /></span>
+        <b className="realm-enter-label">
+          {isEntering ? '正在进入' : isReady ? '进入' : '准备中'}
+        </b>
+        <span className="entry-button-arrow" aria-hidden="true">→</span>
       </motion.button>
 
       <AnimatePresence>

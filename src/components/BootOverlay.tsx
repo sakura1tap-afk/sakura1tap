@@ -72,12 +72,12 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete, 
       <div className="boot-cinematic-shade" aria-hidden="true" />
       <div className="boot-cinematic-copy">
         <strong>SAKURA1TAP</strong>
-        <span>AWAKENING THE SILENCE</span>
+        <span>正在唤醒空间</span>
       </div>
       {state === 'error' && (
         <div className="boot-cinematic-error" role="alert">
-          <span>THE SIGNAL WAS INTERRUPTED</span>
-          <button type="button" onClick={retry}>RETRY</button>
+          <span>加载暂时中断</span>
+          <button type="button" onClick={retry}>重试</button>
         </div>
       )}
     </div>
