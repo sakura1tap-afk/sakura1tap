@@ -7,6 +7,18 @@
 
 ## 2026-07-16
 
+### 新增：D1 动态反应时间排行榜
+
+- 新增 Pages Function `/api/reaction-leaderboard`，使用 `REACTION_DB` D1 binding。
+- API 首次访问自动创建成绩表与索引；binding 缺失时返回明确的 503 提示。
+- GET 返回全站 Top 10，POST 校验五次成绩并由服务端重新计算平均值。
+- 同一浏览器通过本地玩家标识只保留最好成绩，避免普通重复测试堆积榜单。
+- 反应测试完成页新增昵称与保存成绩操作；初始页和完成页显示紧凑榜单，红/绿测试阶段自动隐藏。
+- 新增 `migrations/0001_reaction_scores.sql` 与 `docs/specs/REACTION_LEADERBOARD.md`。
+- 前端、Function 已通过 TypeScript 检查，排行榜 CSS 已通过 PostCSS 解析。
+
+## 2026-07-16
+
 ### 文案：片段页改为「哥布林万岁！」
 
 - 删除片段章节中偏概念化的设计说明与持续记录尾注。
