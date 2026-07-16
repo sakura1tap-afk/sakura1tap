@@ -26,7 +26,7 @@
 - 正式部署使用 Workers Static Assets：入口为 `worker/index.js`，配置为 `wrangler.jsonc`。
 - `run_worker_first` 只拦截 `/api/*`，其他请求交还 `env.ASSETS`，不改变 SPA 与静态资源行为。
 - `functions/api/reaction-leaderboard.ts` 保留同等实现，兼容标准 Pages Functions 部署与本地检查。
-- 使用 D1 binding：`REACTION_DB`；Wrangler 配置声明数据库名 `sakura1tap-reaction`，无需把数据库 UUID 写入仓库。
+- 使用 D1 binding：`REACTION_DB`；Wrangler 自动配置 D1，避免在仓库中保存数据库 UUID，也避免 Git 部署无法按名称关联现有资源。
 - GET 返回 Top 10；POST 校验、写入并返回更新后的榜单。
 - Function 首次访问自动执行 `CREATE TABLE IF NOT EXISTS`，无需单独初始化页面。
 - `migrations/0001_reaction_scores.sql` 保留相同结构，便于日后正式迁移管理。
