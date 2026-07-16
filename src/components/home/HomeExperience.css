@@ -122,7 +122,7 @@ button:focus-visible, a:focus-visible { outline: 1px solid var(--ember); outline
 .cursor-orbit[data-hover="true"] { width: 46px; height: 46px; margin: -23px 0 0 -23px; border-color: rgba(240,173,112,.64); }
 .cursor-orbit i { position: absolute; inset: 14px; border-radius: 50%; background: var(--ember); box-shadow: 0 0 8px rgba(240,173,112,.62); transition: inset .25s ease; }
 .cursor-orbit[data-hover="true"] i { inset: 21px; }
-html[data-dragging="true"], html[data-dragging="true"] body { cursor: grabbing !important; }
+html[data-dragging="true"], html[data-dragging="true"] body { cursor: none !important; }
 html[data-dragging="true"] .cursor-orbit { width: 56px; height: 56px; margin: -28px 0 0 -28px; border-color: var(--ember); }
 
 @media (pointer: coarse), (pointer: none) {
