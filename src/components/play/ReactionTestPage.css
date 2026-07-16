@@ -41,7 +41,7 @@
   grid-template-rows: auto auto;
   align-items: center;
   gap: 1.35rem clamp(1rem, 3vw, 3rem);
-  min-height: clamp(13rem, 27vh, 17rem);
+  min-height: clamp(14rem, 29vh, 18rem);
   padding: 1.35rem clamp(1.25rem, 3.5vw, 3.5rem) 1.15rem;
   background: #0b0d0e;
 }
@@ -105,6 +105,42 @@
 .reaction-test-status > strong { font-size: clamp(1.45rem, 2.4vw, 2.25rem); font-weight: 400; letter-spacing: 0.05em; line-height: 1.2; }
 .reaction-test-status > p { margin: 0; color: rgba(255, 255, 255, 0.44); font-size: 0.68rem; letter-spacing: 0.05em; }
 
+.reaction-test-submit {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1fr) auto;
+  gap: 0.35rem;
+  width: min(100%, 22rem);
+  margin-top: 0.35rem;
+}
+
+.reaction-test-submit input {
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  outline: 0;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f4f1e9;
+  font: inherit;
+  font-size: 0.65rem;
+}
+
+.reaction-test-submit input:focus { border-color: rgba(240, 173, 112, 0.58); }
+.reaction-test-submit input::placeholder { color: rgba(255, 255, 255, 0.28); }
+.reaction-test-submit button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(240, 173, 112, 0.36);
+  background: rgba(240, 173, 112, 0.1);
+  cursor: pointer;
+  font-size: 0.6rem;
+}
+.reaction-test-submit button:disabled { cursor: wait; opacity: 0.55; }
+.reaction-test-submit small { grid-column: 1 / -1; color: rgba(255, 255, 255, 0.4); font-size: 0.52rem; }
+.reaction-test-submit small.is-success { color: rgba(106, 209, 157, 0.82); }
+.reaction-test-submit small.is-error { color: rgba(239, 128, 128, 0.86); }
+
 .reaction-test-results {
   grid-column: 1;
   grid-row: 2;
@@ -126,6 +162,32 @@
 .reaction-test-results i { color: rgba(255, 255, 255, 0.3); font-size: 0.48rem; font-style: normal; }
 .reaction-test-results b { font-size: 0.8rem; font-weight: 500; }
 .reaction-test-results small { color: rgba(255, 255, 255, 0.35); font-size: 0.45rem; }
+
+.reaction-leaderboard {
+  grid-column: 3;
+  grid-row: 2;
+  align-self: stretch;
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.reaction-leaderboard > header { display: flex; align-items: center; justify-content: space-between; }
+.reaction-leaderboard > header > span { display: inline-flex; align-items: center; gap: 0.4rem; color: rgba(255, 255, 255, 0.58); font-size: 0.56rem; letter-spacing: 0.08em; }
+.reaction-leaderboard > header svg { color: #f0ad70; }
+.reaction-leaderboard > header button { display: grid; place-items: center; padding: 0.25rem; border: 0; background: transparent; cursor: pointer; color: rgba(255, 255, 255, 0.42); }
+.reaction-leaderboard > header button:disabled { cursor: wait; }
+.reaction-leaderboard > header svg.is-loading { animation: leaderboardSpin 0.8s linear infinite; }
+.reaction-leaderboard ol { display: grid; gap: 0.18rem; margin: 0; padding: 0; list-style: none; }
+.reaction-leaderboard li { display: grid; grid-template-columns: 1.5rem 1fr auto; align-items: baseline; gap: 0.35rem; padding: 0.25rem 0.35rem; background: rgba(255, 255, 255, 0.035); }
+.reaction-leaderboard li i { color: rgba(255, 255, 255, 0.25); font-size: 0.48rem; font-style: normal; }
+.reaction-leaderboard li span { overflow: hidden; color: rgba(255, 255, 255, 0.62); font-size: 0.58rem; text-overflow: ellipsis; white-space: nowrap; }
+.reaction-leaderboard li b { font-size: 0.66rem; font-weight: 500; }
+.reaction-leaderboard li small { margin-left: 0.18rem; color: rgba(255, 255, 255, 0.3); font-size: 0.42rem; font-weight: 400; }
+.reaction-leaderboard > p { margin: 0; padding: 1.15rem 0; color: rgba(255, 255, 255, 0.28); font-size: 0.55rem; text-align: center; }
+.reaction-test.is-waiting .reaction-leaderboard,
+.reaction-test.is-ready .reaction-leaderboard { visibility: hidden; }
 
 .reaction-test-meta {
   grid-column: 1 / -1;
@@ -151,8 +213,10 @@
   font-size: 0.58rem;
 }
 
+@keyframes leaderboardSpin { to { transform: rotate(360deg); } }
+
 @media (max-width: 760px) {
-  .reaction-test { grid-template-rows: minmax(48vh, 1fr) auto; }
+  .reaction-test { grid-template-rows: minmax(48vh, 1fr) auto; overflow-y: auto; }
   .reaction-test-console {
     grid-template-columns: auto 1fr auto;
     min-height: 17.5rem;
@@ -165,6 +229,9 @@
   .reaction-test-status { grid-column: 1 / -1; }
   .reaction-test-status > strong { font-size: clamp(1.35rem, 6.5vw, 2rem); }
   .reaction-test-results { grid-column: 1 / -1; grid-row: auto; }
+  .reaction-leaderboard { grid-column: 1 / -1; grid-row: auto; }
+  .reaction-leaderboard li:nth-child(n + 4) { display: none; }
+  .reaction-test-submit { width: min(100%, 20rem); }
   .reaction-test-meta { grid-column: 1 / -1; grid-template-columns: 1fr auto; gap: 0.6rem; }
   .reaction-test-meta > span:nth-child(2) { display: none; }
 }
