@@ -7,6 +7,16 @@
 
 ## 2026-07-16
 
+### 修复：Cloudflare 排行榜后端部署与 JSON 响应
+
+- 线上诊断确认 GET 接口错误回退到 SPA HTML、POST 接口返回 405 空响应，说明静态部署未装载 `functions/`。
+- 新增 `public/_worker.js` Advanced Mode Worker；Vite 构建后输出 `dist/_worker.js`，拦截排行榜 API 并将其他请求交回 `env.ASSETS`。
+- 继续沿用现有 `REACTION_DB` D1 binding，无需重建数据库。
+- 前端读取接口时先校验响应体和 Content-Type，避免再次显示浏览器原始的 `Unexpected end of JSON input`。
+- Worker 语法检查与反应测试组件独立 TypeScript 检查通过；正式域名需在 Cloudflare 完成该提交部署后复验。
+
+## 2026-07-16
+
 ### 新增：D1 动态反应时间排行榜
 
 - 新增 Pages Function `/api/reaction-leaderboard`，使用 `REACTION_DB` D1 binding。
