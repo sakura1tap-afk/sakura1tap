@@ -23,12 +23,15 @@
 
 ## Cloudflare 架构
 
-- 使用 Pages Function：`functions/api/reaction-leaderboard.ts`。
+- 正式部署使用构建产物中的 Advanced Mode Worker：`public/_worker.js`；Vite 会将它复制为 `dist/_worker.js`。
+- Worker 只拦截 `/api/reaction-leaderboard`，其他请求交还 `env.ASSETS`，不改变 SPA 与静态资源行为。
+- `functions/api/reaction-leaderboard.ts` 保留同等实现，兼容标准 Pages Functions 部署与本地检查。
 - 使用 D1 binding：`REACTION_DB`。
 - GET 返回 Top 10；POST 校验、写入并返回更新后的榜单。
 - Function 首次访问自动执行 `CREATE TABLE IF NOT EXISTS`，无需单独初始化页面。
 - `migrations/0001_reaction_scores.sql` 保留相同结构，便于日后正式迁移管理。
 - binding 缺失时 API 返回 503 和明确的数据库未绑定提示。
+- 前端读取响应前会验证状态、Content-Type 和响应体，不再把 HTML 或空响应当作 JSON 解析。
 
 ## 第一版边界
 
