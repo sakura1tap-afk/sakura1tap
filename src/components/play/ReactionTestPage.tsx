@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
-import { ArrowLeft, RotateCcw } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowLeft, RefreshCw, RotateCcw, Send, Trophy } from 'lucide-react'
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './ReactionTestPage.css'
 
 type ReactionTestPageProps = {
@@ -8,6 +8,14 @@ type ReactionTestPageProps = {
 }
 
 type TestPhase = 'idle' | 'waiting' | 'ready' | 'result' | 'false-start' | 'complete'
+type RequestStatus = 'idle' | 'loading' | 'success' | 'error'
+
+type LeaderboardEntry = {
+  averageMs: number
+  nickname: string
+  rank: number
+  updatedAt: string
+}
 
 const TRIAL_COUNT = 5
 const MIN_DELAY_MS = 1200
@@ -15,6 +23,16 @@ const SHORT_DELAY_MAX_MS = 3200
 const MEDIUM_DELAY_MAX_MS = 5000
 const MAX_DELAY_MS = 8000
 const LONG_DELAY_THRESHOLD_MS = 5000
+const PLAYER_ID_KEY = 'sakura1tap.reaction.player-id'
+const PLAYER_NAME_KEY = 'sakura1tap.reaction.nickname'
+
+function getOrCreatePlayerId() {
+  const stored = window.localStorage.getItem(PLAYER_ID_KEY)
+  if (stored) return stored
+  const playerId = window.crypto.randomUUID()
+  window.localStorage.setItem(PLAYER_ID_KEY, playerId)
+  return playerId
+}
 
 function getRandomUnit() {
   const values = new Uint32Array(1)
@@ -43,6 +61,11 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
   const previousDelayRef = useRef<number | null>(null)
   const [phase, setPhase] = useState<TestPhase>('idle')
   const [results, setResults] = useState<number[]>([])
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [leaderboardStatus, setLeaderboardStatus] = useState<RequestStatus>('idle')
+  const [nickname, setNickname] = useState(() => window.localStorage.getItem(PLAYER_NAME_KEY) ?? '')
+  const [submissionStatus, setSubmissionStatus] = useState<RequestStatus>('idle')
+  const [submissionMessage, setSubmissionMessage] = useState('')
 
   const clearTimer = useCallback(() => {
     if (timerRef.current !== null) window.clearTimeout(timerRef.current)
@@ -66,7 +89,24 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
     previousDelayRef.current = null
     setResults([])
     setPhase('idle')
+    setSubmissionStatus('idle')
+    setSubmissionMessage('')
   }, [clearTimer])
+
+  const loadLeaderboard = useCallback(async () => {
+    setLeaderboardStatus('loading')
+    try {
+      const response = await window.fetch('/api/reaction-leaderboard', {
+        headers: { Accept: 'application/json' },
+      })
+      if (!response.ok) throw new Error('排行榜暂时不可用')
+      const payload = await response.json() as { entries?: LeaderboardEntry[] }
+      setLeaderboard(payload.entries ?? [])
+      setLeaderboardStatus('success')
+    } catch {
+      setLeaderboardStatus('error')
+    }
+  }, [])
 
   const triggerStage = useCallback(() => {
     if (phase === 'idle' || phase === 'result' || phase === 'false-start') {
@@ -94,8 +134,13 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
   useEffect(() => clearTimer, [clearTimer])
 
   useEffect(() => {
+    void loadLeaderboard()
+  }, [loadLeaderboard])
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== ' ' && event.key !== 'Enter') return
+      if ((event.target as HTMLElement | null)?.closest('button, input')) return
       event.preventDefault()
       triggerStage()
     }
@@ -110,6 +155,38 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
 
   const trialNumber = Math.min(results.length + 1, TRIAL_COUNT)
   const lastResult = results.at(-1)
+
+  const submitScore = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const cleanNickname = nickname.trim().normalize('NFKC')
+    if (!/^[\p{L}\p{N}_-]{2,16}$/u.test(cleanNickname)) {
+      setSubmissionStatus('error')
+      setSubmissionMessage('昵称使用 2–16 个中英文、数字、_ 或 -')
+      return
+    }
+    if (phase !== 'complete' || results.length !== TRIAL_COUNT) return
+
+    setSubmissionStatus('loading')
+    setSubmissionMessage('')
+    try {
+      const response = await window.fetch('/api/reaction-leaderboard', {
+        body: JSON.stringify({ nickname: cleanNickname, playerId: getOrCreatePlayerId(), results }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const payload = await response.json() as { entries?: LeaderboardEntry[]; error?: string; rank?: number }
+      if (!response.ok) throw new Error(payload.error ?? '成绩保存失败')
+      window.localStorage.setItem(PLAYER_NAME_KEY, cleanNickname)
+      setNickname(cleanNickname)
+      setLeaderboard(payload.entries ?? [])
+      setLeaderboardStatus('success')
+      setSubmissionStatus('success')
+      setSubmissionMessage(payload.rank ? `已保存 · 当前第 ${payload.rank} 名` : '成绩已保存')
+    } catch (error) {
+      setSubmissionStatus('error')
+      setSubmissionMessage(error instanceof Error ? error.message : '成绩保存失败')
+    }
+  }
 
   const statusCopy = {
     idle: { eyebrow: 'REACTION TEST', title: '点击上方色块开始', detail: '完成 5 次有效测试后计算平均值' },
@@ -163,6 +240,23 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
           <span>{statusCopy.eyebrow}</span>
           <strong>{statusCopy.title}</strong>
           <p>{statusCopy.detail}</p>
+          {phase === 'complete' && (
+            <form className="reaction-test-submit" onSubmit={submitScore}>
+              <input
+                aria-label="排行榜昵称"
+                autoComplete="nickname"
+                maxLength={16}
+                onChange={(event) => setNickname(event.target.value)}
+                placeholder="输入昵称"
+                value={nickname}
+              />
+              <button disabled={submissionStatus === 'loading'} type="submit">
+                <Send size={13} strokeWidth={1.8} />
+                {submissionStatus === 'loading' ? '保存中' : '保存成绩'}
+              </button>
+              {submissionMessage && <small className={`is-${submissionStatus}`}>{submissionMessage}</small>}
+            </form>
+          )}
         </div>
 
         {phase === 'complete' && (
@@ -172,6 +266,33 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
             ))}
           </div>
         )}
+
+        <aside className="reaction-leaderboard" aria-label="反应时间排行榜">
+          <header>
+            <span><Trophy size={13} strokeWidth={1.8} />全站排行榜</span>
+            <button
+              aria-label="刷新排行榜"
+              disabled={leaderboardStatus === 'loading'}
+              onClick={() => void loadLeaderboard()}
+              type="button"
+            >
+              <RefreshCw className={leaderboardStatus === 'loading' ? 'is-loading' : ''} size={13} strokeWidth={1.8} />
+            </button>
+          </header>
+          {leaderboard.length > 0 ? (
+            <ol>
+              {leaderboard.slice(0, 5).map((entry) => (
+                <li key={`${entry.rank}-${entry.nickname}`}>
+                  <i>{String(entry.rank).padStart(2, '0')}</i>
+                  <span>{entry.nickname}</span>
+                  <b>{entry.averageMs}<small>ms</small></b>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p>{leaderboardStatus === 'loading' ? '读取中…' : leaderboardStatus === 'error' ? '等待数据库连接' : '成为第一个上榜者'}</p>
+          )}
+        </aside>
 
         <footer className="reaction-test-meta">
           <span>加密随机 · 1.2–8 秒</span>
