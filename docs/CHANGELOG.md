@@ -7,6 +7,17 @@
 
 ## 2026-07-16
 
+### 稳定性：跨设备轻入口与 HTML 缓存修复
+
+- 线上验证 iPhone Safari、Android Chrome、Windows Chrome、macOS Safari 均能取得当前主资源，13 个动态分包 MIME 类型正确。
+- 发现重入口约需 32MB 网络资源，五张 4096 纹理解码后理论占用约 320MB；手机与低显存 PC 存在超时或 WebGL context 丢失风险。
+- 新增 `LiteEntry`：无 WebGL、窄屏、粗指针、低内存、节流或 2G 网络直接使用静态背景与进入按钮，不加载 GLB / Live2D。
+- 桌面 GLB 超时缩短至 12 秒并自动降级；Live2D 超过 15 秒后不再阻塞进入。
+- Worker 对 HTML 设置 no-store，并在静态资源前运行，避免旧 HTML 引用已删除哈希分包造成跨部署白屏。
+- 新增 `docs/specs/DEVICE_LOAD_RELIABILITY.md`，记录诊断证据、降级门槛与验收标准。
+
+## 2026-07-16
+
 ### 修复：排行榜 ID 兼容与只保留最佳成绩
 
 - 删除对 `window.crypto.randomUUID()` 的依赖，解决部分浏览器无法保存成绩的问题。
