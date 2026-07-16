@@ -55,9 +55,9 @@ button:focus-visible, a:focus-visible { outline: 1px solid var(--ember); outline
 .identity strong { font-size: clamp(15px,1.45vw,23px); font-weight: 500; letter-spacing: .31em; }
 .identity span { color: rgba(255,255,255,.48); font: 10px/1 var(--font-meta); letter-spacing: .1em; }
 .chapter-nav { display: flex; gap: clamp(17px,2.8vw,48px); }
-.chapter-nav button { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 7px; padding: 5px 0 11px; background: transparent; color: rgba(255,255,255,.48); cursor: none; font: 11px/1 var(--font-meta); letter-spacing: .08em; transition: color .35s ease; }
+.chapter-nav button { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 8px; padding: 5px 0 11px; background: transparent; color: rgba(255,255,255,.64); cursor: none; font: 12px/1 var(--font-meta); letter-spacing: .08em; transition: color .35s ease; }
 .chapter-nav button::after { content: ""; position: absolute; left: 0; bottom: 0; width: 0; height: 1px; background: var(--ember); box-shadow: 0 0 9px var(--ember); transition: width .4s ease; }
-.chapter-nav button i { color: rgba(255,255,255,.24); font-style: normal; font-size: 7px; }
+.chapter-nav button i { color: rgba(255,255,255,.36); font-style: normal; font-size: 8px; }
 .chapter-nav button:hover, .chapter-nav button[aria-current="step"] { color: #fff; }
 .chapter-nav button[aria-current="step"]::after { width: 100%; }
 
@@ -84,7 +84,7 @@ button:focus-visible, a:focus-visible { outline: 1px solid var(--ember); outline
 .archive-panel { opacity: 0; left: 7vw; top: 17%; width: 86vw; display: grid; grid-template-columns: minmax(330px,.72fr) minmax(520px,1.28fr); align-items: end; gap: 6vw; }
 .archive-heading h2 { font-size: clamp(42px,4.4vw,66px); }
 .destination-list { border-top: 1px solid rgba(255,255,255,.2); perspective: 900px; }
-.destination { --tilt-x: 0deg; --tilt-y: 0deg; pointer-events: auto; display: grid; grid-template-columns: 36px 1fr .8fr 24px; align-items: center; gap: 15px; min-height: 88px; padding: 0 14px 0 0; border-bottom: 1px solid rgba(255,255,255,.14); color: inherit; text-decoration: none; cursor: none; opacity: 0; transform: perspective(900px) rotateX(var(--tilt-y)) rotateY(var(--tilt-x)); transform-origin: center; transition: transform .18s ease-out, border-color .35s ease, background .35s ease; }
+.destination { --tilt-x: 0deg; --tilt-y: 0deg; pointer-events: auto; display: grid; grid-template-columns: 36px 1fr 24px; align-items: center; gap: 15px; min-height: 88px; padding: 0 14px 0 0; border-bottom: 1px solid rgba(255,255,255,.14); color: inherit; text-decoration: none; cursor: none; opacity: 0; transform: perspective(900px) rotateX(var(--tilt-y)) rotateY(var(--tilt-x)); transform-origin: center; transition: transform .18s ease-out, border-color .35s ease, background .35s ease; }
 .destination-index, .destination em, .destination small { color: rgba(255,255,255,.48); font: 10px/1.5 var(--font-meta); font-style: normal; letter-spacing: .05em; }
 .destination-main { display: grid; gap: 6px; }
 .destination strong { font-size: clamp(16px,1.45vw,24px); font-weight: 400; letter-spacing: .09em; }
@@ -112,7 +112,7 @@ button:focus-visible, a:focus-visible { outline: 1px solid var(--ember); outline
 .chapter-rail button[aria-current="step"] { color: var(--ember); }
 .chapter-rail button[aria-current="step"] i { width: 18px; box-shadow: 0 0 8px var(--ember); }
 
-.runtime { position: absolute; z-index: 20; left: 4.5vw; right: 4.5vw; bottom: 26px; display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.15); color: rgba(255,255,255,.46); font: 10px/1 var(--font-meta); letter-spacing: .08em; }
+.runtime { position: absolute; z-index: 20; left: 4.5vw; right: 4.5vw; bottom: 26px; display: grid; grid-template-columns: 1fr auto; align-items: center; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.15); color: rgba(255,255,255,.46); font: 10px/1 var(--font-meta); letter-spacing: .08em; }
 .runtime i { display: inline-block; width: 4px; height: 4px; margin: 0 8px 1px 0; border-radius: 50%; background: var(--ember); box-shadow: 0 0 8px var(--ember); }
 .runtime > span:last-child i { margin: 0 0 1px 8px; background: #91dbcc; box-shadow: 0 0 8px #91dbcc; }
 .journey-count b { color: rgba(255,255,255,.86); font-weight: 400; }
