@@ -6,21 +6,24 @@ type BootOverlayProps = {
   modelUrl: string
   onComplete: (loadedModelBuffer: ArrayBuffer) => void
   onModelLoaded?: (loadedModelBuffer: ArrayBuffer) => void
+  onUnavailable?: () => void
 }
 
-export default function BootOverlay({ canComplete = true, modelUrl, onComplete, onModelLoaded }: BootOverlayProps) {
+export default function BootOverlay({ canComplete = true, modelUrl, onComplete, onModelLoaded, onUnavailable }: BootOverlayProps) {
   const [attempt, setAttempt] = useState(0)
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading')
   const bufferRef = useRef<ArrayBuffer | null>(null)
   const onCompleteRef = useRef(onComplete)
   const onModelLoadedRef = useRef(onModelLoaded)
+  const onUnavailableRef = useRef(onUnavailable)
 
   const retry = useCallback(() => setAttempt((value) => value + 1), [])
 
   useEffect(() => {
     onCompleteRef.current = onComplete
     onModelLoadedRef.current = onModelLoaded
-  }, [onComplete, onModelLoaded])
+    onUnavailableRef.current = onUnavailable
+  }, [onComplete, onModelLoaded, onUnavailable])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -28,7 +31,7 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete, 
     bufferRef.current = null
     setState('loading')
 
-    const timeout = window.setTimeout(() => controller.abort(), 25000)
+    const timeout = window.setTimeout(() => controller.abort(), 12000)
 
     async function loadModel() {
       try {
@@ -44,6 +47,7 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete, 
         if (!active) return
         console.warn('Model preload failed.', error)
         setState('error')
+        onUnavailableRef.current?.()
       }
     }
 
@@ -71,7 +75,8 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete, 
       </picture>
       <div className="boot-cinematic-shade" aria-hidden="true" />
       <div className="boot-cinematic-copy">
-        <strong>Sakura1Tap</strong>
+        <strong>SAKURA1TAP</strong>
+        <span>正在唤醒空间</span>
       </div>
       {state === 'error' && (
         <div className="boot-cinematic-error" role="alert">
