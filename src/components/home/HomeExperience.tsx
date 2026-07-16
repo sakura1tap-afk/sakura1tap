@@ -207,10 +207,9 @@ export default function HomeExperience() {
         <div className="afterimage-portrait" aria-hidden="true">
           <img src="/cinematic/awakening.webp" alt="" draggable={false} />
         </div>
-        <section className="chapter-panel afterimage-panel" aria-label="设计片段">
+        <section className="chapter-panel afterimage-panel" aria-label="片段">
           <p className="chapter-mark">04 / 片段</p>
-          <blockquote>设计、代码与动效<br />在这里成为<em>同一件事</em></blockquote>
-          <span>持续记录，持续调整</span>
+          <blockquote>哥布林万岁！</blockquote>
         </section>
 
         <section className="chapter-panel exit-panel" aria-label="继续探索">
