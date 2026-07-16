@@ -14,12 +14,12 @@ import './play/FunctionSpace.css'
 type PlayPageProps = {
   onClose: () => void
   onOpenLab: () => void
-  onStartGame: () => void
+  onStartReaction: () => void
 }
 
 type ModuleCategory = 'game' | 'tool' | 'experiment'
 type ModuleStatus = 'available' | 'building' | 'planned'
-type ModuleAction = 'blackout' | 'lab'
+type ModuleAction = 'reaction' | 'lab'
 
 type SpaceModule = {
   action?: ModuleAction
@@ -48,22 +48,14 @@ const statusMeta = {
 
 const modules: SpaceModule[] = [
   {
-    action: 'blackout',
+    action: 'reaction',
     category: 'game',
-    description: '控制光点，躲避持续生成的扫描障碍。',
+    description: '等待红色变绿，完成 5 次测试并计算平均反应时间。',
     featured: true,
-    id: 'blackout-run',
+    id: 'reaction-test',
     status: 'available',
-    tags: ['Canvas', '反应'],
-    title: 'Blackout Run',
-  },
-  {
-    category: 'game',
-    description: '短时视觉反应与节奏判断训练。',
-    id: 'reaction-grid',
-    status: 'building',
-    tags: ['训练', '计时'],
-    title: '反应矩阵',
+    tags: ['反应', '计时'],
+    title: '反应时间测试',
   },
   {
     category: 'game',
@@ -116,7 +108,7 @@ const modules: SpaceModule[] = [
   },
 ]
 
-export default function PlayPage({ onClose, onOpenLab, onStartGame }: PlayPageProps) {
+export default function PlayPage({ onClose, onOpenLab, onStartReaction }: PlayPageProps) {
   const [activeCategory, setActiveCategory] = useState<'all' | ModuleCategory>('all')
   const [query, setQuery] = useState('')
 
@@ -133,7 +125,7 @@ export default function PlayPage({ onClose, onOpenLab, onStartGame }: PlayPagePr
   }, [activeCategory, query])
 
   const openModule = (action?: ModuleAction) => {
-    if (action === 'blackout') onStartGame()
+    if (action === 'reaction') onStartReaction()
     if (action === 'lab') onOpenLab()
   }
 
