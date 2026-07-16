@@ -156,13 +156,14 @@
 .function-card.is-building { border-style: dashed; }
 .function-card.is-planned { opacity: 0.68; }
 
-.function-card-visual { position: absolute; inset: 0 0 0 45%; overflow: hidden; opacity: 0.75; pointer-events: none; }
-.function-card-visual::before { position: absolute; inset: 0; background: linear-gradient(90deg, #090b0c, transparent 38%), repeating-linear-gradient(100deg, transparent 0 38px, rgba(255, 255, 255, 0.055) 39px 40px); content: ""; }
-.function-card-visual i { position: absolute; width: 1px; height: 70%; background: rgba(255, 255, 255, 0.5); box-shadow: 0 0 1rem rgba(255, 255, 255, 0.28); animation: blackoutSweep 5s linear infinite; }
-.function-card-visual i:nth-child(1) { left: 28%; top: -10%; transform: rotate(18deg); }
-.function-card-visual i:nth-child(2) { left: 62%; top: 24%; height: 55%; animation-delay: -1.7s; }
-.function-card-visual i:nth-child(3) { right: 10%; top: -4%; transform: rotate(-14deg); animation-delay: -3.1s; }
-.function-card-visual span { position: absolute; left: 56%; top: 48%; width: 0.65rem; height: 0.65rem; border-radius: 50%; background: #fff; box-shadow: 0 0 0.9rem #fff, 0 0 2rem rgba(137, 200, 208, 0.75); animation: blackoutPlayer 3.2s ease-in-out infinite; }
+.function-card-visual { position: absolute; inset: 0 0 0 45%; overflow: hidden; opacity: 0.72; pointer-events: none; background: #0b0d0e; }
+.function-card-visual::before { position: absolute; inset: 0; z-index: 2; background: linear-gradient(90deg, #090b0c, transparent 28%), repeating-linear-gradient(0deg, transparent 0 35px, rgba(255, 255, 255, 0.045) 36px); content: ""; }
+.function-card-visual i { position: absolute; inset: 0; }
+.function-card-visual i:nth-child(1) { right: 50%; background: rgba(179, 38, 54, 0.82); }
+.function-card-visual i:nth-child(2) { left: 50%; background: rgba(24, 164, 91, 0.72); }
+.function-card-visual i:nth-child(3) { left: 50%; width: 1px; background: rgba(255, 255, 255, 0.44); box-shadow: 0 0 2rem rgba(255, 255, 255, 0.38); }
+.function-card-visual span { position: absolute; z-index: 3; left: 63%; top: 50%; width: 3.8rem; height: 3.8rem; border: 1px solid rgba(255, 255, 255, 0.72); border-radius: 50%; box-shadow: 0 0 2.6rem rgba(255, 255, 255, 0.18); animation: reactionCardPulse 2.4s ease-in-out infinite; }
+.function-card-visual span::before { position: absolute; inset: calc(50% - 0.22rem); width: 0.44rem; height: 0.44rem; border-radius: 50%; background: #fff; box-shadow: 0 0 1rem #fff; content: ""; }
 
 .function-card-topline { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; color: rgba(255, 255, 255, 0.34); font-size: 0.52rem; letter-spacing: 0.12em; }
 .function-card-topline i { padding: 0.3rem 0.5rem; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 999px; color: rgba(255, 255, 255, 0.54); font-style: normal; }
@@ -187,8 +188,7 @@
 .function-space-empty button { padding: 0.55rem 0.8rem; border: 1px solid rgba(255, 255, 255, 0.16); background: transparent; font-size: 0.62rem; }
 
 @keyframes functionCardIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes blackoutSweep { 0% { transform: translate3d(-3rem, -1rem, 0) rotate(18deg); } 100% { transform: translate3d(8rem, 3rem, 0) rotate(18deg); } }
-@keyframes blackoutPlayer { 0%, 100% { transform: translate(-4rem, 1.5rem); } 50% { transform: translate(3rem, -1.8rem); } }
+@keyframes reactionCardPulse { 0%, 100% { opacity: 0.48; transform: scale(0.92); } 50% { opacity: 1; transform: scale(1.08); } }
 
 @media (max-width: 980px) {
   .function-space-header { grid-template-columns: 1fr auto; min-height: 6.5rem; }
