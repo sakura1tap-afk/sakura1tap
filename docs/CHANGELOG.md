@@ -7,6 +7,16 @@
 
 ## 2026-07-16
 
+### 基底：路由、功能注册表与 Worker 分层
+
+- 新增 `src/app/routes.ts`，集中维护正式路径、路径解析和 history 写入，保持现有 URL 不变。
+- 新增 `src/features/registry.ts`，功能空间的模块数量、分类、状态与入口统一读取注册表。
+- 为反应测试建立 `src/features/reaction/` 稳定入口，保留现有实现与排行榜行为。
+- 新增页面级 loading 和错误边界；动态分包失败时提供重新加载操作，不再永久白屏。
+- 将 Worker 拆分为 `worker/lib/` 与 `worker/routes/`，排行榜数据逻辑不再堆叠在入口文件。
+- 新增 `GET /api/health`，检查 Worker 和 D1；未知 API、无效 JSON 与错误方法统一返回 JSON。
+- 新增 `docs/specs/STABLE_FOUNDATION.md`，锁定本阶段范围、非目标、架构边界和验收标准。
+
 ### 稳定性：跨设备轻入口与 HTML 缓存修复
 
 - 线上验证 iPhone Safari、Android Chrome、Windows Chrome、macOS Safari 均能取得当前主资源，13 个动态分包 MIME 类型正确。

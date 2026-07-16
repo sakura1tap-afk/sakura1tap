@@ -9,6 +9,12 @@ import {
   Wrench,
 } from 'lucide-react'
 import { type CSSProperties, useMemo, useState } from 'react'
+import {
+  featureCategoryOrder,
+  featureRegistry,
+  type FeatureAction,
+  type FeatureCategory,
+} from '../features/registry'
 import './play/FunctionSpace.css'
 
 type PlayPageProps = {
@@ -16,23 +22,6 @@ type PlayPageProps = {
   onOpenLab: () => void
   onStartReaction: () => void
 }
-
-type ModuleCategory = 'game' | 'tool' | 'experiment'
-type ModuleStatus = 'available' | 'building' | 'planned'
-type ModuleAction = 'reaction' | 'lab'
-
-type SpaceModule = {
-  action?: ModuleAction
-  category: ModuleCategory
-  description: string
-  featured?: boolean
-  id: string
-  status: ModuleStatus
-  tags: string[]
-  title: string
-}
-
-const categoryOrder: ModuleCategory[] = ['game', 'tool', 'experiment']
 
 const categoryMeta = {
   game: { label: '游戏', icon: Gamepad2 },
@@ -46,75 +35,13 @@ const statusMeta = {
   planned: '规划中',
 } as const
 
-const modules: SpaceModule[] = [
-  {
-    action: 'reaction',
-    category: 'game',
-    description: '等待红色变绿，完成 5 次测试并计算平均反应时间。',
-    featured: true,
-    id: 'reaction-test',
-    status: 'available',
-    tags: ['反应', '计时'],
-    title: '反应时间测试',
-  },
-  {
-    category: 'game',
-    description: '沿信号轨迹移动，保持连续命中。',
-    id: 'signal-trace',
-    status: 'planned',
-    tags: ['轨迹', '节奏'],
-    title: '信号追踪',
-  },
-  {
-    category: 'tool',
-    description: '组合颜色、渐变和基础材质参数。',
-    id: 'color-forge',
-    status: 'planned',
-    tags: ['颜色', '渐变'],
-    title: '颜色工坊',
-  },
-  {
-    category: 'tool',
-    description: '图片裁切、压缩与格式转换工作台。',
-    id: 'image-bench',
-    status: 'planned',
-    tags: ['图片', '转换'],
-    title: '图片工作台',
-  },
-  {
-    category: 'tool',
-    description: '格式化、校验并快速检索 JSON 路径。',
-    id: 'json-lens',
-    status: 'planned',
-    tags: ['JSON', '开发'],
-    title: 'JSON Lens',
-  },
-  {
-    action: 'lab',
-    category: 'experiment',
-    description: '以可聚焦的视频窗口浏览动效片段。',
-    id: 'motion-lab',
-    status: 'available',
-    tags: ['Motion', 'Video'],
-    title: '动效实验室',
-  },
-  {
-    category: 'experiment',
-    description: '观察鼠标轨迹、速度和粒子响应。',
-    id: 'cursor-field',
-    status: 'building',
-    tags: ['光标', '粒子'],
-    title: '光标力场',
-  },
-]
-
 export default function PlayPage({ onClose, onOpenLab, onStartReaction }: PlayPageProps) {
-  const [activeCategory, setActiveCategory] = useState<'all' | ModuleCategory>('all')
+  const [activeCategory, setActiveCategory] = useState<'all' | FeatureCategory>('all')
   const [query, setQuery] = useState('')
 
   const filteredModules = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase()
-    return modules.filter((item) => {
+    return featureRegistry.filter((item) => {
       if (activeCategory !== 'all' && item.category !== activeCategory) return false
       if (!normalizedQuery) return true
       return [item.title, item.description, ...item.tags]
@@ -124,12 +51,12 @@ export default function PlayPage({ onClose, onOpenLab, onStartReaction }: PlayPa
     })
   }, [activeCategory, query])
 
-  const openModule = (action?: ModuleAction) => {
+  const openModule = (action?: FeatureAction) => {
     if (action === 'reaction') onStartReaction()
     if (action === 'lab') onOpenLab()
   }
 
-  const availableCount = modules.filter((item) => item.status === 'available').length
+  const availableCount = featureRegistry.filter((item) => item.status === 'available').length
 
   return (
     <motion.section
@@ -153,7 +80,7 @@ export default function PlayPage({ onClose, onOpenLab, onStartReaction }: PlayPa
         </div>
         <div className="function-space-summary">
           <strong>{String(availableCount).padStart(2, '0')}</strong>
-          <span>可用 / {String(modules.length).padStart(2, '0')} 模块</span>
+          <span>可用 / {String(featureRegistry.length).padStart(2, '0')} 模块</span>
         </div>
       </header>
 
@@ -177,9 +104,9 @@ export default function PlayPage({ onClose, onOpenLab, onStartReaction }: PlayPa
               type="button"
             >
               <Boxes size={15} strokeWidth={1.7} />
-              <span>全部</span><i>{modules.length}</i>
+              <span>全部</span><i>{featureRegistry.length}</i>
             </button>
-            {categoryOrder.map((category) => {
+            {featureCategoryOrder.map((category) => {
               const CategoryIcon = categoryMeta[category].icon
               return (
                 <button
@@ -190,7 +117,7 @@ export default function PlayPage({ onClose, onOpenLab, onStartReaction }: PlayPa
                 >
                   <CategoryIcon size={15} strokeWidth={1.7} />
                   <span>{categoryMeta[category].label}</span>
-                  <i>{modules.filter((item) => item.category === category).length}</i>
+                  <i>{featureRegistry.filter((item) => item.category === category).length}</i>
                 </button>
               )
             })}
@@ -201,7 +128,7 @@ export default function PlayPage({ onClose, onOpenLab, onStartReaction }: PlayPa
           <span>{filteredModules.length} 个结果</span>
         </div>
 
-        {categoryOrder.map((category) => {
+        {featureCategoryOrder.map((category) => {
           const categoryModules = filteredModules.filter((item) => item.category === category)
           if (categoryModules.length === 0) return null
           const CategoryIcon = categoryMeta[category].icon

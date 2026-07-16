@@ -1,30 +1,23 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { lazy, Suspense, useEffect, useState } from 'react'
+import RouteErrorBoundary from './app/RouteErrorBoundary'
+import RouteFallback from './app/RouteFallback'
+import { getPageFromPath, type AppPage, writeRoute } from './app/routes'
 import BootOverlay from './components/BootOverlay'
 import LiteEntry from './components/LiteEntry'
+import { reactionFeatureLoader } from './features/registry'
 
 const Live2DEntry = lazy(() => import('./components/Live2DEntry'))
 const MainPage = lazy(() => import('./components/MainPage'))
 const MotionLabPage = lazy(() => import('./components/lab/MotionLabPage'))
 const PlayPage = lazy(() => import('./components/PlayPage'))
-const ReactionTestPage = lazy(() => import('./components/play/ReactionTestPage'))
+const ReactionTestPage = lazy(reactionFeatureLoader)
 const SCENE_MOUNT_DELAY_MS = 120
 const ENTRY_READY_TIMEOUT_MS = 15000
-
-type AppPage = 'main' | 'lab' | 'play' | 'reaction'
 
 type NavigatorWithHints = Navigator & {
   connection?: { effectiveType?: string; saveData?: boolean }
   deviceMemory?: number
-}
-
-function getPageFromPath(pathname: string): AppPage {
-  const normalizedPath = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
-
-  if (normalizedPath === '/lab') return 'lab'
-  if (normalizedPath === '/play/reaction') return 'reaction'
-  if (normalizedPath === '/play') return 'play'
-  return 'main'
 }
 
 function canUseWebGL() {
@@ -96,33 +89,21 @@ export default function App() {
     void import('./components/MainPage')
   }, [entryCapabilities.useLiteEntry, entryReady])
 
-  const navigateToMain = () => {
-    window.history.pushState({}, '', '/')
-    setPage('main')
+  const navigate = (nextPage: AppPage) => {
+    writeRoute(nextPage)
+    setPage(nextPage)
     setEntered(true)
   }
 
-  const navigateToPlay = () => {
-    window.history.pushState({}, '', '/play')
-    setPage('play')
-    setEntered(true)
-  }
-
-  const navigateToLab = () => {
-    window.history.pushState({}, '', '/lab')
-    setPage('lab')
-    setEntered(true)
-  }
-
-  const navigateToReaction = () => {
-    window.history.pushState({}, '', '/play/reaction')
-    setPage('reaction')
-    setEntered(true)
-  }
+  const navigateToMain = () => navigate('main')
+  const navigateToPlay = () => navigate('play')
+  const navigateToLab = () => navigate('lab')
+  const navigateToReaction = () => navigate('reaction')
 
   return (
     <main className="app-shell tone-paper">
-      <AnimatePresence mode="wait">
+      <RouteErrorBoundary resetKey={`${page}:${entered}`}>
+        <AnimatePresence mode="wait">
         {!entered ? (
           <motion.section
             key="entry"
@@ -168,23 +149,24 @@ export default function App() {
             )}
           </motion.section>
         ) : page === 'reaction' ? (
-          <Suspense key="reaction" fallback={null}>
+          <Suspense key="reaction" fallback={<RouteFallback />}>
             <ReactionTestPage onBack={navigateToPlay} />
           </Suspense>
         ) : page === 'play' ? (
-          <Suspense key="play" fallback={null}>
+          <Suspense key="play" fallback={<RouteFallback />}>
             <PlayPage onClose={navigateToMain} onOpenLab={navigateToLab} onStartReaction={navigateToReaction} />
           </Suspense>
         ) : page === 'lab' ? (
-          <Suspense key="lab" fallback={null}>
+          <Suspense key="lab" fallback={<RouteFallback />}>
             <MotionLabPage onClose={navigateToMain} />
           </Suspense>
         ) : (
-          <Suspense key="main" fallback={null}>
+          <Suspense key="main" fallback={<RouteFallback />}>
             <MainPage modelBuffer={modelBuffer} />
           </Suspense>
         )}
-      </AnimatePresence>
+        </AnimatePresence>
+      </RouteErrorBoundary>
     </main>
   )
 }
