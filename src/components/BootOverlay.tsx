@@ -71,8 +71,7 @@ export default function BootOverlay({ canComplete = true, modelUrl, onComplete, 
       </picture>
       <div className="boot-cinematic-shade" aria-hidden="true" />
       <div className="boot-cinematic-copy">
-        <strong>SAKURA1TAP</strong>
-        <span>正在唤醒空间</span>
+        <strong>Sakura1Tap</strong>
       </div>
       {state === 'error' && (
         <div className="boot-cinematic-error" role="alert">
