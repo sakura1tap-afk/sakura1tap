@@ -1,0 +1,481 @@
+.lusion-study {
+  --lusion-blue: #1a2ffb;
+  --lusion-ink: #11130f;
+  --lusion-paper: #eef0ec;
+  --lusion-pink: #ff3b9d;
+  --lusion-pointer-x: 50vw;
+  --lusion-pointer-y: 50vh;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--lusion-paper);
+  color: var(--lusion-ink);
+  font-family: "Arial Narrow", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  isolation: isolate;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.lusion-study button {
+  color: inherit;
+  font: inherit;
+}
+
+.lusion-study-backdrop,
+.lusion-study-backdrop > i,
+.lusion-study-backdrop > strong {
+  position: absolute;
+  pointer-events: none;
+}
+
+.lusion-study-backdrop {
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+}
+
+.lusion-study-backdrop::before {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.94), transparent 31rem),
+    radial-gradient(circle at 12% 90%, rgba(26, 47, 251, 0.12), transparent 26rem),
+    radial-gradient(circle at 88% 5%, rgba(255, 59, 157, 0.08), transparent 24rem),
+    linear-gradient(140deg, #f5f6f2 0%, #e4e7e1 100%);
+  content: "";
+}
+
+.lusion-study-grid {
+  inset: 0;
+  opacity: 0.34;
+  background-image:
+    linear-gradient(rgba(17, 19, 15, 0.065) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 19, 15, 0.065) 1px, transparent 1px);
+  background-size: clamp(4rem, 8vw, 9rem) clamp(4rem, 8vw, 9rem);
+  mask-image: radial-gradient(circle at 50% 52%, #000 12%, transparent 70%);
+}
+
+.lusion-study-orbit {
+  left: 50%;
+  top: 50%;
+  width: min(66vw, 74rem);
+  aspect-ratio: 1;
+  border: 1px solid rgba(17, 19, 15, 0.1);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: lusionOrbit 28s linear infinite;
+}
+
+.lusion-study-orbit::before,
+.lusion-study-orbit::after {
+  position: absolute;
+  border-radius: 50%;
+  content: "";
+}
+
+.lusion-study-orbit::before {
+  inset: 16%;
+  border: 1px dashed rgba(26, 47, 251, 0.18);
+}
+
+.lusion-study-orbit::after {
+  left: 50%;
+  top: -0.27rem;
+  width: 0.54rem;
+  height: 0.54rem;
+  background: var(--lusion-blue);
+  box-shadow: 0 0 1.4rem rgba(26, 47, 251, 0.52);
+}
+
+.lusion-study-orbit-b {
+  width: min(42vw, 48rem);
+  border-color: rgba(255, 59, 157, 0.13);
+  animation-direction: reverse;
+  animation-duration: 19s;
+}
+
+.lusion-study-backdrop > strong {
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  color: rgba(17, 19, 15, 0.035);
+  font-size: clamp(7rem, 22vw, 30rem);
+  font-weight: 900;
+  letter-spacing: -0.08em;
+  line-height: 0.7;
+  transform: translate(-50%, -50%);
+}
+
+.lusion-study-header {
+  position: absolute;
+  z-index: 50;
+  inset: 1.6rem 2.4vw auto;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  pointer-events: none;
+}
+
+.lusion-study-brand,
+.lusion-study-back {
+  min-height: 2.4rem;
+  padding: 0.2rem 0;
+  border: 0;
+  background: transparent;
+  cursor: none;
+  pointer-events: auto;
+}
+
+.lusion-study-brand {
+  justify-self: start;
+  padding-left: 0.8rem;
+  border-left: 0.18rem solid var(--lusion-blue);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.21em;
+}
+
+.lusion-study-back {
+  position: relative;
+  justify-self: end;
+  font-size: 0.63rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+}
+
+.lusion-study-back::after {
+  position: absolute;
+  right: 0;
+  bottom: 0.3rem;
+  width: 100%;
+  height: 1px;
+  background: var(--lusion-ink);
+  content: "";
+  transform-origin: right;
+  transition: transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.lusion-study-back:hover::after {
+  transform: scaleX(0.25);
+}
+
+.lusion-study-heading {
+  display: grid;
+  justify-items: center;
+  gap: 0.28rem;
+}
+
+.lusion-study-heading span {
+  color: rgba(17, 19, 15, 0.46);
+  font-size: 0.5rem;
+  letter-spacing: 0.18em;
+}
+
+.lusion-study-heading strong {
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.26em;
+}
+
+.lusion-study-stage {
+  position: absolute;
+  z-index: 10;
+  inset: 5.4rem 2.4vw 4.7rem;
+  overflow: hidden;
+  border: 1px solid rgba(17, 19, 15, 0.16);
+  border-radius: clamp(1rem, 2vw, 2.2rem);
+  background:
+    radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.82), transparent 43%),
+    rgba(232, 235, 229, 0.54);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 2rem 6rem rgba(32, 38, 26, 0.1);
+}
+
+.lusion-study-stage::before {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  box-shadow: inset 0 0 5rem rgba(17, 19, 15, 0.07);
+  content: "";
+  pointer-events: none;
+}
+
+.lusion-study-stage canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+  outline: none;
+  touch-action: none;
+}
+
+.lusion-study-state,
+.lusion-study-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-content: center;
+  gap: 1rem;
+  background: rgba(238, 240, 236, 0.86);
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-align: center;
+}
+
+.lusion-study-fallback strong {
+  font-size: 0.88rem;
+}
+
+.lusion-study-fallback button {
+  justify-self: center;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--lusion-ink);
+  background: transparent;
+}
+
+.lusion-study-caption {
+  position: absolute;
+  z-index: 6;
+  left: clamp(1.2rem, 2.3vw, 2.6rem);
+  bottom: clamp(1.2rem, 2.5vw, 2.8rem);
+  display: grid;
+  gap: 0.7rem;
+  pointer-events: none;
+}
+
+.lusion-study-caption span {
+  color: rgba(17, 19, 15, 0.48);
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+}
+
+.lusion-study-caption strong {
+  font-size: clamp(2.1rem, 5.2vw, 6.8rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 0.78;
+}
+
+.lusion-study-caption strong::first-line {
+  color: var(--lusion-blue);
+}
+
+.lusion-study-index {
+  position: absolute;
+  z-index: 7;
+  right: clamp(1.2rem, 2.2vw, 2.5rem);
+  top: clamp(1.2rem, 2.1vw, 2.3rem);
+  width: min(17rem, 29vw);
+  border-top: 1px solid rgba(17, 19, 15, 0.22);
+  pointer-events: none;
+}
+
+.lusion-study-index > div {
+  display: grid;
+  grid-template-columns: 2.1rem 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.65rem;
+  border-bottom: 1px solid rgba(17, 19, 15, 0.18);
+  color: rgba(17, 19, 15, 0.4);
+}
+
+.lusion-study-index span,
+.lusion-study-index i {
+  font-size: 0.49rem;
+  font-style: normal;
+  letter-spacing: 0.12em;
+}
+
+.lusion-study-index strong {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.lusion-study-index .is-active {
+  color: var(--lusion-ink);
+}
+
+.lusion-study-index .is-active span,
+.lusion-study-index .is-active i {
+  color: var(--lusion-blue);
+}
+
+.lusion-study-footer {
+  position: absolute;
+  z-index: 50;
+  left: 2.4vw;
+  right: 2.4vw;
+  bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(17, 19, 15, 0.55);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.lusion-study-footer button {
+  padding: 0.45rem 0 0.45rem 1.1rem;
+  border: 0;
+  border-left: 1px solid rgba(17, 19, 15, 0.32);
+  background: transparent;
+  cursor: none;
+  font-size: 0.55rem;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  transition: border-color 240ms ease, color 240ms ease;
+}
+
+.lusion-study-footer button:hover {
+  border-color: var(--lusion-pink);
+  color: var(--lusion-blue);
+}
+
+.lusion-study-cursor {
+  position: fixed;
+  z-index: 100;
+  left: var(--lusion-pointer-x);
+  top: var(--lusion-pointer-y);
+  width: 2.45rem;
+  height: 2.45rem;
+  margin: -1.225rem 0 0 -1.225rem;
+  border: 1px solid rgba(17, 19, 15, 0.58);
+  border-radius: 50%;
+  pointer-events: none;
+  transition:
+    width 180ms ease,
+    height 180ms ease,
+    margin 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.lusion-study-cursor i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.22rem;
+  height: 0.22rem;
+  border-radius: 50%;
+  background: var(--lusion-blue);
+  transform: translate(-50%, -50%);
+}
+
+.lusion-study[data-blast="true"] .lusion-study-cursor {
+  width: 5rem;
+  height: 5rem;
+  margin: -2.5rem 0 0 -2.5rem;
+  border-color: var(--lusion-pink);
+  background: rgba(255, 59, 157, 0.08);
+}
+
+@keyframes lusionOrbit {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@media (pointer: fine) {
+  .lusion-study,
+  .lusion-study * {
+    cursor: none !important;
+  }
+}
+
+@media (pointer: coarse), (pointer: none) {
+  .lusion-study-cursor {
+    display: none;
+  }
+
+  .lusion-study button {
+    cursor: pointer;
+  }
+}
+
+@media (max-width: 820px) {
+  .lusion-study-header {
+    inset: max(1rem, env(safe-area-inset-top)) 1rem auto;
+    grid-template-columns: 1fr auto;
+  }
+
+  .lusion-study-heading {
+    display: none;
+  }
+
+  .lusion-study-brand {
+    font-size: 0.72rem;
+  }
+
+  .lusion-study-stage {
+    inset: 4.5rem 0.75rem 4.2rem;
+    border-radius: 1.2rem;
+  }
+
+  .lusion-study-index {
+    right: 0.85rem;
+    top: 0.85rem;
+    width: 11rem;
+  }
+
+  .lusion-study-index > div {
+    min-height: 2.25rem;
+    grid-template-columns: 1.6rem 1fr auto;
+  }
+
+  .lusion-study-index strong {
+    font-size: 0.57rem;
+  }
+
+  .lusion-study-caption {
+    left: 1rem;
+    bottom: 1.2rem;
+  }
+
+  .lusion-study-caption strong {
+    font-size: clamp(2rem, 12vw, 4.3rem);
+  }
+
+  .lusion-study-footer {
+    left: 1rem;
+    right: 1rem;
+    bottom: max(0.8rem, env(safe-area-inset-bottom));
+  }
+
+  .lusion-study-footer > span {
+    max-width: 16rem;
+    font-size: 0.48rem;
+    line-height: 1.5;
+  }
+}
+
+@media (max-height: 680px) and (min-width: 821px) {
+  .lusion-study-header {
+    top: 0.8rem;
+  }
+
+  .lusion-study-stage {
+    top: 4rem;
+    bottom: 3.7rem;
+  }
+
+  .lusion-study-footer {
+    bottom: 0.7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lusion-study *,
+  .lusion-study *::before,
+  .lusion-study *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
