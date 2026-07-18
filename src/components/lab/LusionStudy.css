@@ -370,12 +370,39 @@
   transform: translate(-50%, -50%);
 }
 
-.lusion-study[data-blast="true"] .lusion-study-cursor {
+.lusion-study[data-interaction="blast"] .lusion-study-cursor {
   width: 5rem;
   height: 5rem;
   margin: -2.5rem 0 0 -2.5rem;
   border-color: var(--lusion-pink);
   background: rgba(255, 59, 157, 0.08);
+}
+
+.lusion-study[data-interaction="color"] .lusion-study-cursor {
+  width: 3.25rem;
+  height: 3.25rem;
+  margin: -1.625rem 0 0 -1.625rem;
+  border-color: var(--lusion-blue);
+  background: rgba(26, 47, 251, 0.08);
+}
+
+.lusion-study[data-interaction="color"] .lusion-study-cursor i {
+  width: 0.42rem;
+  height: 0.42rem;
+  background: var(--lusion-pink);
+  box-shadow: 0 0 1.2rem rgba(255, 59, 157, 0.7);
+}
+
+.lusion-study[data-interaction="drag"] .lusion-study-cursor {
+  width: 1.7rem;
+  height: 1.7rem;
+  margin: -0.85rem 0 0 -0.85rem;
+  border-color: var(--lusion-pink);
+  background: rgba(255, 255, 255, 0.36);
+}
+
+.lusion-study[data-interaction="drag"] .lusion-study-cursor i {
+  background: var(--lusion-pink);
 }
 
 @keyframes lusionOrbit {
