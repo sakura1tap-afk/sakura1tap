@@ -1,12 +1,16 @@
 import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useRef,
   useState,
 } from 'react'
 import './MotionLabPage.css'
+
+const LusionStudy = lazy(() => import('./LusionStudy'))
 
 type MotionLabPageProps = {
   onClose: () => void
@@ -88,6 +92,7 @@ export default function MotionLabPage({ onClose }: MotionLabPageProps) {
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([])
   const dragRef = useRef({ active: false, pointerId: -1, startX: 0, startY: 0, panX: 0, panY: 0 })
   const [activeId, setActiveId] = useState<MotionWindowId | null>(null)
+  const [section, setSection] = useState<'windows' | 'lusion'>('windows')
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
 
@@ -193,6 +198,10 @@ export default function MotionLabPage({ onClose }: MotionLabPageProps) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        if (section === 'lusion') {
+          setSection('windows')
+          return
+        }
         if (activeId !== null) returnToOverview()
         else onClose()
         return
@@ -206,7 +215,15 @@ export default function MotionLabPage({ onClose }: MotionLabPageProps) {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [activeId, focusWindow, onClose, returnToOverview])
+  }, [activeId, focusWindow, onClose, returnToOverview, section])
+
+  if (section === 'lusion') {
+    return (
+      <Suspense fallback={<div className="lusion-study-loading">正在构建实验场…</div>}>
+        <LusionStudy onBack={() => setSection('windows')} onClose={onClose} />
+      </Suspense>
+    )
+  }
 
   return (
     <section
@@ -241,6 +258,19 @@ export default function MotionLabPage({ onClose }: MotionLabPageProps) {
           <b>{String(activeId === null ? 0 : activeId + 1).padStart(2, '0')}</b><span>/ 04</span>
         </div>
       </header>
+
+      <button
+        className="motion-lab-section-entry"
+        onClick={() => {
+          pauseAll()
+          setSection('lusion')
+        }}
+        type="button"
+      >
+        <span>01 / STUDY</span>
+        <strong>仿 Lusion</strong>
+        <i>进入实验 →</i>
+      </button>
 
       {activeId !== null && (
         <button className="motion-lab-overview" onClick={returnToOverview} type="button">
@@ -321,3 +351,4 @@ export default function MotionLabPage({ onClose }: MotionLabPageProps) {
     </section>
   )
 }
+
