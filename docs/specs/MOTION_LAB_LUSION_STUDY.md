@@ -3,7 +3,7 @@
 > 日期：2026-07-18  
 > 路由：`/lab` 内部栏目  
 > 当前状态：01 / 零件力场 V2  
-> 发布：GitHub `main` 触发 Cloudflare 自动部署
+> 发布：GitHub `main` 触发 Cloudflare 自动部署（V2.1 稳定性修正）
 
 ## 目标
 
