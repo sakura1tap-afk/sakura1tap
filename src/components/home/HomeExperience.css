@@ -62,6 +62,12 @@ button:focus-visible, a:focus-visible { outline: 1px solid var(--ember); outline
 .chapter-nav button[aria-current="step"]::after { width: 100%; }
 
 .chapter-panel { position: absolute; z-index: 10; pointer-events: none; }
+.cinematic-experience .weather-button,
+.cinematic-experience .destination,
+.cinematic-experience .exit-actions { pointer-events: none; }
+.cinematic-experience[data-scene="0"] .weather-button,
+.cinematic-experience[data-scene="2"] .destination,
+.cinematic-experience[data-scene="4"] .exit-actions { pointer-events: auto; }
 .chapter-mark { margin: 0 0 20px; color: rgba(255,255,255,.52); font: 11px/1.4 var(--font-meta); letter-spacing: .1em; }
 .chapter-mark::before { content: ""; display: inline-block; width: 36px; height: 1px; margin: 0 13px 3px 0; background: linear-gradient(90deg, var(--ember), transparent); }
 .arrival-panel { left: 8vw; top: 30%; width: min(560px,46vw); }

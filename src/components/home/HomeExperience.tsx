@@ -37,6 +37,16 @@ export default function HomeExperience() {
     if (!root) return;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const syncActiveChapter = (active: number) => {
+      root.dataset.scene = String(active);
+      root.querySelectorAll<HTMLElement>(".chapter-panel").forEach((panel, index) => {
+        const isActive = index === active;
+        panel.toggleAttribute("inert", !isActive);
+        panel.setAttribute("aria-hidden", String(!isActive));
+      });
+    };
+
+    syncActiveChapter(0);
     const context = gsap.context(() => {
       gsap.set("[data-intro]", { y: 34, opacity: 0 });
       gsap.set(".site-chrome", { opacity: 0 });
@@ -59,7 +69,7 @@ export default function HomeExperience() {
           onUpdate: ({ progress }) => {
             progressRef.current = progress;
             const active = Math.min(chapters.length - 1, Math.floor(progress * chapters.length));
-            root.dataset.scene = String(active);
+            syncActiveChapter(active);
             root.style.setProperty("--journey", progress.toFixed(4));
             if (progressLabelRef.current) {
               progressLabelRef.current.textContent = String(Math.round(progress * 100)).padStart(3, "0");
