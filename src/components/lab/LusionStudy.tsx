@@ -23,6 +23,7 @@ type PartSpec = {
 type KineticPart = {
   body: RapierBody
   colorIndex: number
+  colorPulse: number
   mesh: THREE.Mesh<THREE.BufferGeometry, THREE.Material>
   radius: number
   scale: number
@@ -227,14 +228,14 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
         { geometry: gearGeometry, massFactor: 1.18, radius: 0.62, createColliders: (scale) => [RAPIER.ColliderDesc.cylinder(0.135 * scale, 0.56 * scale)] },
       ]
 
-      const world = new RAPIER.World({ x: 0, y: -1.45, z: 0 })
+      const world = new RAPIER.World({ x: 0, y: -2.4, z: 0 })
       world.timestep = FIXED_TIME_STEP
       world.numSolverIterations = compactViewport ? 5 : 7
       world.numInternalPgsIterations = 2
       world.maxCcdSubsteps = 2
 
       const parts: KineticPart[] = []
-      const bounds = { x: 7, y: 4.2, z: 2.65 }
+      const bounds = { x: 7, y: 4.2, z: 1.45 }
       let layoutSeed = 1729
 
       for (let index = 0; index < partCount; index += 1) {
@@ -248,9 +249,9 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
 
         const body = world.createRigidBody(
           RAPIER.RigidBodyDesc.dynamic()
-            .setLinearDamping(0.38 + (index % 4) * 0.045)
-            .setAngularDamping(0.3 + (index % 3) * 0.04)
-            .setGravityScale(0.34 + (index % 5) * 0.055)
+            .setLinearDamping(0.62 + (index % 4) * 0.04)
+            .setAngularDamping(1.15 + (index % 3) * 0.16)
+            .setGravityScale(0.42 + (index % 5) * 0.04)
             .setCanSleep(false)
             .setCcdEnabled(index % 5 === 0),
         )
@@ -270,6 +271,7 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
         parts.push({
           body,
           colorIndex,
+          colorPulse: 0,
           mesh,
           radius: spec.radius * scale,
           scale,
@@ -291,7 +293,7 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
             candidate.set(
               Math.cos(angle) * radius * (0.82 + random() * 0.44),
               Math.sin(angle) * radius * 0.84,
-              (random() - 0.5) * bounds.z * 1.38,
+              (random() - 0.5) * 1.5,
             )
             attempts += 1
           } while (
@@ -310,14 +312,14 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
           part.body.setTranslation({ x: candidate.x, y: candidate.y, z: candidate.z }, true)
           part.body.setRotation({ x: rotation.x, y: rotation.y, z: rotation.z, w: rotation.w }, true)
           part.body.setLinvel({
-            x: (random() - 0.5) * 1.35,
-            y: (random() - 0.5) * 1.35,
-            z: (random() - 0.5) * 0.72,
+            x: (random() - 0.5) * 0.9,
+            y: (random() - 0.5) * 0.9,
+            z: (random() - 0.5) * 0.24,
           }, true)
           part.body.setAngvel({
-            x: (random() - 0.5) * 2.1,
-            y: (random() - 0.5) * 2.1,
-            z: (random() - 0.5) * 2.1 + index * 0.0015,
+            x: (random() - 0.5) * 1.2,
+            y: (random() - 0.5) * 1.2,
+            z: (random() - 0.5) * 1.2 + index * 0.001,
           }, true)
         })
       }
@@ -327,6 +329,7 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
       const pointerNdc = new THREE.Vector2()
       const pointerWorld = new THREE.Vector3(100, 100, 0)
       const previousPointerWorld = new THREE.Vector3(100, 100, 0)
+      const projectedPartPosition = new THREE.Vector3()
       const raycaster = new THREE.Raycaster()
       const interactionPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)
       let pointerActive = false
@@ -387,24 +390,60 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
         pointerActive = false
         pointerSpeed = 0
       }
+
+      const findPointerHit = (): { part: KineticPart; point: THREE.Vector3 } | null => {
+        scene.updateMatrixWorld(true)
+        const exactHit = raycaster.intersectObjects(parts.map((part) => part.mesh), false)[0]
+        if (typeof exactHit?.object.userData.partIndex === 'number') {
+          return {
+            part: parts[exactHit.object.userData.partIndex as number],
+            point: exactHit.point,
+          }
+        }
+
+        const rect = canvas.getBoundingClientRect()
+        const focalPixels = rect.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5)))
+        let bestPartIndex = -1
+        let bestScore = Number.POSITIVE_INFINITY
+
+        parts.forEach((part, index) => {
+          projectedPartPosition.copy(part.mesh.position).project(camera)
+          if (projectedPartPosition.z < -1 || projectedPartPosition.z > 1) return
+          const screenX = (projectedPartPosition.x * 0.5 + 0.5) * rect.width
+          const screenY = (-projectedPartPosition.y * 0.5 + 0.5) * rect.height
+          const pointerX = (pointerNdc.x * 0.5 + 0.5) * rect.width
+          const pointerY = (-pointerNdc.y * 0.5 + 0.5) * rect.height
+          const distanceToCamera = Math.max(1, camera.position.distanceTo(part.mesh.position))
+          const pickRadius = Math.max(18, (part.radius / distanceToCamera) * focalPixels * 1.3)
+          const score = Math.hypot(screenX - pointerX, screenY - pointerY) / pickRadius
+          if (score <= 1 && score < bestScore) {
+            bestPartIndex = index
+            bestScore = score
+          }
+        })
+
+        if (bestPartIndex < 0) return null
+        const bestPart = parts[bestPartIndex]
+        return { part: bestPart, point: bestPart.mesh.position.clone() }
+      }
+
       const onPointerDown = (event: PointerEvent) => {
         if (event.button !== 0) return
         pointerActive = true
         mapPointerToWorld(event)
-        const hit = raycaster.intersectObjects(parts.map((part) => part.mesh), false)[0]
-        const hitPart = typeof hit?.object.userData.partIndex === 'number'
-          ? parts[hit.object.userData.partIndex as number]
-          : undefined
+        const hit = findPointerHit()
+        const hitPart = hit?.part
 
         if (hitPart) {
-          hitPart.colorIndex = (hitPart.colorIndex + 1 + Math.floor(Math.random() * (materials.length - 1))) % materials.length
+          hitPart.colorIndex = (hitPart.colorIndex + 1) % materials.length
+          hitPart.colorPulse = 1
           hitPart.mesh.material = materials[hitPart.colorIndex]
           hitPart.body.applyImpulseAtPoint(
-            { x: pointerNdc.x * 0.16, y: pointerNdc.y * 0.16, z: -0.34 },
-            hit?.point ?? hitPart.body.translation(),
+            { x: pointerNdc.x * 0.08, y: pointerNdc.y * 0.08, z: -0.12 },
+            hit.point,
             true,
           )
-          hitPart.body.applyTorqueImpulse({ x: pointerNdc.y * 0.32, y: -pointerNdc.x * 0.32, z: 0.48 }, true)
+          hitPart.body.applyTorqueImpulse({ x: pointerNdc.y * 0.12, y: -pointerNdc.x * 0.12, z: 0.22 }, true)
           draggingPart = hitPart
           dragDepth = hitPart.body.translation().z
           root.dataset.dragging = 'true'
@@ -462,17 +501,14 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
       resizeObserver.observe(canvas)
       resize()
 
-      const applyFieldForces = (part: KineticPart, elapsed: number) => {
+      const applyFieldForces = (part: KineticPart) => {
         const position = part.body.translation()
+        const velocity = part.body.linvel()
         const mass = part.body.mass()
-        const distance = Math.max(0.18, Math.hypot(position.x, position.y, position.z * 1.28))
-        const centreAcceleration = 0.52 + Math.min(distance, 8) * 0.17
-        const centreForce = centreAcceleration * mass
-        const inverseDistance = 1 / distance
         part.body.addForce({
-          x: -position.x * inverseDistance * centreForce - position.y * mass * 0.035,
-          y: -position.y * inverseDistance * centreForce + position.x * mass * 0.035 + Math.sin(elapsed * 0.55 + part.seed) * mass * 0.018,
-          z: -position.z * mass * 1.2,
+          x: -position.x * mass * 0.68,
+          y: -position.y * mass * 0.52,
+          z: (-position.z * 2.8 - velocity.z * 2.1) * mass,
         }, true)
 
         const edgeX = Math.abs(position.x) - bounds.x
@@ -485,7 +521,7 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
         if (pointerActive && !draggingPart) {
           const dx = position.x - pointerWorld.x
           const dy = position.y - pointerWorld.y
-          const dz = (position.z - pointerWorld.z) * 0.52
+          const dz = (position.z - pointerWorld.z) * 0.22
           const pointerDistance = Math.max(0.08, Math.hypot(dx, dy, dz))
           if (pointerDistance < 2.85) {
             const falloff = Math.pow(1 - pointerDistance / 2.85, 1.6)
@@ -495,7 +531,7 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
               y: (dy / pointerDistance) * force,
               z: (dz / pointerDistance) * force,
             }, true)
-            part.body.addTorque({ x: dy * falloff * 0.12, y: -dx * falloff * 0.12, z: 0.04 * mass }, true)
+            part.body.addTorque({ x: dy * falloff * 0.06, y: -dx * falloff * 0.06, z: 0 }, true)
           }
         }
       }
@@ -518,10 +554,10 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
           fz *= scale
         }
         body.addForce({ x: fx, y: fy, z: fz }, true)
-        body.addTorque({ x: -velocity.y * 0.18, y: velocity.x * 0.18, z: pointerSpeed * 0.025 }, true)
+        body.addTorque({ x: -velocity.y * 0.08, y: velocity.x * 0.08, z: pointerSpeed * 0.012 }, true)
       }
 
-      const syncMeshes = () => {
+      const syncMeshes = (frameTime: number) => {
         parts.forEach((part) => {
           const position = part.body.translation()
           const rotation = part.body.rotation()
@@ -529,14 +565,16 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
           const angularVelocity = part.body.angvel()
           const speed = Math.hypot(velocity.x, velocity.y, velocity.z)
           const angularSpeed = Math.hypot(angularVelocity.x, angularVelocity.y, angularVelocity.z)
-          if (speed > 10.5) {
-            const scale = 10.5 / speed
+          if (speed > 6.5) {
+            const scale = 6.5 / speed
             part.body.setLinvel({ x: velocity.x * scale, y: velocity.y * scale, z: velocity.z * scale }, false)
           }
-          if (angularSpeed > 9) {
-            const scale = 9 / angularSpeed
+          if (angularSpeed > 5) {
+            const scale = 5 / angularSpeed
             part.body.setAngvel({ x: angularVelocity.x * scale, y: angularVelocity.y * scale, z: angularVelocity.z * scale }, false)
           }
+          part.colorPulse = Math.max(0, part.colorPulse - frameTime * 4.6)
+          part.mesh.scale.setScalar(part.scale * (1 + part.colorPulse * 0.14))
           part.mesh.position.set(position.x, position.y, position.z)
           part.mesh.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w)
         })
@@ -556,10 +594,13 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
         const frameTime = Math.min((now - lastTime) / 1000, 0.05)
         lastTime = now
         accumulator += frameTime
-        const elapsed = now / 1000
         let steps = 0
         while (accumulator >= FIXED_TIME_STEP && steps < MAX_PHYSICS_STEPS) {
-          parts.forEach((part) => applyFieldForces(part, elapsed))
+          parts.forEach((part) => {
+            part.body.resetForces(false)
+            part.body.resetTorques(false)
+            applyFieldForces(part)
+          })
           applyDragForce()
           world.step()
           accumulator -= FIXED_TIME_STEP
@@ -567,7 +608,7 @@ export default function LusionStudy({ onBack, onClose }: LusionStudyProps) {
         }
         if (steps === MAX_PHYSICS_STEPS) accumulator = 0
 
-        syncMeshes()
+        syncMeshes(frameTime)
         blastPulse = Math.max(0, blastPulse - frameTime * 3.5)
         pointerSpeed *= Math.exp(-frameTime * 8)
         pointerLight.intensity = 25 + pointerSpeed * 1.25 + blastPulse * 42
