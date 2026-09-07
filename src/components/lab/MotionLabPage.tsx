@@ -92,6 +92,7 @@ export default function MotionLabPage({ onClose }: MotionLabPageProps) {
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([])
   const dragRef = useRef({ active: false, pointerId: -1, startX: 0, startY: 0, panX: 0, panY: 0 })
   const [activeId, setActiveId] = useState<MotionWindowId | null>(null)
+  const [failedVideos, setFailedVideos] = useState<Set<MotionWindowId>>(() => new Set())
   const [section, setSection] = useState<'windows' | 'lusion'>('windows')
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -120,6 +121,16 @@ export default function MotionLabPage({ onClose }: MotionLabPageProps) {
 
   const selectWindow = (id: MotionWindowId) => {
     const video = videoRefs.current[id]
+    if (failedVideos.has(id)) {
+      setFailedVideos((current) => {
+        const next = new Set(current)
+        next.delete(id)
+        return next
+      })
+      video?.load()
+      if (video) void video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
+      return
+    }
     if (activeId !== id) {
       focusWindow(id)
       return
@@ -282,12 +293,13 @@ export default function MotionLabPage({ onClose }: MotionLabPageProps) {
         <div className="motion-lab-focus-pulse" aria-hidden="true" />
         {motionWindows.map((item, index) => {
           const active = activeId === item.id
+          const unavailable = failedVideos.has(item.id)
           const itemProgress = active ? progress : 0
           return (
             <button
-              aria-label={`${active ? (isPlaying ? '暂停' : '继续播放') : '聚焦'}${item.title}`}
+              aria-label={`${unavailable ? '重新加载' : active ? (isPlaying ? '暂停' : '继续播放') : '聚焦'}${item.title}`}
               aria-pressed={active}
-              className={`motion-window ${active ? 'is-active' : ''}`}
+              className={`motion-window ${active ? 'is-active' : ''} ${unavailable ? 'is-unavailable' : ''}`}
               data-depth={item.depth}
               data-index={index}
               key={item.id}
@@ -311,6 +323,18 @@ export default function MotionLabPage({ onClose }: MotionLabPageProps) {
                 <video
                   loop
                   muted
+                  onError={() => {
+                    setFailedVideos((current) => new Set(current).add(item.id))
+                    if (active) setIsPlaying(false)
+                  }}
+                  onLoadedData={() => {
+                    setFailedVideos((current) => {
+                      if (!current.has(item.id)) return current
+                      const next = new Set(current)
+                      next.delete(item.id)
+                      return next
+                    })
+                  }}
                   onPause={() => active && setIsPlaying(false)}
                   onPlay={() => active && setIsPlaying(true)}
                   onTimeUpdate={(event) => {
@@ -322,6 +346,12 @@ export default function MotionLabPage({ onClose }: MotionLabPageProps) {
                   ref={(video) => { videoRefs.current[item.id] = video }}
                   src={item.src}
                 />
+                {unavailable && (
+                  <span className="motion-window-unavailable" role="status">
+                    <strong>片段加载中断</strong>
+                    <i>点击重新加载</i>
+                  </span>
+                )}
                 <span className="motion-window-shade" aria-hidden="true" />
                 <span className="motion-window-scan" aria-hidden="true" />
                 <span className="motion-window-meta">
@@ -329,7 +359,7 @@ export default function MotionLabPage({ onClose }: MotionLabPageProps) {
                   <strong>{item.title}</strong>
                 </span>
                 <span className="motion-window-state">
-                  {active ? (isPlaying ? '播放中' : '已暂停') : '聚焦'}
+                  {unavailable ? '待恢复' : active ? (isPlaying ? '播放中' : '已暂停') : '聚焦'}
                 </span>
                 <span className="motion-window-progress" aria-hidden="true">
                   <i style={{ transform: `scaleX(${itemProgress})` }} />
@@ -351,4 +381,3 @@ export default function MotionLabPage({ onClose }: MotionLabPageProps) {
     </section>
   )
 }
-

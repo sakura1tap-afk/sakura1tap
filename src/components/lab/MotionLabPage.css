@@ -246,6 +246,22 @@
   transition: filter 720ms ease, transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.motion-window-unavailable {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-content: center;
+  gap: 0.45rem;
+  background: radial-gradient(circle at 50% 42%, rgba(158, 220, 225, 0.08), transparent 42%), #07090a;
+  color: rgba(255, 255, 255, 0.74);
+  text-align: center;
+}
+
+.motion-window-unavailable strong { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.16em; }
+.motion-window-unavailable i { color: rgba(255, 255, 255, 0.4); font-size: 0.5rem; font-style: normal; letter-spacing: 0.13em; }
+.motion-window.is-unavailable .motion-window-state::before { background: #d87967; box-shadow: 0 0 0.75rem rgba(216, 121, 103, 0.72); }
+
 .motion-window-shade {
   position: absolute;
   inset: 0;
@@ -495,4 +511,3 @@
     width: 10.5rem;
   }
 }
-

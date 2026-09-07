@@ -7,6 +7,8 @@ const API_ROUTES = new Map([
   ['/api/reaction-leaderboard', handleReactionLeaderboard],
 ])
 
+const ASSET_PATH_PATTERN = /\.[a-z0-9]{2,8}$/i
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
@@ -24,6 +26,15 @@ export default {
 
     const response = await env.ASSETS.fetch(request)
     const contentType = response.headers.get('content-type') ?? ''
+    if (ASSET_PATH_PATTERN.test(url.pathname) && contentType.includes('text/html')) {
+      return new Response(null, {
+        headers: {
+          'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff',
+        },
+        status: 404,
+      })
+    }
     if (!contentType.includes('text/html')) return response
 
     const headers = new Headers(response.headers)
