@@ -110,8 +110,11 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reducedMotion) {
+    const prefersStaticScene =
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      window.matchMedia("(max-width: 900px)").matches ||
+      window.matchMedia("(pointer: coarse)").matches;
+    if (prefersStaticScene) {
       onReady?.();
       return;
     }
@@ -227,7 +230,7 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
     let closeupTexture: WebGLTexture | undefined;
 
     const resize = () => {
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, mobile ? 1 : 1.5);
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, mobile ? 1 : 1.25);
       const width = Math.max(1, Math.floor(canvas.clientWidth * pixelRatio));
       const height = Math.max(1, Math.floor(canvas.clientHeight * pixelRatio));
       if (canvas.width !== width || canvas.height !== height) {
