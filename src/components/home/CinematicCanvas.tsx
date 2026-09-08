@@ -30,10 +30,6 @@ const fragmentShaderSource = `
   uniform float uImpact;
   varying vec2 vUv;
 
-  float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-  }
-
   vec2 coverUv(vec2 uv, vec2 viewport, vec2 image) {
     float viewportRatio = viewport.x / viewport.y;
     float imageRatio = image.x / image.y;
@@ -88,8 +84,6 @@ const fragmentShaderSource = `
     vec3 shifted = mix(bridgeRed, closeRed, smoothstep(0.05, 0.95, blend));
     color.r = shifted.r;
 
-    float grain = hash(gl_FragCoord.xy + floor(uTime * 18.0)) - 0.5;
-    color += grain * 0.026;
     color.b *= 1.06;
     color.r *= 1.01 + uImpact * 0.025;
 
@@ -129,12 +123,20 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
       return;
     }
 
+    const rendererInfo = gl.getExtension("WEBGL_debug_renderer_info");
+    const renderer = String(gl.getParameter(rendererInfo?.UNMASKED_RENDERER_WEBGL ?? gl.RENDERER));
+    if (/swiftshader|software|llvmpipe/i.test(renderer)) {
+      onReady?.();
+      return;
+    }
+
     gl.clearColor(0.008, 0.016, 0.018, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     let frame = 0;
     let disposed = false;
     let startedAt = performance.now();
+    let lastRenderedAt = 0;
     let impact = 0;
     let dragActive = false;
     let lastPointer = { x: 0, y: 0 };
@@ -261,11 +263,18 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
       delete document.documentElement.dataset.dragging;
     };
 
+    const onContextLost = (event: Event) => {
+      event.preventDefault();
+      cancelAnimationFrame(frame);
+      canvas.dataset.ready = "false";
+    };
+
     window.addEventListener("resize", resize, { passive: true });
     window.addEventListener("pointermove", onPointerMove, { passive: true });
     window.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
+    canvas.addEventListener("webglcontextlost", onContextLost);
 
     Promise.all([createTexture(bridgeUrl), createTexture(closeupUrl)]).then(([bridgeAsset, closeupAsset]) => {
       if (disposed) return;
@@ -280,11 +289,16 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
       gl.uniform1i(uniforms.closeup, 1);
       gl.uniform2f(uniforms.bridgeResolution, bridgeAsset.width, bridgeAsset.height);
       gl.uniform2f(uniforms.closeupResolution, closeupAsset.width, closeupAsset.height);
+      resize();
       startedAt = performance.now();
 
       const render = (now: number) => {
         if (disposed) return;
-        resize();
+        if (now - lastRenderedAt < 25) {
+          frame = requestAnimationFrame(render);
+          return;
+        }
+        lastRenderedAt = now;
         pointer.x += (pointerTarget.x - pointer.x) * 0.075;
         pointer.y += (pointerTarget.y - pointer.y) * 0.075;
         drag.x += (dragTarget.x - drag.x) * 0.065;
@@ -320,6 +334,7 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
       window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
+      canvas.removeEventListener("webglcontextlost", onContextLost);
       if (bridgeTexture) gl.deleteTexture(bridgeTexture);
       if (closeupTexture) gl.deleteTexture(closeupTexture);
       gl.deleteBuffer(positionBuffer);
