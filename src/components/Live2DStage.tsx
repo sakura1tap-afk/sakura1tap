@@ -45,7 +45,7 @@ const stageModels: CubismSdkModelConfig[] = [
 ]
 
 const MODEL_LOAD_TIMEOUT = 24000
-const MAX_DPR = 2
+const MAX_DPR = 1.5
 
 export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange }: Live2DStageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)

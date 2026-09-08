@@ -110,11 +110,8 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const prefersStaticScene =
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
-      window.matchMedia("(max-width: 900px)").matches ||
-      window.matchMedia("(pointer: coarse)").matches;
-    if (prefersStaticScene) {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) {
       onReady?.();
       return;
     }

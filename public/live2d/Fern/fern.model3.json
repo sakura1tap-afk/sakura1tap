@@ -3,10 +3,10 @@
 	"FileReferences": {
 		"Moc": "fern.moc3",
 		"Textures": [
-			"fern.4096/texture_00.png",
-			"fern.4096/texture_01.png",
-			"fern.4096/texture_02.png",
-			"fern.4096/texture_03.png"
+			"fern.4096/texture_00.webp",
+			"fern.4096/texture_01.webp",
+			"fern.4096/texture_02.webp",
+			"fern.4096/texture_03.webp"
 		],
 		"Physics": "fern.physics3.json",
 		"DisplayInfo": "fern.cdi3.json",
