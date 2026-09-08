@@ -9,6 +9,10 @@ const CRITICAL_ASSETS = [
   { path: '/art/videos/285224_medium.mp4', type: 'video/' },
   { path: '/models/study.glb', type: 'model/' },
   { path: '/vendor/live2dcubismcore.min.js', type: 'javascript' },
+  { path: '/live2d/Fern/fern.model3.json', type: 'application/json' },
+  { path: '/live2d/Fern/fern.4096/texture_02.png', type: 'image/' },
+  { path: '/live2d/WhiteAngelOriginal/%E6%97%A0%E5%8F%A3%E5%A4%A9%E4%BD%BF%205.model3.json', type: 'application/json' },
+  { path: '/live2d/WhiteAngelOriginal/%E6%97%A0%E5%8F%A3%E5%A4%A9%E4%BD%BF%205.4096/texture_00.png', type: 'image/' },
 ]
 
 async function probeAsset(request, assets, asset) {
