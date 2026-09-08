@@ -8,6 +8,8 @@ const API_ROUTES = new Map([
 ])
 
 const ASSET_PATH_PATTERN = /\.[a-z0-9]{2,8}$/i
+const HASHED_ASSET_PATH_PATTERN = /^\/assets\/.*-[a-z0-9_-]{6,}\.(?:css|js)$/i
+const HEAVY_ASSET_PATH_PATTERN = /^\/(?:art|cinematic|images|live2d|models|vendor)\//
 
 export default {
   async fetch(request, env) {
@@ -35,7 +37,20 @@ export default {
         status: 404,
       })
     }
-    if (!contentType.includes('text/html')) return response
+    if (!contentType.includes('text/html')) {
+      const headers = new Headers(response.headers)
+      headers.set('X-Content-Type-Options', 'nosniff')
+      if (HASHED_ASSET_PATH_PATTERN.test(url.pathname)) {
+        headers.set('Cache-Control', 'public, max-age=31536000, immutable')
+      } else if (HEAVY_ASSET_PATH_PATTERN.test(url.pathname)) {
+        headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800')
+      }
+      return new Response(response.body, {
+        headers,
+        status: response.status,
+        statusText: response.statusText,
+      })
+    }
 
     const headers = new Headers(response.headers)
     headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
