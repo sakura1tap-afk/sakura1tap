@@ -12,12 +12,14 @@
 - 带文件扩展名的请求若回退为 HTML，Worker 改为返回 404 和 `X-Content-Type-Options: nosniff`。
 - `/api/health` 使用 `HEAD` 检查八项关键资源，不下载大文件正文。
 - 资源探测覆盖入口背景、主要场景、代表视频、主 GLB 与 Live2D runtime。
+- 资源探测补充两套 Live2D 配置与代表纹理，避免入口人物损坏时健康检查仍误报正常。
+- 哈希 JS/CSS 使用长期不可变缓存；大图、视频、模型与 Live2D 资源使用一天浏览器缓存和七天后台复验，减少弱网重复验证造成的黑块与加载错位。
 - 动效实验室按窗口隔离视频错误，并允许原位重试。
 
 ## 验收标准
 
 - `/api/health` 的 `database` 和 `assets.status` 均为 `ready`。
-- `assets.failed` 为空，`assets.checked` 为 8。
+- `assets.failed` 为空，`assets.checked` 为 12。
 - 不存在的文件返回 404，不返回 `text/html`。
 - 单个视频加载失败时页面仍可操作，窗口显示“片段加载中断”，点击可重新加载。
 
