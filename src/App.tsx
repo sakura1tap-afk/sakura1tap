@@ -6,14 +6,25 @@ import { getPageFromPath, type AppPage, writeRoute } from './app/routes'
 import LiteEntry from './components/LiteEntry'
 import { reactionFeatureLoader } from './features/registry'
 
+const Live2DEntry = lazy(() => import('./components/Live2DEntry'))
 const MainPage = lazy(() => import('./components/MainPage'))
 const MotionLabPage = lazy(() => import('./components/lab/MotionLabPage'))
 const PlayPage = lazy(() => import('./components/PlayPage'))
 const ReactionTestPage = lazy(reactionFeatureLoader)
 
+function canUseWebGL() {
+  try {
+    const canvas = document.createElement('canvas')
+    return !!(canvas.getContext('webgl2') || canvas.getContext('webgl'))
+  } catch {
+    return false
+  }
+}
+
 export default function App() {
   const [entered, setEntered] = useState(() => getPageFromPath(window.location.pathname) !== 'main')
   const [page, setPage] = useState<AppPage>(() => getPageFromPath(window.location.pathname))
+  const [webglAvailable] = useState(canUseWebGL)
 
   useEffect(() => {
     const syncPageFromLocation = () => {
@@ -54,7 +65,13 @@ export default function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.75, ease: 'easeInOut' }}
           >
-            <LiteEntry onEnter={navigateToMain} />
+            {webglAvailable ? (
+              <Suspense fallback={<LiteEntry onEnter={navigateToMain} />}>
+                <Live2DEntry isReady onEnter={navigateToMain} />
+              </Suspense>
+            ) : (
+              <LiteEntry onEnter={navigateToMain} />
+            )}
           </motion.section>
         ) : page === 'reaction' ? (
           <Suspense key="reaction" fallback={<RouteFallback />}>
