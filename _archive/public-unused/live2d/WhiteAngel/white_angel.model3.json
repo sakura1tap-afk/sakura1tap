@@ -1,0 +1,89 @@
+{
+  "Version": 3,
+  "FileReferences": {
+    "Moc": "white_angel.moc3",
+    "Textures": [
+      "white_angel.4096/texture_00.png"
+    ],
+    "Physics": "white_angel.physics3.json",
+    "DisplayInfo": "white_angel.cdi3.json",
+    "Expressions": [
+      {
+        "Name": "expression1",
+        "File": "yansha.exp3.json"
+      },
+      {
+        "Name": "expression2",
+        "File": "lianhong.exp3.json"
+      },
+      {
+        "Name": "expression3",
+        "File": "jing.exp3.json"
+      },
+      {
+        "Name": "expression4",
+        "File": "qian.exp3.json"
+      },
+      {
+        "Name": "expression5",
+        "File": "xingxing.exp3.json"
+      },
+      {
+        "Name": "expression6",
+        "File": "heilian.exp3.json"
+      },
+      {
+        "Name": "expression7",
+        "File": "xin.exp3.json"
+      },
+      {
+        "Name": "expression8",
+        "File": "yun.exp3.json"
+      },
+      {
+        "Name": "expression9",
+        "File": "ku.exp3.json"
+      },
+      {
+        "Name": "expression10",
+        "File": "heshishoushi.exp3.json"
+      },
+      {
+        "Name": "expression11",
+        "File": "namaishoushi.exp3.json"
+      },
+      {
+        "Name": "expression12",
+        "File": "xiezishoushi.exp3.json"
+      },
+      {
+        "Name": "expression13",
+        "File": "quantuo.exp3.json"
+      },
+      {
+        "Name": "expression14",
+        "File": "qushuiyin.exp3.json"
+      },
+      {
+        "Name": "expression15",
+        "File": "click.exp3.json"
+      }
+    ]
+  },
+  "Groups": [
+    {
+      "Target": "Parameter",
+      "Name": "LipSync",
+      "Ids": []
+    },
+    {
+      "Target": "Parameter",
+      "Name": "EyeBlink",
+      "Ids": [
+        "ParamEyeLOpen",
+        "ParamEyeROpen"
+      ]
+    }
+  ],
+  "HitAreas": []
+}

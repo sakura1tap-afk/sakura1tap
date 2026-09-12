@@ -1,4 +1,4 @@
-node_modules
+﻿node_modules
 dist
 .env
 .env.local
@@ -17,4 +17,3 @@ background-candidate*.png
 
 # Assets that are no longer referenced by any routed page. They stay on disk (and out
 # of the deployed bundle) so they can be restored with a single move back into public/.
-/_archive/
