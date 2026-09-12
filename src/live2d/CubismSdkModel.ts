@@ -12,9 +12,28 @@ import { csmVector } from '../vendor/cubism/type/csmvector'
 
 const PRIORITY_IDLE = 1
 const PRIORITY_FORCE = 3
+const CUBISM_RUNTIME_URL = '/vendor/live2dcubismcore.min.js'
 
+type MeshBounds = {
+  maxX: number
+  maxY: number
+  minX: number
+  minY: number
+}
+
+const EMPTY_BOUNDS: MeshBounds = { maxX: 0.5, maxY: 0.5, minX: -0.5, minY: -0.5 }
+
+let cubismRuntimePromise: Promise<void> | null = null
 let frameworkStarted = false
 
+/**
+ * Placement is expressed against the *drawn* model, not the moc artboard: these
+ * models declare a 1 x ~1.41 canvas whose origin sits near the middle of the
+ * artwork, so the mesh lives roughly half an artboard away from the canvas centre.
+ * `x` / `y` are viewport fractions (0 = left/top, 1 = right/bottom) for the centre
+ * of the model's bounding box, and `height` is that box's height in NDC units
+ * (2 = full viewport height, so 1 means half the viewport).
+ */
 export type CubismSdkLayout = {
   height: number
   mobileHeight: number
@@ -51,8 +70,35 @@ type PendingTextureRecord = {
   url: string
 }
 
-export function ensureCubismFramework() {
+/**
+ * The Cubism Core is a ~200 kB blocking script that only the entry route needs, so it
+ * is injected on demand instead of being loaded by index.html for every route.
+ */
+function loadCubismRuntime() {
+  if (window.Live2DCubismCore) return Promise.resolve()
+  if (!cubismRuntimePromise) {
+    cubismRuntimePromise = new Promise<void>((resolve, reject) => {
+      const script = document.createElement('script')
+      script.async = true
+      script.src = CUBISM_RUNTIME_URL
+      script.addEventListener('load', () => {
+        if (window.Live2DCubismCore) resolve()
+        else reject(new Error('Cubism runtime did not initialise.'))
+      })
+      script.addEventListener('error', () => {
+        cubismRuntimePromise = null
+        reject(new Error('Cubism runtime failed to load.'))
+      })
+      document.head.appendChild(script)
+    })
+  }
+  return cubismRuntimePromise
+}
+
+export async function ensureCubismFramework() {
   if (frameworkStarted) return
+
+  await loadCubismRuntime()
 
   if (!window.Live2DCubismCore) {
     throw new Error('Cubism runtime is not available.')
@@ -76,6 +122,7 @@ export class CubismSdkModel extends CubismUserModel {
   private expressionCursor = 0
   private idleCursor = 0
   private lastMotionStartedAt = 0
+  private meshBounds: MeshBounds | null = null
   private modelSetting: CubismModelSettingJson | null = null
   private motionUpdated = false
 
@@ -113,6 +160,7 @@ export class CubismSdkModel extends CubismUserModel {
     this.expressions.clear()
     this.motions.length = 0
     this.textures.length = 0
+    this.meshBounds = null
     super.release()
   }
 
@@ -310,14 +358,53 @@ export class CubismSdkModel extends CubismUserModel {
     const isCompact = width < 720
     const layout = this.config.layout
     const aspect = width / Math.max(1, height)
-    const x = (isCompact ? layout.mobileX : layout.x) - 0.5
-    const y = 0.5 - (isCompact ? layout.mobileY : layout.y)
+    const anchorX = isCompact ? layout.mobileX : layout.x
+    const anchorY = isCompact ? layout.mobileY : layout.y
     const modelHeight = isCompact ? layout.mobileHeight : layout.height
 
+    const bounds = this.getMeshBounds()
+    const boundsHeight = Math.max(0.0001, bounds.maxY - bounds.minY)
+    const scale = modelHeight / boundsHeight
+    const centerX = (bounds.minX + bounds.maxX) / 2
+    const centerY = (bounds.minY + bounds.maxY) / 2
+
     this._modelMatrix = new CubismModelMatrix(this._model.getCanvasWidth(), this._model.getCanvasHeight())
-    this._modelMatrix.setHeight(modelHeight)
-    this._modelMatrix.centerX(x * 2 * aspect)
-    this._modelMatrix.centerY(y * 2)
+    this._modelMatrix.scale(scale, scale)
+    // draw() applies a projection that divides x by the viewport aspect *after* this
+    // matrix, so the horizontal offset has to be pre-multiplied by the aspect while
+    // the vertical offset does not. Anchoring the mesh box (instead of the moc
+    // artboard) is what keeps the character where the layout says it is.
+    this._modelMatrix.translateX(aspect * (anchorX * 2 - 1) - scale * centerX)
+    this._modelMatrix.translateY(1 - anchorY * 2 - scale * centerY)
+  }
+
+  private getMeshBounds() {
+    if (this.meshBounds || !this._model) return this.meshBounds ?? EMPTY_BOUNDS
+
+    let minX = Infinity
+    let minY = Infinity
+    let maxX = -Infinity
+    let maxY = -Infinity
+
+    for (let index = 0; index < this._model.getDrawableCount(); index += 1) {
+      const positions = this._model.getDrawableVertexPositions(index)
+      if (!positions) continue
+      for (let offset = 0; offset + 1 < positions.length; offset += 2) {
+        const x = positions[offset]
+        const y = positions[offset + 1]
+        if (x < minX) minX = x
+        if (x > maxX) maxX = x
+        if (y < minY) minY = y
+        if (y > maxY) maxY = y
+      }
+    }
+
+    // Only remember a plausible box; an empty read (model not ready yet) is retried
+    // on the next layout pass instead of being cached as the fallback box.
+    if (Number.isFinite(minX) && Number.isFinite(maxX) && maxX > minX && maxY > minY) {
+      this.meshBounds = { maxX, maxY, minX, minY }
+    }
+    return this.meshBounds ?? EMPTY_BOUNDS
   }
 
   private startNextIdleMotion() {

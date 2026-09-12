@@ -8,37 +8,26 @@
 
 ## Current signature experience — Void Relic
 
-The production homepage now uses a five-act GSAP scroll narrative built around a luminous obsidian relic: Opening → Compression → Expansion → Drift → Exit. The previous fantasy-realm installation remains available at `/lab`, while `/play` and `/play/blackout` are preserved.
+The production homepage now uses a five-act GSAP scroll narrative built around a luminous obsidian relic: Opening → Compression → Expansion → Drift → Exit. `/play` and `/lab` remain available from the third act, and the earlier fantasy-realm installation is kept in `src/components/main/` but is no longer routed.
 
 ## 网站当前进度 🚧
 
 目前已经实现的主要内容：
 
-- Boot 启动加载层 ⚡
-  - 预加载入口背景图。
-  - 预加载主场景 GLB 模型。
-  - 显示启动进度、加载状态、失败重试提示。
-  - 负责告诉访问者：别急，魔法阵正在通电。
 - Live2D 入口页 🎭
-  - 加载双 Live2D 模型舞台。
+  - 首页 `/` 首先进入 Live2D 入口舞台（双模型）。
   - 支持鼠标焦点追随。
   - 支持点击角色触发表情 / 动作反馈。
   - 支持进入按钮与入场转场。
-- 3D 主页面 🧭
-  - 使用 Three.js / React Three Fiber 渲染主场景。
-  - 通过滚轮切换不同内容节点。
-  - 节点包括 About、Work、Source、Play。
-  - 不同节点拥有独立主题色、镜头位置、模型角度和详情卡片。
+  - Cubism 运行时按需加载，只在内页不下载。
+- 主页面：Void Relic 五幕滚动叙事 🧭
+  - 使用 Three.js / React Three Fiber + GSAP ScrollTrigger。
+  - 通过滚动切换首页 → 互动 → 功能 → 片段 → 继续五幕。
+  - 第三幕提供「功能空间」与「动效实验室」入口。
 - Play 工具箱 🎮
-  - 已建立独立的 Play 页面。
-  - 当前可用模块：`Blackout Run`。
-  - 预留 `Signal`、`Forge` 等未来实验模块。
-- Blackout Run 小游戏 ⚫⚪
-  - 使用 HTML5 Canvas 2D 实现。
-  - 鼠标 / 指针控制光点移动。
-  - 随时间生成障碍物并提升难度。
-  - 支持分数、最高分、开始和重新开始状态。
-  - 简单来说：白色小点努力活下去，像极了赶 deadline 的我。
+  - 已建立独立的功能空间页面，带分类筛选与搜索。
+  - 当前可用模块：`反应时间测试`、`动效实验室`（含「仿 Lusion」物理实验场）。
+  - `Signal`、`Color Forge`、`JSON Lens` 等仍标记为规划中。
 
 ## 网站体验流程 🗺️
 
@@ -47,28 +36,24 @@ The production homepage now uses a five-act GSAP scroll narrative built around a
 ```text
 打开网站
   ↓
-BootOverlay 启动加载层
-  ↓
-Live2D 入口页
+Live2D 入口页（背景图 + 双模型舞台）
   ↓
 点击入口按钮
   ↓
-3D 主页面
-  ↓
-滚轮 / 热点切换 About、Work、Source、Play
+主页面：Void Relic 五幕滚动叙事
   ↓
 进入 Play 工具箱
   ↓
-启动 Blackout Run 小游戏
+打开「反应时间测试」或「动效实验室」
 ```
 
 当前路由：
 
 ```text
-/                 Void Relic 五幕滚动主体验
-/lab              保留的 3D 实验场
-/play             Play 工具箱介绍页
-/play/blackout    Blackout Run 全屏小游戏
+/                 Void Relic 五幕滚动主体验（入口页为 Live2D 舞台）
+/lab              动效实验室：视频窗口 + 「仿 Lusion」物理实验场
+/play             Play 工具箱 / 功能空间
+/play/reaction    反应时间测试（含全站排行榜）
 ```
 
 项目目前使用轻量的 History API 手写路由控制，暂未接入 React Router。现在页面还不算多，先别拿大炮打蚊子。
@@ -81,26 +66,27 @@ Live2D 入口页
 
 ### Live2D 入口
 
-Live2D 是当前网站的核心视觉记忆点之一。入口页会展示角色舞台，角色可以根据鼠标位置改变视线方向，也可以通过点击触发表情或动作反馈。
+Live2D 是当前网站的核心视觉记忆点之一。入口页会展示双模型舞台，角色可以根据鼠标位置改变视线方向，也可以通过点击触发表情或动作反馈。
 
-### 3D 主页面
+模型的摆放按**实际网格包围盒**计算（见 `src/live2d/CubismSdkModel.ts` 的 `CubismSdkLayout` 说明）：`x` / `y` 是角色包围盒中心在视口中的比例，`height` 是该包围盒在 NDC 下的高度（1 = 半个视口高）。之所以不按 moc 画布居中，是因为这两个模型的网格相对画布原点偏移了大约半个画布。
 
-主页面是网站的核心展示区域。当前以四个节点组织内容：
+### 主页面
 
-- `About`：个人与网站介绍。
-- `Work`：项目、作品、学习记录入口。
-- `Source`：模型来源、灵感参考和设计演化记录。
-- `Play`：互动工具箱和小游戏入口。
+主页面是网站的核心展示区域，当前是 Void Relic 五幕滚动叙事（首页 → 互动 → 功能 → 片段 → 继续）。功能幕提供「功能空间」和「动效实验室」两个入口。
 
-节点切换时，页面会同步改变文字、主题色、热点状态、3D 镜头位置和模型朝向。不是单纯换文字，而是让页面真的“动起来”。
+> 早期基于 About / Work / Source / Play 四节点的 3D 魔幻场景仍保留在 `src/components/main/` 下，但已不再挂载到任何路由。
 
 ### Play 工具箱
 
-Play 是未来承载小游戏、视觉实验和前端工具的区域。目前已经接入第一个完整模块：`Blackout Run`。
+Play 是承载小游戏、视觉实验和前端工具的区域。目前可用模块为「反应时间测试」和「动效实验室」。
 
-### Blackout Run
+### 反应时间测试
 
-`Blackout Run` 是一个黑白风格的 Canvas 躲避小游戏。玩家通过鼠标控制白色光点移动，躲避不断出现的扫描障碍物，存活越久分数越高。
+等待红色变绿后点击，完成 5 次有效测试计算平均值，并通过 `/api/reaction-leaderboard` 提交到 Cloudflare D1 排行榜（本地 `vite dev` / `vite preview` 没有 Worker，所以排行榜会显示未连接）。
+
+### 动效实验室
+
+`/lab` 提供四个可聚焦的视频动效窗口，以及「仿 Lusion」实验场：基于 Rapier 刚体物理的零件力场。Rapier 体积较大，只在进入该实验场时才动态加载。
 
 ## 技术栈 🛠️
 
@@ -124,22 +110,22 @@ src/main.tsx                       React 根节点挂载
 src/App.tsx                        顶层状态、入口流程、手写路由控制
 src/motion/gsap.ts                 GSAP 注册和统一导出
 src/motion/motionTokens.ts         动效时长、缓动和媒体查询 token
-src/components/BootOverlay.tsx     启动加载层与 GLB 模型预加载
+src/components/BootOverlay.tsx     启动加载层与 GLB 模型预加载（当前未挂载，遗留）
 src/components/Live2DEntry.tsx     Live2D 入口页与进入按钮
 src/components/Live2DStage.tsx     Live2D WebGL 舞台与模型调度
-src/live2d/CubismSdkModel.ts       自定义 Cubism 模型加载、更新、渲染逻辑
-src/data/mainSections.ts           主页面节点内容、镜头、热点和图标配置
-src/components/MainPage.tsx        3D 主页面、节点渲染、滚轮切换
-src/components/main/MainScene.tsx  主页面 R3F/Three 场景和模型渲染
-src/components/main/DetailLayer.tsx 主页面节点详情弹层
-src/components/main/MainPanel.tsx  主页面标题、正文和主操作按钮
-src/components/main/SceneHotspots.tsx 主页面场景热点按钮
-src/components/main/TechStrip.tsx  主页面底部技术条
-src/components/PlayPage.tsx        Play 工具箱介绍页
-src/components/PlayGamePage.tsx    Blackout Run 全屏程序页
-src/components/DodgeGame.tsx       Canvas 躲避小游戏
-src/components/CursorParticles.tsx 入口粒子与萤火效果
-src/style.css                      当前全局样式文件
+src/live2d/CubismSdkModel.ts       自定义 Cubism 模型加载、更新、渲染与布局逻辑
+src/components/home/HomeExperience.tsx  主页面五幕滚动叙事
+src/components/home/CinematicCanvas.tsx 主页面 WebGL 背景着色器
+src/components/PlayPage.tsx        Play 工具箱 / 功能空间
+src/components/play/ReactionTestPage.tsx 反应时间测试与排行榜
+src/components/lab/MotionLabPage.tsx 动效实验室（视频窗口 → 仿 Lusion 实验场）
+src/components/lab/LusionStudy.tsx    Rapier 刚体零件力场
+src/data/mainSections.ts           早期四节点主页面的内容配置（当前未挂载，遗留）
+src/components/main/*              早期 3D 魔幻主页面组件（当前未挂载，遗留）
+src/components/PlayGamePage.tsx    Blackout Run 全屏程序页（当前未挂载，遗留）
+src/components/DodgeGame.tsx       Canvas 躲避小游戏（当前未挂载，遗留）
+src/components/CursorParticles.tsx 入口粒子与萤火效果（当前未挂载，遗留）
+src/style.css                      全局样式（含若干历史设计遗留规则）
 ```
 
 ## 本地开发 💻
@@ -151,6 +137,7 @@ npm install
 npm run dev
 npm run build
 npm run preview
+npm test        # 运行 Cloudflare Worker 的路由/缓存策略测试
 ```
 
 ## 线上部署 ☁️
@@ -172,16 +159,16 @@ npm run preview
 短期计划：
 
 - 补充更完整的个人介绍与项目内容。
-- 优化 README 和网站说明。
-- 检查移动端 Live2D、3D 主页面和小游戏体验。
 - 整理模型、图片和素材来源说明。
-- 优化加载速度与资源体积。
+- 清理无路由引用的遗留组件：`src/components/main/`、`BootOverlay.tsx`、`EntryMiniGame.tsx`、`CursorParticles.tsx`、`DodgeGame.tsx`、`PlayGamePage.tsx`、`src/components/artifact/`。它们仍能编译，但 `App.tsx` 已经不再渲染，属于上一版设计的残留（对应素材已在 `_archive/`）。
+- `EntryMotionController.tsx` 目前只往 `.live2d-entry` 上写 `--entry-motion-*` 变量，而没有样式消费它们；要么删掉，要么把入口动效重新接上。
+- `/lab` 的 Lusion 实验场首次进入仍偏慢（Rapier 分包 2.2 MB，gzip 830 KB），可以换成更小的物理方案或延迟到真正点击时再加载。
+- `/lab` 的四个视频合计 38 MB，是 `dist` 里最大的一块；若拿到压缩工具，值得重新导出一版。
 
 中期计划：
 
-- 将 `src/style.css` 拆分为更易维护的样式模块。
+- 继续按页面拆分样式（`src/style.css` 现在只保留全局 base 与 Live2D 入口，其它页面各自持有 CSS）。
 - 扩展 Play 工具箱，增加新的交互实验。
-- 完善 Source 区域，记录模型、参考网站和设计迭代。
 - 增加更明确的项目展示页或作品详情页。
 
 长期计划：
@@ -206,10 +193,14 @@ npm run preview
 
 ## 注意事项 ⚠️
 
-- 当前网站包含较重的模型、Live2D 和图片资源，首次加载速度仍有继续优化空间。
+- 首页入口背景、Live2D 运行时和模型清单只在 `/` 预加载；Cubism Core 改为入口页按需注入，内页不再下载。进入主页要用的两张背景图在入口页以 `prefetch` 预热。
+- Live2D 模型的摆放按实际网格包围盒计算，改 `layout` 前请先读 `CubismSdkLayout` 的说明。
+- `src/style.css` 已收敛到当前站点真正命中的选择器（5929 行 → 371 行），历史几代设计的规则已删除，需要时可从 git 历史找回。改动它时要留意：现在文件里的声明顺序就是级联结果本身，随意重排会改变谁生效。
+- 无路由引用的素材已移到 `_archive/`（见该目录的 README），`dist` 从 125 MB 降到 52 MB。它们仍在本地，移回 `public/` 再 build 即可恢复。
+- 路由用 `history.pushState` + `sakura:route-change` 事件，站内跳转是单页切换，不会整页刷新；新页面由 `aria-live` 区域播报，并各自设置 `document.title`。
+- 开启「减少动态效果」时，主页会退化成可正常滚动的静态五幕（而不是只剩第一屏）。
 - 当前内容文案仍有占位性质，后续会持续替换为真实内容。
-- 当前样式主要集中在 `src/style.css`，后续可能拆分。
-- 当前路由为手写 History API，页面继续增加后可能调整。
+- 未匹配的路径会回落到主页面（没有独立 404 页）。
 
 ## License / 素材说明 📌
 

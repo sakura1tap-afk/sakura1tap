@@ -31,9 +31,6 @@ export default function EntryMotionController({ isEntering, modelReady, rootRef 
             return
           }
 
-          const miniGame = root.querySelector('.entry-mini-game')
-          const gate = root.querySelector('.city-gate-entry')
-
           const intro = gsap.timeline({
             defaults: {
               ease: motionEases.emphasis,
@@ -41,31 +38,10 @@ export default function EntryMotionController({ isEntering, modelReady, rootRef 
             },
           })
 
-          intro
-            .set(root, {
-              '--entry-motion-scan': 0,
-              '--entry-motion-ready': modelReady ? 1 : 0,
-            })
-            .from(
-              miniGame,
-              {
-                autoAlpha: 0,
-                duration: 0.72,
-                scale: 0.96,
-                y: 20,
-              },
-            )
-            .from(
-              gate,
-              {
-                autoAlpha: 0,
-                duration: 0.52,
-                scale: 0.94,
-                stagger: 0.09,
-                y: 18,
-              },
-              '<0.08',
-            )
+          intro.set(root, {
+            '--entry-motion-scan': 0,
+            '--entry-motion-ready': modelReady ? 1 : 0,
+          })
 
           const idle = gsap.timeline({
             repeat: -1,
@@ -84,18 +60,6 @@ export default function EntryMotionController({ isEntering, modelReady, rootRef 
               '--entry-motion-scan': 0,
               duration: 1.35,
             })
-            .to(
-              miniGame,
-              {
-                rotation: 1.8,
-                scale: 1.012,
-                transformOrigin: '50% 50%',
-                yoyo: true,
-                repeat: 1,
-                duration: 1.6,
-              },
-              0,
-            )
 
           return () => {
             intro.kill()

@@ -1,6 +1,7 @@
 import { type CSSProperties, type PointerEvent as ReactPointerEvent, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { handleRouteClick } from "../../app/routes";
 import CinematicCanvas from "./CinematicCanvas";
 import "./HomeExperience.css";
 
@@ -11,13 +12,15 @@ const destinations = [
     index: "01",
     name: "功能空间",
     href: "/play",
+    page: "play",
   },
   {
     index: "02",
     name: "动效实验室",
     href: "/lab",
+    page: "lab",
   },
-];
+] as const;
 
 export default function HomeExperience() {
   const experienceRef = useRef<HTMLElement>(null);
@@ -37,14 +40,55 @@ export default function HomeExperience() {
     if (!root) return;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const panels = () => root.querySelectorAll<HTMLElement>(".chapter-panel");
     const syncActiveChapter = (active: number) => {
       root.dataset.scene = String(active);
-      root.querySelectorAll<HTMLElement>(".chapter-panel").forEach((panel, index) => {
+      panels().forEach((panel, index) => {
         const isActive = index === active;
         panel.toggleAttribute("inert", !isActive);
         panel.setAttribute("aria-hidden", String(!isActive));
       });
     };
+
+    // Reduced motion: drop the scroll narrative and lay the acts out as a plain,
+    // fully reachable document. Without this every act stayed `inert` and the
+    // destination links kept `pointer-events: none`, so /play and /lab were
+    // unreachable for anyone with the OS motion preference on.
+    if (reducedMotion) {
+      root.dataset.motion = "reduced";
+      panels().forEach((panel) => {
+        panel.removeAttribute("inert");
+        panel.removeAttribute("aria-hidden");
+      });
+      gsap.set("[data-intro]", { clearProps: "all" });
+      gsap.set(".site-chrome", { opacity: 1 });
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            const index = Array.prototype.indexOf.call(panels(), entry.target);
+            if (index < 0) continue;
+            root.dataset.scene = String(index);
+            root.querySelectorAll<HTMLElement>("[data-chapter]").forEach((element) => {
+              if (Number(element.dataset.chapter) === index) element.setAttribute("aria-current", "step");
+              else element.removeAttribute("aria-current");
+            });
+            if (progressLabelRef.current) {
+              const ratio = index / (chapters.length - 1);
+              progressLabelRef.current.textContent = String(Math.round(ratio * 100)).padStart(3, "0");
+            }
+          }
+        },
+        { rootMargin: "-45% 0px -45% 0px", threshold: 0 },
+      );
+      panels().forEach((panel) => observer.observe(panel));
+
+      return () => {
+        observer.disconnect();
+        delete root.dataset.motion;
+      };
+    }
 
     syncActiveChapter(0);
     const context = gsap.context(() => {
@@ -53,11 +97,6 @@ export default function HomeExperience() {
       gsap.timeline({ defaults: { ease: "power3.out" } })
         .to(".site-chrome", { opacity: 1, duration: 1.1 }, 0.2)
         .to("[data-intro]", { y: 0, opacity: 1, duration: 1.25, stagger: 0.09 }, 0.35);
-
-      if (reducedMotion) {
-        gsap.set(".chapter-panel:first-of-type", { opacity: 1 });
-        return;
-      }
 
       const timeline = gsap.timeline({
         scrollTrigger: {
@@ -156,7 +195,7 @@ export default function HomeExperience() {
       <div className="cinematic-stage">
         <picture className="scene-fallback">
           <source media="(max-width: 760px)" srcSet="/cinematic/scene-mobile.webp" />
-          <img src="/cinematic/bridge.webp" alt="" draggable={false} />
+          <img src="/cinematic/bridge.webp" alt="" draggable={false} decoding="async" fetchPriority="high" />
         </picture>
         <CinematicCanvas progressRef={progressRef} />
         <div className="color-wash" aria-hidden="true" />
@@ -203,6 +242,7 @@ export default function HomeExperience() {
                 className="destination"
                 href={item.href}
                 key={item.name}
+                onClick={handleRouteClick(item.page)}
                 onPointerMove={tiltDestination}
                 onPointerLeave={resetTilt}
               >

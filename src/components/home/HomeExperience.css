@@ -201,11 +201,90 @@ html[data-dragging="true"] .cursor-orbit { width: 56px; height: 56px; margin: -2
   .runtime { left: 18px; right: 18px; }
 }
 
+/*
+ * Reduced motion.
+ * Instead of hiding four of the five acts — which also left them `inert` and their
+ * links unclickable, stranding these visitors on the first screen — the narrative
+ * becomes a plain scrollable document: fixed backdrop, five stacked acts, every
+ * destination reachable. `data-motion="reduced"` is set by HomeExperience.tsx.
+ */
+.cinematic-experience[data-motion="reduced"] {
+  height: auto;
+  min-height: 100vh;
+}
+
+.cinematic-experience[data-motion="reduced"] .cinematic-stage {
+  position: relative;
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
+}
+
+.cinematic-experience[data-motion="reduced"] .scene-fallback,
+.cinematic-experience[data-motion="reduced"] .color-wash,
+.cinematic-experience[data-motion="reduced"] .soft-grain {
+  position: fixed;
+  inset: 0;
+}
+
+.cinematic-experience[data-motion="reduced"] .scene-fallback img { animation: none; }
+
+.cinematic-experience[data-motion="reduced"] .cinematic-canvas,
+.cinematic-experience[data-motion="reduced"] .petals,
+.cinematic-experience[data-motion="reduced"] .scanline,
+.cinematic-experience[data-motion="reduced"] .afterimage-portrait,
+.cinematic-experience[data-motion="reduced"] .awakening-veil {
+  display: none;
+}
+
+.cinematic-experience[data-motion="reduced"] .chapter-panel {
+  position: relative;
+  inset: auto;
+  display: grid;
+  align-content: center;
+  width: auto;
+  max-width: min(1040px, 90vw);
+  min-height: 100vh;
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: 15vh 0 9vh;
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+/* the acts are all live now, so their actions must be clickable everywhere */
+.cinematic-experience[data-motion="reduced"] .chapter-panel,
+.cinematic-experience[data-motion="reduced"] .chapter-panel * {
+  pointer-events: auto;
+}
+
+.cinematic-experience[data-motion="reduced"] .archive-panel {
+  display: block;
+}
+
+.cinematic-experience[data-motion="reduced"] .destination {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.cinematic-experience[data-motion="reduced"] .destination-list {
+  max-width: 620px;
+  margin-top: 34px;
+}
+
+.cinematic-experience[data-motion="reduced"] .afterimage-panel,
+.cinematic-experience[data-motion="reduced"] .exit-panel {
+  text-align: left;
+}
+
+.cinematic-experience[data-motion="reduced"] .site-header,
+.cinematic-experience[data-motion="reduced"] .chapter-rail,
+.cinematic-experience[data-motion="reduced"] .runtime {
+  position: fixed;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
-  .cinematic-experience { height: 100vh; min-height: 680px; }
-  .chapter-panel:not(.arrival-panel), .chapter-rail, .cinematic-canvas, .petals, .scanline { display: none; }
   .awakening-veil { transition-duration: .2s; }
-  .scene-fallback img { animation: none; }
-  .arrival-panel { opacity: 1 !important; }
 }

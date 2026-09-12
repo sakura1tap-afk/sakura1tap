@@ -186,6 +186,22 @@
 .reaction-leaderboard li b { font-size: 0.66rem; font-weight: 500; }
 .reaction-leaderboard li small { margin-left: 0.18rem; color: rgba(255, 255, 255, 0.3); font-size: 0.42rem; font-weight: 400; }
 .reaction-leaderboard > p { margin: 0; padding: 1.15rem 0; color: rgba(255, 255, 255, 0.28); font-size: 0.55rem; text-align: center; }
+.reaction-leaderboard > header .reaction-leaderboard-total { margin-left: auto; margin-right: 0.35rem; color: rgba(255, 255, 255, 0.26); font-size: 0.48rem; letter-spacing: 0.06em; }
+.reaction-leaderboard li.is-me { background: rgba(240, 173, 112, 0.12); }
+.reaction-leaderboard li.is-me span { color: #f0ad70; }
+.reaction-leaderboard-best {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 0.55rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.32);
+  font-size: 0.5rem;
+  letter-spacing: 0.06em;
+}
+.reaction-leaderboard-best b { color: rgba(255, 255, 255, 0.72); font-size: 0.66rem; font-weight: 500; }
+.reaction-leaderboard-best small { margin-left: 0.18rem; color: rgba(255, 255, 255, 0.3); font-size: 0.42rem; font-weight: 400; }
 .reaction-test.is-waiting .reaction-leaderboard,
 .reaction-test.is-ready .reaction-leaderboard { visibility: hidden; }
 

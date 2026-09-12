@@ -13,21 +13,45 @@
     <meta property="og:url" content="https://www.sakura1tap.com/" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="canonical" href="https://www.sakura1tap.com/" />
-    <link rel="preload" href="/cinematic/entry-v2.webp" as="image" type="image/webp" media="(min-width: 761px)" />
-    <link rel="preload" href="/cinematic/entry-v2-mobile.webp" as="image" type="image/webp" media="(max-width: 760px)" />
-    <link rel="preload" href="/vendor/live2dcubismcore.min.js" as="script" />
-    <link rel="preload" href="/live2d/Fern/fern.model3.json" as="fetch" crossorigin="anonymous" />
-    <link
-      rel="preload"
-      href="/live2d/WhiteAngelOriginal/%E6%97%A0%E5%8F%A3%E5%A4%A9%E4%BD%BF%205.model3.json"
-      as="fetch"
-      crossorigin="anonymous"
-    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
     <title>Sakura1Tap</title>
+    <script>
+      // The boot entry (background art, Live2D runtime + model manifests) only exists
+      // on the root route. Every other route renders an inner page, so preloading that
+      // there only burns bandwidth and logs "unused preload" warnings.
+      // This runs during <head> parsing, so the requests still start before the bundle.
+      (function () {
+        var path = location.pathname.replace(/\/+$/, '') || '/';
+        if (path !== '/' && path !== '/index.html') return;
+
+        var mobile = window.matchMedia('(max-width: 760px)').matches;
+        var hints = [
+          { rel: 'preload', as: 'script', href: '/vendor/live2dcubismcore.min.js' },
+          { rel: 'preload', as: 'image', type: 'image/webp', href: mobile ? '/cinematic/entry-v2-mobile.webp' : '/cinematic/entry-v2.webp' },
+          { rel: 'preload', as: 'fetch', crossorigin: true, href: '/live2d/WhiteAngelOriginal/%E6%97%A0%E5%8F%A3%E5%A4%A9%E4%BD%BF%205.model3.json' },
+          { rel: 'preload', as: 'fetch', crossorigin: true, href: '/live2d/Fern/fern.model3.json' },
+          // The homepage WebGL stage needs these two right after the enter click.
+          // Prefetching them while the entry is on screen makes that transition
+          // instant instead of showing the awakening veil.
+          { rel: 'prefetch', as: 'image', href: mobile ? '/cinematic/scene-mobile.webp' : '/cinematic/bridge.webp' },
+          { rel: 'prefetch', as: 'image', href: '/cinematic/closeup.webp' },
+        ];
+
+        hints.forEach(function (item) {
+          var link = document.createElement('link');
+          link.rel = item.rel;
+          link.as = item.as;
+          link.href = item.href;
+          if (item.type) link.type = item.type;
+          if (item.crossorigin) link.crossOrigin = 'anonymous';
+          document.head.appendChild(link);
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script src="/vendor/live2dcubismcore.min.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

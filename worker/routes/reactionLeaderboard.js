@@ -1,4 +1,4 @@
-import { apiError, json, toHeadResponse } from '../lib/http.js'
+import { apiError, clientKey, json, rateLimit, toHeadResponse } from '../lib/http.js'
 
 let schemaInitialization = null
 
@@ -46,10 +46,19 @@ async function listScores(database) {
   return (result.results ?? []).map((entry, index) => ({ ...entry, rank: index + 1 }))
 }
 
+/** How many ranked players exist, so the UI can show the board is alive. */
+async function countScores(database) {
+  const row = await database.prepare(
+    'SELECT COUNT(*) AS total FROM reaction_scores WHERE average_ms BETWEEN 80 AND 1500',
+  ).first()
+  return Number(row?.total ?? 0)
+}
+
 async function handleGet(env) {
   const database = requireDatabase(env)
   await ensureSchema(database)
-  return json({ entries: await listScores(database) })
+  const [entries, total] = await Promise.all([listScores(database), countScores(database)])
+  return json({ entries, total })
 }
 
 async function readSubmission(request) {
@@ -106,12 +115,12 @@ async function handlePost(request, env) {
   const saved = await database.prepare(
     'SELECT average_ms AS averageMs FROM reaction_scores WHERE nickname = ?',
   ).bind(nickname).first()
-  const entries = await listScores(database)
+  const [entries, total] = await Promise.all([listScores(database), countScores(database)])
   const rank = entries.find(
     (entry) => entry.nickname === nickname && entry.averageMs === saved?.averageMs,
   )?.rank ?? null
 
-  return json({ bestAverageMs: saved?.averageMs ?? averageMs, entries, improved, isNew, rank })
+  return json({ bestAverageMs: saved?.averageMs ?? averageMs, entries, improved, isNew, rank, total })
 }
 
 export async function handleReactionLeaderboard(request, env) {
@@ -120,7 +129,13 @@ export async function handleReactionLeaderboard(request, env) {
       const response = await handleGet(env)
       return request.method === 'HEAD' ? toHeadResponse(response) : response
     }
-    if (request.method === 'POST') return await handlePost(request, env)
+    if (request.method === 'POST') {
+      const limit = rateLimit(`reaction:${clientKey(request)}`, { limit: 12, windowMs: 60_000 })
+      if (!limit.allowed) {
+        return json({ error: '提交过于频繁，请稍后再试' }, 429, { 'Retry-After': String(limit.retryAfter) })
+      }
+      return await handlePost(request, env)
+    }
     return json({ error: '请求方法不支持' }, 405, { Allow: 'GET, HEAD, POST' })
   } catch (error) {
     return apiError(error)

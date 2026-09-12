@@ -24,6 +24,25 @@ const MEDIUM_DELAY_MAX_MS = 5000
 const MAX_DELAY_MS = 8000
 const LONG_DELAY_THRESHOLD_MS = 5000
 const PLAYER_NAME_KEY = 'sakura1tap.reaction.nickname'
+const PERSONAL_BEST_KEY = 'sakura1tap.reaction.best'
+
+function readPersonalBest() {
+  try {
+    const raw = window.localStorage.getItem(PERSONAL_BEST_KEY)
+    const value = raw === null ? Number.NaN : Number(raw)
+    return Number.isFinite(value) && value > 0 ? value : null
+  } catch {
+    return null
+  }
+}
+
+function writePersonalBest(value: number) {
+  try {
+    window.localStorage.setItem(PERSONAL_BEST_KEY, String(value))
+  } catch {
+    /* private mode / storage disabled: the board still works, we just forget */
+  }
+}
 
 async function readApiPayload<T>(response: Response): Promise<T> {
   const contentType = response.headers.get('content-type') ?? ''
@@ -73,6 +92,8 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
   const [results, setResults] = useState<number[]>([])
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [leaderboardStatus, setLeaderboardStatus] = useState<RequestStatus>('idle')
+  const [playerTotal, setPlayerTotal] = useState(0)
+  const [personalBest, setPersonalBest] = useState<number | null>(readPersonalBest)
   const [nickname, setNickname] = useState(() => window.localStorage.getItem(PLAYER_NAME_KEY) ?? '')
   const [submissionStatus, setSubmissionStatus] = useState<RequestStatus>('idle')
   const [submissionMessage, setSubmissionMessage] = useState('')
@@ -109,9 +130,10 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
       const response = await window.fetch('/api/reaction-leaderboard', {
         headers: { Accept: 'application/json' },
       })
-      const payload = await readApiPayload<{ entries?: LeaderboardEntry[]; error?: string }>(response)
+      const payload = await readApiPayload<{ entries?: LeaderboardEntry[]; error?: string; total?: number }>(response)
       if (!response.ok) throw new Error(payload.error ?? '排行榜暂时不可用')
       setLeaderboard(payload.entries ?? [])
+      setPlayerTotal(payload.total ?? 0)
       setLeaderboardStatus('success')
     } catch {
       setLeaderboardStatus('error')
@@ -134,7 +156,19 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
       const reaction = Math.max(1, Math.round(window.performance.now() - readyAtRef.current))
       const nextResults = [...results, reaction]
       setResults(nextResults)
-      setPhase(nextResults.length === TRIAL_COUNT ? 'complete' : 'result')
+      if (nextResults.length === TRIAL_COUNT) {
+        setPhase('complete')
+        // Remember the personal best as soon as the round ends, so it survives a
+        // failed or offline leaderboard submission.
+        const roundAverage = Math.round(nextResults.reduce((sum, value) => sum + value, 0) / nextResults.length)
+        setPersonalBest((current) => {
+          if (current !== null && current <= roundAverage) return current
+          writePersonalBest(roundAverage)
+          return roundAverage
+        })
+      } else {
+        setPhase('result')
+      }
       return
     }
 
@@ -191,13 +225,20 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
         improved?: boolean
         isNew?: boolean
         rank?: number
+        total?: number
       }>(response)
       if (!response.ok) throw new Error(payload.error ?? '成绩保存失败')
       window.localStorage.setItem(PLAYER_NAME_KEY, cleanNickname)
       setNickname(cleanNickname)
       setLeaderboard(payload.entries ?? [])
+      setPlayerTotal(payload.total ?? playerTotal)
       setLeaderboardStatus('success')
       setSubmissionStatus('success')
+      // remember the best locally so the number survives a failed/offline submit
+      if (personalBest === null || average < personalBest) {
+        writePersonalBest(average)
+        setPersonalBest(average)
+      }
       if (payload.improved === false) {
         setSubmissionMessage(`未超过最佳成绩 · 仍为 ${payload.bestAverageMs ?? average} ms`)
       } else if (payload.isNew) {
@@ -207,7 +248,13 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
       }
     } catch (error) {
       setSubmissionStatus('error')
-      setSubmissionMessage(error instanceof Error ? error.message : '成绩保存失败')
+      // Keep the message human: the technical cause is not actionable for a visitor.
+      const detail = error instanceof Error ? error.message : ''
+      setSubmissionMessage(
+        detail.includes('昵称')
+          ? detail
+          : `排行榜暂时不可用 · 最佳成绩已保存在本机（${personalBest ?? average} ms）`,
+      )
     }
   }
 
@@ -293,6 +340,9 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
         <aside className="reaction-leaderboard" aria-label="反应时间排行榜">
           <header>
             <span><Trophy size={13} strokeWidth={1.8} />全站排行榜</span>
+            <span className="reaction-leaderboard-total">
+              {playerTotal > 0 ? `${playerTotal} 位挑战者` : ''}
+            </span>
             <button
               aria-label="刷新排行榜"
               disabled={leaderboardStatus === 'loading'}
@@ -305,7 +355,7 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
           {leaderboard.length > 0 ? (
             <ol>
               {leaderboard.slice(0, 5).map((entry) => (
-                <li key={`${entry.rank}-${entry.nickname}`}>
+                <li className={entry.nickname === nickname.trim() ? 'is-me' : ''} key={`${entry.rank}-${entry.nickname}`}>
                   <i>{String(entry.rank).padStart(2, '0')}</i>
                   <span>{entry.nickname}</span>
                   <b>{entry.averageMs}<small>ms</small></b>
@@ -313,7 +363,12 @@ export default function ReactionTestPage({ onBack }: ReactionTestPageProps) {
               ))}
             </ol>
           ) : (
-            <p>{leaderboardStatus === 'loading' ? '读取中…' : leaderboardStatus === 'error' ? '等待数据库连接' : '成为第一个上榜者'}</p>
+            <p>{leaderboardStatus === 'loading' ? '读取中…' : leaderboardStatus === 'error' ? '排行榜离线 · 成绩仅保存在本机' : '成为第一个上榜者'}</p>
+          )}
+          {personalBest !== null && (
+            <footer className="reaction-leaderboard-best">
+              本机最佳 <b>{personalBest}<small>ms</small></b>
+            </footer>
           )}
         </aside>
 

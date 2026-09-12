@@ -1,0 +1,133 @@
+.artifact-lab {
+  position: fixed;
+  inset: 0;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.032) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    radial-gradient(circle at 50% 46%, rgba(242, 232, 224, 0.12), transparent 30%),
+    #020202;
+  background-size: 76px 76px, 76px 76px, 100% 100%, 100% 100%;
+  color: #eee9e1;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.artifact-lab::before,
+.artifact-lab::after,
+.artifact-lab-field {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  content: '';
+}
+
+.artifact-lab::before {
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 9px);
+  opacity: 0.18;
+  mix-blend-mode: screen;
+  transform: skewY(-7deg) translateY(-8%);
+}
+
+.artifact-lab::after {
+  border: 1px solid rgba(238, 232, 222, 0.13);
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.92);
+}
+
+.artifact-lab-field {
+  background:
+    linear-gradient(115deg, transparent 12%, rgba(245, 238, 228, 0.08) 13%, transparent 14%),
+    linear-gradient(245deg, transparent 21%, rgba(99, 52, 66, 0.1) 22%, transparent 23%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 26%, rgba(255, 255, 255, 0.03));
+  opacity: 0.72;
+}
+
+.artifact-lab-canvas {
+  position: absolute !important;
+  inset: 0;
+  z-index: 2;
+}
+
+.artifact-lab-title {
+  position: fixed;
+  top: 28px;
+  left: 28px;
+  z-index: 3;
+  display: grid;
+  gap: 8px;
+  max-width: min(360px, calc(100vw - 56px));
+  font-family: 'Sometype Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0;
+  pointer-events: none;
+}
+
+.artifact-lab-title span,
+.artifact-lab-prompt,
+.artifact-lab-debug {
+  font-size: 11px;
+  line-height: 1.35;
+  color: rgba(238, 232, 222, 0.62);
+}
+
+.artifact-lab-title strong {
+  font-family: 'Zen Dots', 'Sometype Mono', ui-monospace, monospace;
+  font-size: clamp(16px, 2vw, 28px);
+  line-height: 1.05;
+  font-weight: 400;
+  color: rgba(246, 241, 233, 0.9);
+  text-shadow: 0 0 26px rgba(150, 78, 96, 0.22);
+}
+
+.artifact-lab-prompt {
+  position: fixed;
+  right: 28px;
+  top: 31px;
+  z-index: 3;
+  font-family: 'Sometype Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  pointer-events: none;
+}
+
+.artifact-lab-debug {
+  position: fixed;
+  left: 28px;
+  bottom: 24px;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  max-width: calc(100vw - 56px);
+  font-family: 'Sometype Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .artifact-lab {
+    background-size: 54px 54px, 54px 54px, 100% 100%, 100% 100%;
+  }
+
+  .artifact-lab-title {
+    top: 20px;
+    left: 18px;
+    max-width: calc(100vw - 36px);
+  }
+
+  .artifact-lab-title strong {
+    font-size: 15px;
+  }
+
+  .artifact-lab-prompt {
+    right: 18px;
+    top: auto;
+    bottom: 48px;
+  }
+
+  .artifact-lab-debug {
+    left: 18px;
+    bottom: 18px;
+    gap: 10px;
+  }
+}

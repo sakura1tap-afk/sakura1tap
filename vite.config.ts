@@ -38,10 +38,6 @@ export default defineConfig({
             return 'motion-vendor'
           }
 
-          if (id.includes('/pixi.js/') || id.includes('/pixi-live2d-display/') || id.includes('/live2dcubismcore/')) {
-            return 'live2d-vendor'
-          }
-
           return undefined
         },
       },

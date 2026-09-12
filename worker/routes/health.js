@@ -7,7 +7,6 @@ const CRITICAL_ASSETS = [
   { path: '/cinematic/awakening.webp', type: 'image/' },
   { path: '/art/videos/272021_medium.mp4', type: 'video/' },
   { path: '/art/videos/285224_medium.mp4', type: 'video/' },
-  { path: '/models/study.glb', type: 'model/' },
   { path: '/vendor/live2dcubismcore.min.js', type: 'javascript' },
   { path: '/live2d/Fern/fern.model3.json', type: 'application/json' },
   { path: '/live2d/Fern/fern.4096/texture_02.webp', type: 'image/' },

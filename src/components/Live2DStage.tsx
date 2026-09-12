@@ -14,6 +14,9 @@ type Live2DStageProps = {
   onLoadStateChange?: (state: StageState) => void
 }
 
+// `x` / `y` are viewport fractions for the character's bounding-box centre and
+// `height` is that box's height in NDC units (1 = half the viewport height).
+// See CubismSdkLayout for how the values are applied.
 const stageModels: CubismSdkModelConfig[] = [
   {
     url: '/live2d/WhiteAngelOriginal/无口天使 5.model3.json',
@@ -21,12 +24,12 @@ const stageModels: CubismSdkModelConfig[] = [
     feedbackExpressions: ['expression15', 'expression2', 'expression3', 'expression5', 'expression8', 'expression9'],
     parameterOverrides: { Param80: 1 },
     layout: {
-      height: 1.42,
-      mobileHeight: 1.24,
-      mobileX: 0.36,
-      mobileY: 0.72,
-      x: 0.36,
-      y: 0.68,
+      height: 1,
+      mobileHeight: 1.08,
+      mobileX: 0.31,
+      mobileY: 0.7,
+      x: 0.3,
+      y: 0.72,
     },
   },
   {
@@ -34,12 +37,12 @@ const stageModels: CubismSdkModelConfig[] = [
     required: true,
     parameterOverrides: { Param33: 1 },
     layout: {
-      height: 1.48,
-      mobileHeight: 1.26,
-      mobileX: 0.64,
-      mobileY: 0.72,
-      x: 0.69,
-      y: 0.68,
+      height: 1.04,
+      mobileHeight: 1.12,
+      mobileX: 0.69,
+      mobileY: 0.7,
+      x: 0.68,
+      y: 0.72,
     },
   },
 ]
@@ -150,7 +153,7 @@ class CubismStageEngine {
   }
 
   public async load() {
-    ensureCubismFramework()
+    await ensureCubismFramework()
 
     const contextOptions = {
       alpha: true,

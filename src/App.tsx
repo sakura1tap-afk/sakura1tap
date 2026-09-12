@@ -2,7 +2,13 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import RouteErrorBoundary from './app/RouteErrorBoundary'
 import RouteFallback from './app/RouteFallback'
-import { getPageFromPath, type AppPage, writeRoute } from './app/routes'
+import {
+  getPageFromPath,
+  navigateTo,
+  PAGE_TITLES,
+  ROUTE_CHANGE_EVENT,
+  type AppPage,
+} from './app/routes'
 import LiteEntry from './components/LiteEntry'
 import { reactionFeatureLoader } from './features/registry'
 
@@ -34,15 +40,24 @@ export default function App() {
     }
 
     window.addEventListener('popstate', syncPageFromLocation)
-    return () => window.removeEventListener('popstate', syncPageFromLocation)
+    window.addEventListener(ROUTE_CHANGE_EVENT, syncPageFromLocation)
+    return () => {
+      window.removeEventListener('popstate', syncPageFromLocation)
+      window.removeEventListener(ROUTE_CHANGE_EVENT, syncPageFromLocation)
+    }
   }, [])
+
+  // Each route gets its own document title so history, tabs and bookmarks are readable.
+  useEffect(() => {
+    document.title = PAGE_TITLES[entered ? page : 'main']
+  }, [entered, page])
 
   useEffect(() => {
     void import('./components/MainPage')
   }, [])
 
   const navigate = (nextPage: AppPage) => {
-    writeRoute(nextPage)
+    navigateTo(nextPage)
     setPage(nextPage)
     setEntered(true)
   }
@@ -52,8 +67,14 @@ export default function App() {
   const navigateToLab = () => navigate('lab')
   const navigateToReaction = () => navigate('reaction')
 
+  const currentTitle = PAGE_TITLES[entered ? page : 'main']
+
   return (
     <main className="app-shell tone-paper">
+      {/* Announces the new view to assistive tech, which an SPA otherwise never does. */}
+      <p aria-live="polite" className="visually-hidden" data-route-announcer>
+        {currentTitle}
+      </p>
       <RouteErrorBoundary resetKey={`${page}:${entered}`}>
         <AnimatePresence mode="wait">
         {!entered ? (
