@@ -1,4 +1,4 @@
-﻿node_modules
+node_modules
 dist
 .env
 .env.local
@@ -17,3 +17,15 @@ background-candidate*.png
 
 # Assets that are no longer referenced by any routed page. They stay on disk (and out
 # of the deployed bundle) so they can be restored with a single move back into public/.
+
+# Local-only scratch material, moved out of the repo root. Kept on disk for reference but
+# deliberately not versioned: ~356 MB of candidate models, textures and duplicates whose
+# provenance is recorded in _archive/root-clutter/README.md. Without these rules the set
+# that got committed would depend on each file's extension instead of on intent.
+_archive/root-clutter/source-library/
+_archive/root-clutter/whiteangel-dlc/
+_archive/root-clutter/whiteangel-dlc.zip
+_archive/root-clutter/chatgpt-image-20260620.png
+_archive/root-clutter/background-candidate.png
+_archive/root-clutter/background-candidate-view.png
+_archive/root-clutter/vite-live2d-sdk.log

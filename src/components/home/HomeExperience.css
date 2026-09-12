@@ -158,13 +158,18 @@ button:focus-visible, a:focus-visible { outline: 1px solid var(--ember); outline
 /*
  * Site cursor (src/components/home/CinematicCursor.tsx).
  * `body.cinematic-mode` hides the system cursor, so this replaces it: an exact ember dot
- * for pointing accuracy, a spring-followed ring for fluidity, and a label naming whatever
- * is under the pointer so clickability is visible before the click.
+ * for pointing accuracy, a spring-followed ring for fluidity, a slower halo that lags the
+ * ring so the pointer reads as lit rather than drawn, and a label naming whatever is under
+ * the pointer so clickability is visible before the click.
+ *
+ * The halo reads `--ember`, so it takes on each act's accent without any per-scene rule.
+ * The motion trail lives in the canvas layer below (CursorRipple).
  */
 .cinematic-cursor { position: fixed; inset: 0; z-index: 400; pointer-events: none; }
 
 .cinematic-cursor-dot,
-.cinematic-cursor-ring {
+.cinematic-cursor-ring,
+.cinematic-cursor-halo {
   position: fixed;
   left: 0;
   top: 0;
@@ -229,6 +234,41 @@ button:focus-visible, a:focus-visible { outline: 1px solid var(--ember); outline
 }
 .cinematic-cursor-ring[data-hover="true"] .cinematic-cursor-label { opacity: 1; }
 
+/*
+ * Halo: a soft bloom that trails both the dot and the ring, carrying the act accent so it
+ * changes tone as the narrative moves. The glow lives on a pseudo-element because the
+ * element's own `transform` is rewritten every frame by the cursor loop — any animation
+ * on that same property would be overwritten rather than composed.
+ */
+.cinematic-cursor-halo {
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  transition: opacity .3s ease, width .4s cubic-bezier(.2,.8,.2,1), height .4s cubic-bezier(.2,.8,.2,1), margin .4s cubic-bezier(.2,.8,.2,1);
+}
+.cinematic-cursor-halo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  /* Plain-rgba fallback first: `color-mix()` is Baseline 2023, and without a fallback an
+     unsupported build would drop the whole gradient and leave no halo at all. */
+  background: radial-gradient(circle, rgba(240, 173, 112, .15) 0 32%, rgba(137, 200, 208, .07) 48%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ember) 15%, transparent) 0 32%,
+    color-mix(in srgb, var(--ice) 7%, transparent) 48%,
+    transparent 70%
+  );
+  animation: cursorHaloBreath 3.4s ease-in-out infinite alternate;
+}
+.cinematic-cursor-halo[data-visible="true"] { opacity: .9; }
+
+@keyframes cursorHaloBreath {
+  from { opacity: .72; transform: scale(.94); }
+  to { opacity: 1; transform: scale(1.07); }
+}
+
 html[data-dragging="true"], html[data-dragging="true"] body { cursor: none !important; }
 
 @media (pointer: coarse), (pointer: none) {
@@ -250,7 +290,7 @@ html[data-dragging="true"], html[data-dragging="true"] body { cursor: none !impo
 @media (max-width: 900px) {
   body.cinematic-mode { cursor: auto; }
   .cinematic-experience { height: 560vh; min-height: 3300px; }
-  .cinematic-cursor, .chapter-nav { display: none; }
+  .cinematic-cursor, .cinematic-cursor-halo, .chapter-nav { display: none; }
   .site-header { inset: max(20px,env(safe-area-inset-top)) 22px auto; }
   .identity strong { font-size: 15px; }
   .arrival-panel { left: 22px; top: 27%; width: calc(100% - 60px); }
