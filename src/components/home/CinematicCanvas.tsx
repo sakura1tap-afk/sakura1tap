@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 
 type CinematicCanvasProps = {
   progressRef: { current: number };
+  /** 0..1 scroll speed, so the scene reacts while the page is moving. */
+  velocityRef?: { current: number };
   onReady?: () => void;
 };
 
@@ -18,9 +20,11 @@ const vertexShaderSource = `
 const fragmentShaderSource = `
   precision highp float;
 
+  uniform sampler2D uAwakening;
   uniform sampler2D uBridge;
   uniform sampler2D uCloseup;
   uniform vec2 uResolution;
+  uniform vec2 uAwakeningResolution;
   uniform vec2 uBridgeResolution;
   uniform vec2 uCloseupResolution;
   uniform vec2 uPointer;
@@ -28,6 +32,7 @@ const fragmentShaderSource = `
   uniform float uTime;
   uniform float uProgress;
   uniform float uImpact;
+  uniform float uVelocity;
   varying vec2 vUv;
 
   vec2 coverUv(vec2 uv, vec2 viewport, vec2 image) {
@@ -48,6 +53,13 @@ const fragmentShaderSource = `
     return texture2D(textureMap, covered).rgb;
   }
 
+  /* Distance from uv to a point, corrected so ripples stay circular on any viewport. */
+  float radialDistance(vec2 uv, vec2 point) {
+    vec2 delta = uv - point;
+    delta.x *= uResolution.x / uResolution.y;
+    return length(delta);
+  }
+
   void main() {
     vec2 uv = vUv;
     vec2 pointer = uPointer;
@@ -56,40 +68,99 @@ const fragmentShaderSource = `
     float distanceToPointer = max(length(delta), 0.001);
     vec2 direction = normalize(delta);
 
-    float pulse = sin(distanceToPointer * 78.0 - uTime * 4.2);
-    float falloff = exp(-distanceToPointer * 8.5);
-    float pointerField = smoothstep(0.48, 0.0, distanceToPointer);
-    float ripple = pulse * falloff * (0.002 + uImpact * 0.005);
-    vec2 distortion = direction * ripple;
+    /*
+     * "Rhythm" layer: a slow wave travels out from a focal point that itself drifts
+     * around the frame, so the still image keeps breathing instead of sitting flat.
+     */
+    vec2 focal = vec2(0.5 + 0.2 * sin(uTime * 0.11), 0.46 + 0.13 * cos(uTime * 0.09));
+    float focalDistance = radialDistance(uv, focal);
+    vec2 focalDirection = normalize(vec2(uv.x - focal.x, (uv.y - focal.y) * 0.72) + 0.0001);
+    float swell = 0.55 + 0.45 * sin(uTime * 0.21);
+    float wave = sin(focalDistance * 20.0 - uTime * 1.15);
+    // Scrolling drives the rhythm: the faster the page moves, the stronger the swell and
+    // the shorter the wavelength, which reads as the world rushing past.
+    float speed = clamp(uVelocity, 0.0, 1.0);
+    float waveField = exp(-focalDistance * (2.35 + speed * 0.9)) * swell * (1.0 + speed * 2.4);
+    vec2 rhythm = focalDirection * wave * waveField * 0.0062;
 
-    float proximity = smoothstep(0.12, 0.42, uProgress);
-    float archive = smoothstep(0.42, 0.64, uProgress);
-    float afterimage = smoothstep(0.66, 0.88, uProgress);
-    float blend = clamp(proximity - archive * 0.22 + afterimage * 0.18, 0.0, 1.0);
+    /* Cursor ripple: concentric rings that ride the pointer. */
+    float pointerRing = sin(distanceToPointer * 46.0 - uTime * 3.1);
+    float pointerField = exp(-distanceToPointer * 5.4);
+    vec2 cursorRipple = direction * pointerRing * pointerField * (0.006 + uImpact * 0.016);
 
-    float slowBreath = sin(uTime * 0.34) * 0.004;
+    float archive = smoothstep(0.34, 0.58, uProgress);
+    float afterimage = smoothstep(0.6, 0.66, uProgress);
+    // A touch of vertical smear at speed, so fast scrolling is not a hard jump.
+    vec2 smear = vec2(0.0, (uv.y - 0.5) * speed * 0.006);
+    vec2 distortion = rhythm + cursorRipple + smear;
+
+    float slowBreath = sin(uTime * 0.34) * 0.005;
     vec2 bridgeDrift = vec2(uDrag.x * 0.16, uDrag.y * 0.10) + (uPointer - 0.5) * vec2(-0.012, -0.006);
     vec2 closeDrift = vec2(uDrag.x * -0.10, uDrag.y * -0.06) + (uPointer - 0.5) * vec2(0.008, 0.004);
+    vec2 wakeDrift = vec2(uDrag.x * 0.07, uDrag.y * 0.05) + (uPointer - 0.5) * vec2(-0.006, -0.003);
 
-    vec2 bridgeUv = uv + distortion * (1.0 - blend * 0.4);
-    vec2 closeUv = uv - distortion * (0.75 + blend * 0.25);
-    vec3 bridge = sampleScene(uBridge, bridgeUv, uBridgeResolution, 1.025 + slowBreath + uProgress * 0.035, bridgeDrift);
-    vec3 closeup = sampleScene(uCloseup, closeUv, uCloseupResolution, 1.02 + blend * 0.11 - slowBreath, closeDrift);
-    vec3 color = mix(bridge, closeup, smoothstep(0.05, 0.95, blend));
+    /*
+     * Scroll-bound background switching.
+     *
+     * The point here is the *seam*, not the frames: a plain cross-fade ghosts two images
+     * through each other and washes out in the middle. So each switch is a soft diagonal
+     * wipe blended with a dissolve — the eye follows a moving edge instead of a flat
+     * opacity ramp — plus a warm bloom exactly at the crossing and a small chromatic
+     * split across that edge.
+     */
+    float toBridge = smoothstep(0.06, 0.32, uProgress);
+    float toCloseup = smoothstep(0.50, 0.90, uProgress);
 
-    float chroma = pointerField * (0.0012 + uImpact * 0.0035);
+    float seamSweep = uv.x * 0.86 + uv.y * 0.14;
+    float seamWidth = 0.26;
+
+    float seamEdgeBridge = mix(-0.35, 1.35, toBridge);
+    float seamMaskBridge = 1.0 - smoothstep(seamEdgeBridge - seamWidth, seamEdgeBridge + seamWidth, seamSweep);
+    float seamBridge = mix(toBridge, seamMaskBridge, 0.72);
+
+    float seamEdgeCloseup = mix(-0.35, 1.35, toCloseup);
+    float seamMaskCloseup = 1.0 - smoothstep(seamEdgeCloseup - seamWidth, seamEdgeCloseup + seamWidth, seamSweep);
+    float seamCloseup = mix(toCloseup, seamMaskCloseup, 0.72);
+
+    // peaks at the midpoint of each switch, zero either side
+    float midBridge = 4.0 * toBridge * (1.0 - toBridge);
+    float midCloseup = 4.0 * toCloseup * (1.0 - toCloseup);
+    float seamBloom = midBridge + midCloseup;
+    vec2 seamShift = vec2(0.0042, 0.0026) * seamBloom;
+
+    vec2 wakeUv = uv + distortion * 0.6;
+    vec2 bridgeUv = uv + distortion * (1.0 - archive * 0.35) + seamShift;
+    vec2 closeUv = uv - distortion * (0.8 + afterimage * 0.2) - seamShift;
+
+    vec3 wake = sampleScene(uAwakening, wakeUv, uAwakeningResolution, 1.015 + slowBreath * 0.6, wakeDrift);
+    vec3 bridge = sampleScene(uBridge, bridgeUv, uBridgeResolution, 1.03 + slowBreath + uProgress * 0.04, bridgeDrift);
+    vec3 closeup = sampleScene(uCloseup, closeUv, uCloseupResolution, 1.02 + toCloseup * 0.12 - slowBreath, closeDrift);
+
+    vec3 color = mix(wake, bridge, seamBridge);
+    color = mix(color, closeup, seamCloseup);
+
+    // lifts the washed-out midpoint and reads as light passing through the cut
+    color += vec3(0.105, 0.088, 0.062) * seamBloom;
+
+    /* Chromatic fringe near the pointer keeps the ripple legible on dark frames. */
+    float chroma = pointerField * (0.0016 + uImpact * 0.0045);
     vec2 redOffset = direction * chroma;
-    vec3 bridgeRed = sampleScene(uBridge, bridgeUv + redOffset, uBridgeResolution, 1.025 + slowBreath + uProgress * 0.035, bridgeDrift);
-    vec3 closeRed = sampleScene(uCloseup, closeUv + redOffset, uCloseupResolution, 1.02 + blend * 0.11 - slowBreath, closeDrift);
-    vec3 shifted = mix(bridgeRed, closeRed, smoothstep(0.05, 0.95, blend));
-    color.r = shifted.r;
+    vec3 redLayer = mix(
+      sampleScene(uAwakening, wakeUv + redOffset * 0.6, uAwakeningResolution, 1.015, wakeDrift),
+      sampleScene(uBridge, bridgeUv + redOffset, uBridgeResolution, 1.03 + slowBreath, bridgeDrift),
+      seamBridge
+    );
+    color.r = mix(redLayer.r, sampleScene(uCloseup, closeUv + redOffset, uCloseupResolution, 1.02, closeDrift).r, seamCloseup);
 
     color.b *= 1.06;
     color.r *= 1.01 + uImpact * 0.025;
 
+    /* A faint travelling highlight marking the crest of the rhythm wave. */
+    color += vec3(0.055, 0.062, 0.058) * smoothstep(0.55, 1.0, wave) * waveField;
+
     float vignette = smoothstep(0.96, 0.22, distance(vUv, vec2(0.5)));
     color *= mix(0.52, 1.0, vignette);
-    color *= 0.82 + pointerField * 0.12 + uImpact * falloff * 0.08;
+    color *= 0.82 + (1.0 - pointerField) * 0.12 + uImpact * pointerField * 0.08;
     color = mix(color, vec3(dot(color, vec3(0.299, 0.587, 0.114))), afterimage * 0.18);
     color *= vec3(0.86, 0.94, 0.97);
 
@@ -97,7 +168,7 @@ const fragmentShaderSource = `
   }
 `;
 
-export default function CinematicCanvas({ progressRef, onReady }: CinematicCanvasProps) {
+export default function CinematicCanvas({ progressRef, velocityRef, onReady }: CinematicCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -189,6 +260,7 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
 
     const uniforms = {
       resolution: gl.getUniformLocation(program, "uResolution"),
+      awakeningResolution: gl.getUniformLocation(program, "uAwakeningResolution"),
       bridgeResolution: gl.getUniformLocation(program, "uBridgeResolution"),
       closeupResolution: gl.getUniformLocation(program, "uCloseupResolution"),
       pointer: gl.getUniformLocation(program, "uPointer"),
@@ -196,6 +268,8 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
       time: gl.getUniformLocation(program, "uTime"),
       progress: gl.getUniformLocation(program, "uProgress"),
       impact: gl.getUniformLocation(program, "uImpact"),
+      velocity: gl.getUniformLocation(program, "uVelocity"),
+      awakening: gl.getUniformLocation(program, "uAwakening"),
       bridge: gl.getUniformLocation(program, "uBridge"),
       closeup: gl.getUniformLocation(program, "uCloseup"),
     };
@@ -223,13 +297,19 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
     });
 
     const mobile = window.matchMedia("(max-width: 760px)").matches;
-    const bridgeUrl = mobile ? "/cinematic/awakening-mobile.webp" : "/cinematic/bridge.webp";
-    const closeupUrl = mobile ? "/cinematic/scene-mobile.webp" : "/cinematic/closeup.webp";
+    // Three frames of the same take, cross-faded by scroll progress: establishing shot at
+    // act 1, the character through the middle acts, close-up at the end. Acts 1 and 5 keep
+    // the frames the scene already used, so the middle movement is the only addition.
+    // The mobile list is the portrait crop of each moment.
+    const sceneUrls = mobile
+      ? ["/cinematic/awakening-mobile.webp", "/cinematic/entry-v2-mobile.webp", "/cinematic/scene-mobile.webp"]
+      : ["/cinematic/bridge.webp", "/cinematic/awakening.webp", "/cinematic/closeup.webp"];
+    let awakeningTexture: WebGLTexture | undefined;
     let bridgeTexture: WebGLTexture | undefined;
     let closeupTexture: WebGLTexture | undefined;
 
     const resize = () => {
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, mobile ? 1 : 1.25);
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2);
       const width = Math.max(1, Math.floor(canvas.clientWidth * pixelRatio));
       const height = Math.max(1, Math.floor(canvas.clientHeight * pixelRatio));
       if (canvas.width !== width || canvas.height !== height) {
@@ -276,17 +356,22 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
     window.addEventListener("pointercancel", onPointerUp);
     canvas.addEventListener("webglcontextlost", onContextLost);
 
-    Promise.all([createTexture(bridgeUrl), createTexture(closeupUrl)]).then(([bridgeAsset, closeupAsset]) => {
+    Promise.all(sceneUrls.map((url) => createTexture(url))).then(([awakeningAsset, bridgeAsset, closeupAsset]) => {
       if (disposed) return;
+      awakeningTexture = awakeningAsset.texture;
       bridgeTexture = bridgeAsset.texture;
       closeupTexture = closeupAsset.texture;
       gl.useProgram(program);
       gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, bridgeTexture);
-      gl.uniform1i(uniforms.bridge, 0);
+      gl.bindTexture(gl.TEXTURE_2D, awakeningTexture);
+      gl.uniform1i(uniforms.awakening, 0);
       gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, bridgeTexture);
+      gl.uniform1i(uniforms.bridge, 1);
+      gl.activeTexture(gl.TEXTURE2);
       gl.bindTexture(gl.TEXTURE_2D, closeupTexture);
-      gl.uniform1i(uniforms.closeup, 1);
+      gl.uniform1i(uniforms.closeup, 2);
+      gl.uniform2f(uniforms.awakeningResolution, awakeningAsset.width, awakeningAsset.height);
       gl.uniform2f(uniforms.bridgeResolution, bridgeAsset.width, bridgeAsset.height);
       gl.uniform2f(uniforms.closeupResolution, closeupAsset.width, closeupAsset.height);
       resize();
@@ -316,6 +401,7 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
         gl.uniform1f(uniforms.time, (now - startedAt) / 1000);
         gl.uniform1f(uniforms.progress, progressRef.current);
         gl.uniform1f(uniforms.impact, impact);
+        gl.uniform1f(uniforms.velocity, velocityRef?.current ?? 0);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
         frame = requestAnimationFrame(render);
       };
@@ -335,6 +421,7 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
       canvas.removeEventListener("webglcontextlost", onContextLost);
+      if (awakeningTexture) gl.deleteTexture(awakeningTexture);
       if (bridgeTexture) gl.deleteTexture(bridgeTexture);
       if (closeupTexture) gl.deleteTexture(closeupTexture);
       gl.deleteBuffer(positionBuffer);
@@ -342,7 +429,7 @@ export default function CinematicCanvas({ progressRef, onReady }: CinematicCanva
       gl.deleteShader(vertexShader);
       gl.deleteShader(fragmentShader);
     };
-  }, [onReady, progressRef]);
+  }, [onReady, progressRef, velocityRef]);
 
   return <canvas className="cinematic-canvas" ref={canvasRef} aria-hidden="true" />;
 }

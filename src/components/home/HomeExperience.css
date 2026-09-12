@@ -30,6 +30,38 @@ button:focus-visible, a:focus-visible { outline: 1px solid var(--ember); outline
 .cinematic-canvas { z-index: -4; display: block; opacity: 0; transition: opacity 1.2s cubic-bezier(.2,.8,.2,1); }
 .cinematic-canvas[data-ready="true"] { opacity: 1; }
 
+/*
+ * Cursor ripple layer (src/components/home/CursorRipple.tsx). Sits above the backdrop
+ * but below the panels, and never intercepts pointer events.
+ */
+.cursor-ripple { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; mix-blend-mode: screen; }
+
+/*
+ * Scroll-reactive backdrop. `--scroll-velocity` (0..1) and `--scroll-direction` are
+ * written by HomeExperience on every frame; these rules turn them into parallax and a
+ * travelling light so a fast flick reads as motion instead of a hard jump.
+ */
+.scene-fallback {
+  inset: -3% 0;
+  transform: translate3d(0, calc(var(--scroll-velocity, 0) * var(--scroll-direction, 1) * -1.4rem), 0);
+  transition: transform .12s linear;
+}
+
+.cinematic-stage::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 6;
+  height: 38%;
+  pointer-events: none;
+  opacity: calc(var(--scroll-velocity, 0) * 0.5);
+  background: linear-gradient(180deg, transparent, rgba(240, 173, 112, 0.09) 55%, transparent);
+  transform: translate3d(0, calc((1 - var(--scroll-velocity, 0)) * 40vh), 0);
+  transition: opacity .18s linear;
+}
+.cinematic-stage { --scroll-velocity: 0; }
+
 .awakening-veil { position: fixed; inset: 0; z-index: 300; overflow: hidden; background: #080d0e; pointer-events: none; transition: opacity 1.05s cubic-bezier(.7,0,.25,1), visibility 1.05s; }
 .awakening-veil picture, .awakening-veil img { position: absolute; inset: 0; width: 100%; height: 100%; }
 .awakening-veil img { object-fit: cover; filter: saturate(.75) brightness(.62); transform: scale(1.025); animation: awakenBreath 5s ease-out both; }
@@ -123,17 +155,85 @@ button:focus-visible, a:focus-visible { outline: 1px solid var(--ember); outline
 .runtime > span:last-child i { margin: 0 0 1px 8px; background: #91dbcc; box-shadow: 0 0 8px #91dbcc; }
 .journey-count b { color: rgba(255,255,255,.86); font-weight: 400; }
 
-.cursor-orbit { position: fixed; z-index: 400; left: 0; top: 0; width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 1px solid rgba(255,255,255,.34); border-radius: 50%; pointer-events: none; opacity: 0; transition: opacity .25s ease, width .25s ease, height .25s ease, margin .25s ease, border-color .25s ease; }
-.cursor-orbit[data-visible="true"] { opacity: 1; }
-.cursor-orbit[data-hover="true"] { width: 46px; height: 46px; margin: -23px 0 0 -23px; border-color: rgba(240,173,112,.64); }
-.cursor-orbit i { position: absolute; inset: 14px; border-radius: 50%; background: var(--ember); box-shadow: 0 0 8px rgba(240,173,112,.62); transition: inset .25s ease; }
-.cursor-orbit[data-hover="true"] i { inset: 21px; }
+/*
+ * Site cursor (src/components/home/CinematicCursor.tsx).
+ * `body.cinematic-mode` hides the system cursor, so this replaces it: an exact ember dot
+ * for pointing accuracy, a spring-followed ring for fluidity, and a label naming whatever
+ * is under the pointer so clickability is visible before the click.
+ */
+.cinematic-cursor { position: fixed; inset: 0; z-index: 400; pointer-events: none; }
+
+.cinematic-cursor-dot,
+.cinematic-cursor-ring {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .22s ease;
+  will-change: transform;
+}
+
+.cinematic-cursor-dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: #f6dc8e;
+  box-shadow: 0 0 10px rgba(240, 173, 112, .85), 0 0 2px rgba(255, 255, 255, .9);
+}
+.cinematic-cursor-dot[data-visible="true"] { opacity: 1; }
+
+.cinematic-cursor-ring {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin: -21px 0 0 -21px;
+  border: 1px solid rgba(241, 238, 231, .5);
+  border-radius: 999px;
+  background: rgba(6, 10, 11, .12);
+  backdrop-filter: blur(2px);
+  transition:
+    opacity .22s ease,
+    width .3s cubic-bezier(.2,.8,.2,1),
+    height .3s cubic-bezier(.2,.8,.2,1),
+    margin .3s cubic-bezier(.2,.8,.2,1),
+    border-color .3s ease,
+    background .3s ease;
+}
+.cinematic-cursor-ring[data-visible="true"] { opacity: 1; }
+.cinematic-cursor-ring[data-hover="true"] {
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  border-color: rgba(240, 173, 112, .8);
+  background: rgba(240, 173, 112, .1);
+}
+.cinematic-cursor-ring[data-pressed="true"] { background: rgba(240, 173, 112, .22); }
+.cinematic-cursor-ring[data-dragging="true"] {
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border-color: rgba(137, 200, 208, .85);
+}
+
+.cinematic-cursor-label {
+  color: rgba(246, 220, 142, .96);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .24s ease .06s;
+}
+.cinematic-cursor-ring[data-hover="true"] .cinematic-cursor-label { opacity: 1; }
+
 html[data-dragging="true"], html[data-dragging="true"] body { cursor: none !important; }
-html[data-dragging="true"] .cursor-orbit { width: 56px; height: 56px; margin: -28px 0 0 -28px; border-color: var(--ember); }
 
 @media (pointer: coarse), (pointer: none) {
   body.cinematic-mode { cursor: auto; }
-  .cursor-orbit { display: none; }
+  .cinematic-cursor { display: none; }
   .identity, .chapter-nav button, .weather-button, .destination, .exit-actions a, .exit-actions button, .chapter-rail button { cursor: pointer; }
 }
 
@@ -150,7 +250,7 @@ html[data-dragging="true"] .cursor-orbit { width: 56px; height: 56px; margin: -2
 @media (max-width: 900px) {
   body.cinematic-mode { cursor: auto; }
   .cinematic-experience { height: 560vh; min-height: 3300px; }
-  .cursor-orbit, .chapter-nav { display: none; }
+  .cinematic-cursor, .chapter-nav { display: none; }
   .site-header { inset: max(20px,env(safe-area-inset-top)) 22px auto; }
   .identity strong { font-size: 15px; }
   .arrival-panel { left: 22px; top: 27%; width: calc(100% - 60px); }

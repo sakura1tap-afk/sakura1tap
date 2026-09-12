@@ -3,6 +3,8 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { handleRouteClick } from "../../app/routes";
 import CinematicCanvas from "./CinematicCanvas";
+import CinematicCursor from "./CinematicCursor";
+import CursorRipple from "./CursorRipple";
 import "./HomeExperience.css";
 
 const chapters = ["首页", "互动", "功能", "片段", "继续"];
@@ -24,9 +26,9 @@ const destinations = [
 
 export default function HomeExperience() {
   const experienceRef = useRef<HTMLElement>(null);
-  const cursorRef = useRef<HTMLDivElement>(null);
   const progressLabelRef = useRef<HTMLSpanElement>(null);
   const progressRef = useRef(0);
+  const scrollVelocityRef = useRef(0);
 
   useEffect(() => {
     document.body.classList.add("cinematic-mode");
@@ -134,35 +136,30 @@ export default function HomeExperience() {
         .fromTo(".exit-panel", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.15 }, 0.82);
     }, root);
 
-    return () => context.revert();
-  }, []);
-
-  useEffect(() => {
-    const cursor = cursorRef.current;
-    const pointerFine = window.matchMedia("(pointer: fine)").matches;
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!cursor || !pointerFine || reducedMotion) return;
-
-    const moveX = gsap.quickTo(cursor, "x", { duration: 0.24, ease: "power3.out" });
-    const moveY = gsap.quickTo(cursor, "y", { duration: 0.24, ease: "power3.out" });
-    const onMove = (event: PointerEvent) => {
-      moveX(event.clientX);
-      moveY(event.clientY);
-      cursor.dataset.visible = "true";
+    // Scroll speed is published as a CSS variable (and a ref the WebGL layer reads) so
+    // the backdrop can answer to the scroll instead of only to the scroll position.
+    let raf = 0;
+    let lastScrollY = window.scrollY;
+    let velocity = 0;
+    let direction = 1;
+    const publishVelocity = () => {
+      const current = window.scrollY;
+      const delta = current - lastScrollY;
+      lastScrollY = current;
+      if (Math.abs(delta) > 0.5) direction = delta > 0 ? 1 : -1;
+      velocity += (Math.min(1, Math.abs(delta) / 70) - velocity) * 0.16;
+      if (velocity < 0.001) velocity = 0;
+      scrollVelocityRef.current = velocity;
+      root.style.setProperty("--scroll-velocity", velocity.toFixed(3));
+      root.style.setProperty("--scroll-direction", String(direction));
+      raf = window.requestAnimationFrame(publishVelocity);
     };
-    const onOver = (event: PointerEvent) => {
-      cursor.dataset.hover = (event.target as HTMLElement).closest("a, button") ? "true" : "false";
-    };
-    const onLeave = () => { cursor.dataset.visible = "false"; };
-    window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerover", onOver, { passive: true });
-    document.documentElement.addEventListener("mouseleave", onLeave);
-    window.addEventListener("blur", onLeave);
+    raf = window.requestAnimationFrame(publishVelocity);
+
     return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerover", onOver);
-      document.documentElement.removeEventListener("mouseleave", onLeave);
-      window.removeEventListener("blur", onLeave);
+      window.cancelAnimationFrame(raf);
+      scrollVelocityRef.current = 0;
+      context.revert();
     };
   }, []);
 
@@ -190,14 +187,15 @@ export default function HomeExperience() {
 
   return (
     <main className="cinematic-experience" data-scene="0" ref={experienceRef}>
-      <div className="cursor-orbit" ref={cursorRef} aria-hidden="true"><i /></div>
+      <CinematicCursor />
 
       <div className="cinematic-stage">
         <picture className="scene-fallback">
           <source media="(max-width: 760px)" srcSet="/cinematic/scene-mobile.webp" />
           <img src="/cinematic/bridge.webp" alt="" draggable={false} decoding="async" fetchPriority="high" />
         </picture>
-        <CinematicCanvas progressRef={progressRef} />
+        <CinematicCanvas progressRef={progressRef} velocityRef={scrollVelocityRef} />
+        <CursorRipple />
         <div className="color-wash" aria-hidden="true" />
         <div className="soft-grain" aria-hidden="true" />
         <div className="scanline" aria-hidden="true" />
@@ -240,6 +238,7 @@ export default function HomeExperience() {
             {destinations.map((item) => (
               <a
                 className="destination"
+                data-cursor={item.name}
                 href={item.href}
                 key={item.name}
                 onClick={handleRouteClick(item.page)}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { CubismSdkModel, ensureCubismFramework, type CubismSdkModelConfig } from '../live2d/CubismSdkModel'
 
 type FocusPoint = {
@@ -17,6 +17,10 @@ type Live2DStageProps = {
 // `x` / `y` are viewport fractions for the character's bounding-box centre and
 // `height` is that box's height in NDC units (1 = half the viewport height).
 // See CubismSdkLayout for how the values are applied.
+//
+// Framing: the characters are large and sit low, so only the head and shoulders rise
+// above the fold. `y` deliberately exceeds 1 — the body is meant to be off-screen, and
+// that is what keeps the artwork from swallowing the scene.
 const stageModels: CubismSdkModelConfig[] = [
   {
     url: '/live2d/WhiteAngelOriginal/无口天使 5.model3.json',
@@ -24,12 +28,12 @@ const stageModels: CubismSdkModelConfig[] = [
     feedbackExpressions: ['expression15', 'expression2', 'expression3', 'expression5', 'expression8', 'expression9'],
     parameterOverrides: { Param80: 1 },
     layout: {
-      height: 1,
-      mobileHeight: 1.08,
-      mobileX: 0.31,
-      mobileY: 0.7,
-      x: 0.3,
-      y: 0.72,
+      height: 1.5,
+      mobileHeight: 1.22,
+      mobileX: 0.28,
+      mobileY: 1.0,
+      x: 0.28,
+      y: 1.06,
     },
   },
   {
@@ -37,18 +41,20 @@ const stageModels: CubismSdkModelConfig[] = [
     required: true,
     parameterOverrides: { Param33: 1 },
     layout: {
-      height: 1.04,
-      mobileHeight: 1.12,
-      mobileX: 0.69,
-      mobileY: 0.7,
-      x: 0.68,
-      y: 0.72,
+      height: 1.56,
+      mobileHeight: 1.28,
+      mobileX: 0.7,
+      mobileY: 1.0,
+      x: 0.7,
+      y: 1.06,
     },
   },
 ]
 
 const MODEL_LOAD_TIMEOUT = 24000
-const MAX_DPR = 1.5
+// Demo build: render the models at full device resolution. Lower this if a weak GPU
+// ever struggles, but crispness matters more than the last few frames here.
+const MAX_DPR = 2
 
 export default function Live2DStage({ focusPoint, isEntering, onLoadStateChange }: Live2DStageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
